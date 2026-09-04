@@ -15,6 +15,9 @@
     --blue-light:#5FA8E0;
     --coral:#E8483A;
     --teal:#2FA88A;
+    --protein:#FF6B35;
+    --carb:#1B4B8F;
+    --fat:#2FA88A;
     --on-accent:#FFFFFF;
     --shadow:0 1px 2px rgba(43,43,51,.06),0 10px 26px -16px rgba(43,43,51,.28);
   }
@@ -59,9 +62,11 @@
   .btn{border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);padding:10px 16px;cursor:pointer;font-weight:700;font-size:.87rem;}
   .btn:hover{background:var(--bg);}
   .btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
-  .btn-primary{background:var(--orange);border-color:var(--orange);color:var(--on-accent);}
-  .btn-primary:hover{filter:brightness(1.06);}
-  .btn-primary:disabled{opacity:.45;cursor:default;filter:none;}
+  .btn-primary{background:var(--orange);border-color:var(--orange);color:var(--on-accent);box-shadow:0 3px 10px -3px color-mix(in srgb, var(--orange) 55%, transparent);}
+  .btn-primary:hover{filter:brightness(1.06);transform:translateY(-1px);box-shadow:0 5px 14px -3px color-mix(in srgb, var(--orange) 60%, transparent);}
+  .btn-primary:active{transform:translateY(0);box-shadow:0 2px 6px -2px color-mix(in srgb, var(--orange) 55%, transparent);}
+  .btn-primary:disabled{opacity:.45;cursor:default;filter:none;transform:none;box-shadow:none;}
+  .btn-primary.btn-saved{background:var(--teal);border-color:var(--teal);box-shadow:0 3px 10px -3px color-mix(in srgb, var(--teal) 55%, transparent);}
   .btn-blue{background:var(--blue);border-color:var(--blue);color:var(--on-accent);}
   .btn-ghost{background:transparent;border-color:transparent;}
   .btn-ghost:hover{background:var(--bg);}
@@ -115,9 +120,9 @@
   .stat .sl{font-size:.72rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
 
   .kpi-strip{display:flex;background:var(--bg);border-radius:14px;border:1px solid var(--line);overflow:hidden;}
-  .kpi-cell{flex:1;min-width:0;padding:12px 6px 11px;text-align:center;border-top:3px solid transparent;display:flex;flex-direction:column;justify-content:center;gap:3px;}
+  .kpi-cell{flex:1;min-width:0;padding:14px 4px 12px;text-align:center;border-top:3px solid transparent;display:flex;flex-direction:column;justify-content:center;gap:4px;}
   .kpi-cell + .kpi-cell{border-left:1px solid var(--line);}
-  .kpi-v{font-size:1.28rem;font-weight:800;line-height:1;letter-spacing:-.01em;}
+  .kpi-v{font-size:1.68rem;font-weight:800;line-height:1;letter-spacing:-.02em;}
   .kpi-l{font-size:.6rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
   .kpi-sub{font-size:.58rem;color:var(--text-soft);line-height:1.25;}
   .kpi-breakdown{margin-top:6px;text-align:left;display:flex;flex-direction:column;gap:3px;}
@@ -155,8 +160,15 @@
   .item-name{font-weight:600;}
   .item-sub{color:var(--text-soft);font-size:.78rem;}
   .item-kcal{font-weight:700;font-size:1.02rem;min-width:3.6em;text-align:right;}
+  .summary-head{display:grid;grid-template-columns:1fr repeat(4,44px);gap:4px;font-size:.62rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.03em;padding-bottom:6px;border-bottom:1px solid var(--line);font-weight:700;}
+  .summary-head .sr-kcal,.summary-head .sr-macro{text-align:right;}
+  .summary-row{display:grid;grid-template-columns:1fr repeat(4,44px);gap:4px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.82rem;align-items:center;}
+  .summary-row:last-of-type{border-bottom:none;}
+  .summary-row .sr-kcal,.summary-row .sr-macro{text-align:right;font-weight:600;}
+  .summary-total{border-top:2px solid var(--line-strong);margin-top:2px;padding-top:11px;font-weight:800;}
+  .suggestion-box{margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:12px;font-size:.85rem;display:flex;gap:8px;align-items:flex-start;}
   .item-macros{font-size:.72rem;color:var(--text-soft);margin-top:3px;}
-  .item-macros b{color:var(--text);font-weight:600;}
+  .item-macros b{color:inherit;font-weight:700;}
   .item-kcal-col{text-align:right;}
   .item-pct{font-size:.66rem;color:var(--text-soft);margin-top:2px;font-weight:600;}
   .item-actions{display:flex;gap:2px;}
@@ -246,7 +258,7 @@
   .sf-preview b{color:var(--text);}
 
   @media (prefers-reduced-motion:no-preference){
-    .btn,.item-del,.bar-fill,.tab,.meal-chip{transition:background-color .15s ease,filter .15s ease,width .3s ease;}
+    .btn,.item-del,.bar-fill,.tab,.meal-chip{transition:background-color .15s ease,filter .15s ease,width .3s ease,transform .15s ease,box-shadow .15s ease;}
   }
 </style>
 
@@ -670,6 +682,13 @@
   }
   function uid(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "id-"+Date.now()+"-"+Math.random().toString(16).slice(2); }
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function flashSaved(btn, afterFn){
+    if (!btn){ if (afterFn) afterFn(); return; }
+    btn.disabled = true;
+    btn.classList.add("btn-saved");
+    btn.textContent = "✓ Salvo!";
+    setTimeout(function(){ if (afterFn) afterFn(); }, 850);
+  }
   function fmtNum(n){ return Number(n||0).toLocaleString("pt-BR", {maximumFractionDigits:1}); }
   function fmtSigned(n){ n=Number(n||0); return (n>=0?"+":"")+fmtNum(n); }
 
@@ -838,9 +857,9 @@
       '</div>'+
       '<div class="card">'+
         '<div class="card-title">Macros do dia</div>'+
-        macroRow("Proteína", food.protein, targets.protein)+
-        macroRow("Carboidratos", food.carbs, targets.carb)+
-        macroRow("Gordura", food.fat, targets.fat)+
+        macroRow("Proteína", food.protein, targets.protein, "var(--protein)")+
+        macroRow("Carboidratos", food.carbs, targets.carb, "var(--carb)")+
+        macroRow("Gordura", food.fat, targets.fat, "var(--fat)")+
       '</div>'+
       '<div class="card">'+
         '<div class="card-title">'+chartTitle+
@@ -876,18 +895,18 @@
       if (!v || v<=0) return;
       day.weight = v;
       if (state.currentDate === todayISO()){ state.profile.weightKg = v; state.profile.targets = computeTargets(state.profile); }
-      state.isDemo=false; save(); renderAll();
+      state.isDemo=false; save();
+      flashSaved(this, renderAll);
     });
     var nextBtn = document.getElementById("dateNext");
     if (nextBtn) nextBtn.disabled = state.currentDate >= todayISO();
   }
 
-  function macroRow(label, consumed, target){
+  function macroRow(label, consumed, target, color){
     var pct = target>0 ? Math.min(100, Math.round((consumed/target)*100)) : 0;
     var over = target>0 && consumed>target;
-    var fill = over ? "var(--coral)" : "var(--teal)";
     var extra = over ? ' <span style="color:var(--coral);">(+'+fmtNum(consumed-target)+' g)</span>' : "";
-    return '<div class="macro-row"><div class="macro-line"><span class="label">'+label+'</span><span class="vals">'+fmtNum(consumed)+' / '+fmtNum(target)+' g'+extra+'</span></div><div class="bar"><div class="bar-fill" style="width:'+pct+'%;background:'+fill+';"></div></div></div>';
+    return '<div class="macro-row"><div class="macro-line"><span class="label" style="color:'+color+';">'+label+'</span><span class="vals">'+fmtNum(consumed)+' / '+fmtNum(target)+' g'+extra+'</span></div><div class="bar"><div class="bar-fill" style="width:'+pct+'%;background:'+color+';"></div></div></div>';
   }
 
   function changeDate(delta){
@@ -897,6 +916,48 @@
   }
 
   /* ================= FOOD ================= */
+  var SUGGESTION_POOL = {
+    protein: ["Peito de frango grelhado","Ovo cozido","Iogurte grego","Whey protein (pó)"],
+    carb: ["Batata doce cozida","Arroz integral cozido","Aveia em flocos","Banana"],
+    fat: ["Abacate","Azeite de oliva","Castanha do Pará","Amendoim"]
+  };
+  function mealSummarySuggestion(totals, targets){
+    var ratios = {
+      protein: targets.protein>0 ? totals.protein/targets.protein : 1,
+      carb: targets.carb>0 ? totals.carbs/targets.carb : 1,
+      fat: targets.fat>0 ? totals.fat/targets.fat : 1
+    };
+    var lowest = Object.keys(ratios).reduce(function(a,b){ return ratios[a]<=ratios[b]?a:b; });
+    if (ratios[lowest] >= 0.9) return "Seus macros estão bem equilibrados até agora hoje. 👏";
+    var labels = {protein:"Sua proteína", carb:"Seu carboidrato", fat:"Sua gordura"};
+    var pool = SUGGESTION_POOL[lowest];
+    var food = pool[Math.floor(Date.now()/86400000) % pool.length];
+    return labels[lowest]+" está a "+Math.round(ratios[lowest]*100)+"% da meta até agora — que tal incluir "+food+" na próxima refeição?";
+  }
+  function renderMealSummaryHtml(day, targets){
+    var rows = MEALS.map(function(m){
+      var t = mealTotals(day.meals[m.key]);
+      return '<div class="summary-row"><span class="sr-name">'+m.label+'</span>'+
+        '<span class="sr-kcal num">'+fmtNum(t.kcal)+'</span>'+
+        '<span class="sr-macro num" style="color:var(--protein);">'+fmtNum(t.protein)+'</span>'+
+        '<span class="sr-macro num" style="color:var(--carb);">'+fmtNum(t.carbs)+'</span>'+
+        '<span class="sr-macro num" style="color:var(--fat);">'+fmtNum(t.fat)+'</span>'+
+      '</div>';
+    }).join("");
+    var dayTotals = dayFoodTotals(day);
+    var totalRow = '<div class="summary-row summary-total"><span class="sr-name">Total</span>'+
+      '<span class="sr-kcal num">'+fmtNum(dayTotals.kcal)+'</span>'+
+      '<span class="sr-macro num" style="color:var(--protein);">'+fmtNum(dayTotals.protein)+'</span>'+
+      '<span class="sr-macro num" style="color:var(--carb);">'+fmtNum(dayTotals.carbs)+'</span>'+
+      '<span class="sr-macro num" style="color:var(--fat);">'+fmtNum(dayTotals.fat)+'</span>'+
+    '</div>';
+    return '<div class="card">'+
+      '<div class="card-title">Resumo por refeição</div>'+
+      '<div class="summary-head"><span class="sr-name"></span><span class="sr-kcal">Kcal</span><span class="sr-macro" style="color:var(--protein);">Prot</span><span class="sr-macro" style="color:var(--carb);">Carb</span><span class="sr-macro" style="color:var(--fat);">Gord</span></div>'+
+      rows + totalRow +
+      '<div class="suggestion-box"><span>💡</span><span>'+esc(mealSummarySuggestion(dayTotals, targets))+'</span></div>'+
+    '</div>';
+  }
   function renderFood(){
     var day = ensureDay(state.currentDate);
     var active = state.ui.foodMeal || "cafeDaManha";
@@ -919,6 +980,7 @@
       '<div class="card"><div class="card-title">Alimentação · '+formatDateLabel(state.currentDate)+'</div>'+
         '<div class="meal-tabs">'+tabsHtml+'</div>'+
       '</div>'+
+      renderMealSummaryHtml(day, state.profile.targets)+
       '<div class="card">'+
         '<div class="card-title">'+(MEALS.filter(function(m){return m.key===active;})[0]||{}).label+
           '<button type="button" class="btn btn-small" id="addFoodBtn">+ Adicionar</button></div>'+
@@ -934,7 +996,8 @@
       if (!drafted.length) return;
       day.meals[active] = (day.meals[active]||[]).concat(drafted);
       draft[active] = [];
-      state.isDemo=false; save(); renderFood(); renderDashboard();
+      state.isDemo=false; save();
+      flashSaved(this, function(){ renderFood(); renderDashboard(); });
     });
   }
   document.getElementById("view-food").addEventListener("click", function(e){
@@ -965,7 +1028,7 @@
     var pctGoal = targetKcal>0 ? Math.round((it.kcal/targetKcal)*100) : 0;
     return '<div class="item-row'+(isDraft?" draft":"")+'">'+
       '<div><div class="item-name">'+esc(it.name)+'</div>'+(it.grams?'<div class="item-sub">'+fmtNum(it.grams)+' g</div>':'')+
-        '<div class="item-macros">P <b class="num">'+fmtNum(it.protein)+'</b>g · C <b class="num">'+fmtNum(it.carbs)+'</b>g · G <b class="num">'+fmtNum(it.fat)+'</b>g</div>'+
+        '<div class="item-macros"><span style="color:var(--protein);">P <b class="num">'+fmtNum(it.protein)+'</b>g</span> · <span style="color:var(--carb);">C <b class="num">'+fmtNum(it.carbs)+'</b>g</span> · <span style="color:var(--fat);">G <b class="num">'+fmtNum(it.fat)+'</b>g</span></div>'+
       '</div>'+
       '<div class="item-kcal-col"><div class="item-kcal num">'+fmtNum(it.kcal)+' kcal</div><div class="item-pct num">'+pctGoal+'% da meta</div></div>'+
       '<div class="item-actions">'+editBtn+'<button type="button" class="item-del" data-del="'+(isDraft?"draft":"saved")+'|'+it.id+'" aria-label="Remover '+esc(it.name)+'">×</button></div>'+
@@ -1126,6 +1189,38 @@
   /* ================= WORKOUT ================= */
   var workoutForm = {type:"musculacao", mode:"duracao", durationMin:30, intensity:"moderada", distanceKm:5, paceMinKm:6, note:""};
   var editingWorkoutId = null;
+  var workoutChartMode = "month";
+  var workoutChartDate = {y:(new Date()).getFullYear(), m:(new Date()).getMonth()+1};
+  function workoutMonthlySeries(y,m){
+    var dim = daysInMonth(y,m);
+    var arr = [];
+    for (var d=1; d<=dim; d++){
+      var log = state.logs[y+"-"+pad(m)+"-"+pad(d)];
+      arr.push({label:String(d), kcal: log?dayWorkoutKcal(log):0});
+    }
+    return arr;
+  }
+  function workoutYearlySeries(y){
+    var arr = [];
+    for (var m=1; m<=12; m++){
+      var dim = daysInMonth(y,m), sum=0;
+      for (var d=1; d<=dim; d++){
+        var log = state.logs[y+"-"+pad(m)+"-"+pad(d)];
+        if (log) sum += dayWorkoutKcal(log);
+      }
+      arr.push({label:new Intl.DateTimeFormat("pt-BR",{month:"short"}).format(new Date(y,m-1,1)).replace(".",""), kcal:sum});
+    }
+    return arr;
+  }
+  function renderMagnitudeBars(series){
+    var max = Math.max(1, Math.max.apply(null, series.map(function(s){return s.kcal;})));
+    var bars = series.map(function(s){
+      var h = s.kcal>0 ? Math.max(3, Math.round((s.kcal/max)*70)) : 1;
+      var title = s.label+": "+fmtNum(s.kcal)+" kcal";
+      return '<div class="bar-col" title="'+esc(title)+'"><div class="fill" style="height:'+h+'px;background:'+(s.kcal>0?"var(--teal)":"var(--line)")+';"></div><div class="bx-label">'+esc(s.label)+'</div></div>';
+    }).join("");
+    return '<div class="chart-bars">'+bars+'</div>';
+  }
   function updateWorkoutEstimate(){
     var el = document.getElementById("workoutEstimateVal");
     if (el) el.textContent = computeWorkoutKcal(workoutForm, state.profile.weightKg) + " kcal";
@@ -1172,8 +1267,46 @@
           (editingWorkoutId ? '<button type="button" class="btn" id="cancelEditWorkout">Cancelar</button>' : '')+
         '</div>'+
       '</div>'+
-      '<div class="card"><div class="card-title">Treinos de '+formatDateLabel(state.currentDate)+' <span class="pill pill-teal">'+fmtNum(dayWorkoutKcal(day))+' kcal</span></div>'+savedList+'</div>';
+      '<div class="card"><div class="card-title">Treinos de '+formatDateLabel(state.currentDate)+' <span class="pill pill-teal">'+fmtNum(dayWorkoutKcal(day))+' kcal</span></div>'+savedList+'</div>'+
+      (function(){
+        var wcY = workoutChartDate.y, wcM = workoutChartDate.m, now = new Date();
+        var wcIsCurrentMonth = (wcY===now.getFullYear() && wcM===now.getMonth()+1);
+        var wcIsCurrentYear = (wcY===now.getFullYear());
+        var wcSeries = workoutChartMode==="month" ? workoutMonthlySeries(wcY,wcM) : workoutYearlySeries(wcY);
+        var wcLabel = workoutChartMode==="month" ? monthLabel(wcY,wcM) : String(wcY);
+        var wcTotal = wcSeries.reduce(function(s,x){return s+x.kcal;},0);
+        var wcNextDisabled = workoutChartMode==="month" ? wcIsCurrentMonth : wcIsCurrentYear;
+        return '<div class="card"><div class="card-title">Histórico de gasto por treino'+
+            '<div class="segmented" id="workoutChartMode" style="width:auto;">'+
+              '<button type="button" data-val="month" class="'+(workoutChartMode==="month"?"active":"")+'">Mês</button>'+
+              '<button type="button" data-val="year" class="'+(workoutChartMode==="year"?"active":"")+'">Ano</button>'+
+            '</div>'+
+          '</div>'+
+          '<div class="month-nav" style="margin-bottom:10px;">'+
+            '<button type="button" class="btn btn-small" id="workoutChartPrev">‹</button>'+
+            '<span class="label">'+esc(wcLabel)+'</span>'+
+            '<button type="button" class="btn btn-small" id="workoutChartNext" '+(wcNextDisabled?"disabled":"")+'>›</button>'+
+          '</div>'+
+          renderMagnitudeBars(wcSeries)+
+          '<p class="muted" style="font-size:.82rem;margin-top:10px;text-align:center;">Total: <b class="num">'+fmtNum(wcTotal)+'</b> kcal</p>'+
+        '</div>';
+      })();
 
+    document.getElementById("workoutChartMode").addEventListener("click", function(e){
+      var b = e.target.closest("button"); if (!b) return;
+      workoutChartMode = b.dataset.val; renderWorkout();
+    });
+    document.getElementById("workoutChartPrev").addEventListener("click", function(){
+      if (workoutChartMode==="month"){ workoutChartDate.m--; if (workoutChartDate.m<1){workoutChartDate.m=12; workoutChartDate.y--;} }
+      else { workoutChartDate.y--; }
+      renderWorkout();
+    });
+    document.getElementById("workoutChartNext").addEventListener("click", function(){
+      if (this.disabled) return;
+      if (workoutChartMode==="month"){ workoutChartDate.m++; if (workoutChartDate.m>12){workoutChartDate.m=1; workoutChartDate.y++;} }
+      else { workoutChartDate.y++; }
+      renderWorkout();
+    });
     document.getElementById("wType").addEventListener("change", function(){ workoutForm.type=this.value; workoutForm.mode="duracao"; renderWorkout(); });
     var modeBtns = document.getElementById("wMode");
     if (modeBtns) modeBtns.addEventListener("click", function(e){ var b=e.target.closest("button"); if (b){ workoutForm.mode=b.dataset.val; renderWorkout(); } });
@@ -1192,7 +1325,8 @@
       } else {
         day.workouts.push(entry);
       }
-      state.isDemo=false; save(); renderWorkout(); renderDashboard();
+      state.isDemo=false; save();
+      flashSaved(this, function(){ renderWorkout(); renderDashboard(); });
     });
     var cancelEditBtn = document.getElementById("cancelEditWorkout");
     if (cancelEditBtn) cancelEditBtn.addEventListener("click", function(){
@@ -1246,9 +1380,9 @@
       calcStepHtml("Meta calórica diária", fmtNum(t.kcal)+" kcal", "", true);
   }
   function calcMemoryMacroHtml(p, t){
-    return calcStepHtml("Proteína — "+t.proteinPerKg+" g/kg × "+fmtNum(t.proteinBaseKg)+" kg"+(t.usingLBM?" de massa magra":" de peso corporal"), fmtNum(t.protein)+" g") +
-      calcStepHtml("Gordura — "+t.fatPerKg+" g/kg × "+fmtNum(p.weightKg)+" kg de peso corporal", fmtNum(t.fat)+" g") +
-      calcStepHtml("Carboidrato — preenche o restante das calorias da meta", fmtNum(t.carb)+" g");
+    return calcStepHtml("Proteína — "+t.proteinPerKg+" g/kg × "+fmtNum(t.proteinBaseKg)+" kg"+(t.usingLBM?" de massa magra":" de peso corporal"), '<span style="color:var(--protein);">'+fmtNum(t.protein)+' g</span>') +
+      calcStepHtml("Gordura — "+t.fatPerKg+" g/kg × "+fmtNum(p.weightKg)+" kg de peso corporal", '<span style="color:var(--fat);">'+fmtNum(t.fat)+' g</span>') +
+      calcStepHtml("Carboidrato — preenche o restante das calorias da meta", '<span style="color:var(--carb);">'+fmtNum(t.carb)+' g</span>');
   }
   function goalBar(pct, color){
     return '<div class="bar"><div class="bar-fill" style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color+';"></div></div>';
@@ -1316,9 +1450,9 @@
       '<div class="card"><div class="card-title">Metas calóricas e de macros</div>'+
         '<div class="target-preview" style="margin:0 0 16px;">'+
           '<div><span class="tv num">'+fmtNum(t.kcal)+'</span><span class="tl">Kcal/dia</span></div>'+
-          '<div><span class="tv num">'+fmtNum(t.protein)+'</span><span class="tl">Prot g</span></div>'+
-          '<div><span class="tv num">'+fmtNum(t.carb)+'</span><span class="tl">Carb g</span></div>'+
-          '<div><span class="tv num">'+fmtNum(t.fat)+'</span><span class="tl">Gord g</span></div>'+
+          '<div><span class="tv num" style="color:var(--protein);">'+fmtNum(t.protein)+'</span><span class="tl">Prot g</span></div>'+
+          '<div><span class="tv num" style="color:var(--carb);">'+fmtNum(t.carb)+'</span><span class="tl">Carb g</span></div>'+
+          '<div><span class="tv num" style="color:var(--fat);">'+fmtNum(t.fat)+'</span><span class="tl">Gord g</span></div>'+
         '</div>'+
         '<div class="calc-memory-title">Memória de cálculo — meta calórica</div>'+
         '<div class="calc-steps">'+calcMemoryKcalHtml(p, t)+'</div>'+
@@ -1336,7 +1470,9 @@
       state.profile.bodyFatTargetPct = (+document.getElementById("metaBodyFatTarget").value) || null;
       state.profile.targetDate = document.getElementById("metaTargetDate").value || null;
       state.profile.weeklyWorkoutGoal = (+document.getElementById("metaWeeklyWorkouts").value) || null;
-      state.isDemo=false; save(); renderAll();
+      state.profile.targets = computeTargets(state.profile);
+      state.isDemo=false; save();
+      flashSaved(this, renderAll);
     });
   }
 
@@ -1675,7 +1811,7 @@
       '<div><span class="tv num">'+fmtNum(t.tmb)+'</span><span class="tl">TMB</span></div>'+
       '<div><span class="tv num">'+fmtNum(t.get)+'</span><span class="tl">GET</span></div>'+
       '<div><span class="tv num">'+fmtNum(t.kcal)+'</span><span class="tl">Meta kcal</span></div>'+
-      '<div><span class="tv num">'+fmtNum(t.carb)+'</span><span class="tl">Carb g</span></div>';
+      '<div><span class="tv num" style="color:var(--carb);">'+fmtNum(t.carb)+'</span><span class="tl">Carb g</span></div>';
     var w = document.getElementById("safetyWarnSlot");
     var warnHtml = (t.safety.belowFloor || t.safety.belowTMB)
       ? '<div class="warn" style="margin-bottom:12px;"><span>⚠️</span><div>'+(t.safety.belowFloor?"Déficit muito agressivo — meta ajustada para o mínimo seguro. ":"")+(t.safety.belowTMB?"A meta ainda fica abaixo da sua TMB.":"")+'</div></div>'
@@ -1741,8 +1877,10 @@
     state.profile = profile;
     state.isDemo=false;
     save();
-    profileOverlay.hidden=true;
-    renderAll();
+    flashSaved(e.target.querySelector('button[type="submit"]'), function(){
+      profileOverlay.hidden=true;
+      renderAll();
+    });
   });
 
   /* ================= INIT ================= */
