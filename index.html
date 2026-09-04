@@ -120,6 +120,10 @@
   .kpi-v{font-size:1.28rem;font-weight:800;line-height:1;letter-spacing:-.01em;}
   .kpi-l{font-size:.6rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
   .kpi-sub{font-size:.58rem;color:var(--text-soft);line-height:1.25;}
+  .kpi-breakdown{margin-top:6px;text-align:left;display:flex;flex-direction:column;gap:3px;}
+  .kpi-breakdown-row{display:flex;align-items:center;gap:4px;font-size:.6rem;color:var(--text-soft);white-space:nowrap;}
+  .kpi-breakdown-row i{width:6px;height:6px;border-radius:50%;flex:0 0 auto;font-style:normal;}
+  .kpi-breakdown-row b{margin-left:auto;color:var(--text);font-weight:700;font-size:.68rem;padding-left:4px;}
   .kpi-progress{margin-top:14px;}
   .kpi-progress-label{display:flex;justify-content:space-between;font-size:.76rem;color:var(--text-soft);margin-bottom:6px;}
   .kpi-progress-label b{color:var(--text);}
@@ -151,6 +155,10 @@
   .item-name{font-weight:600;}
   .item-sub{color:var(--text-soft);font-size:.78rem;}
   .item-kcal{font-weight:700;font-size:1.02rem;min-width:3.6em;text-align:right;}
+  .item-macros{font-size:.72rem;color:var(--text-soft);margin-top:3px;}
+  .item-macros b{color:var(--text);font-weight:600;}
+  .item-kcal-col{text-align:right;}
+  .item-pct{font-size:.66rem;color:var(--text-soft);margin-top:2px;font-weight:600;}
   .item-actions{display:flex;gap:2px;}
   .item-del,.item-edit{border:none;background:transparent;color:var(--text-soft);cursor:pointer;width:24px;height:24px;border-radius:50%;font-size:1rem;flex:0 0 auto;}
   .item-del:hover{background:var(--line);color:var(--coral);}
@@ -509,21 +517,40 @@
     var activityEntry = ACTIVITY.filter(function(a){return a.key===p.activity;})[0] || ACTIVITY.filter(function(a){return a.key==="moderado";})[0];
     var act = activityEntry.factor;
     var get = tmb*act;
-    var kcal, safety={belowFloor:false, belowTMB:false}, adjustmentKcal=0, adjustmentLabel="";
+    var kcal, safety={belowFloor:false, belowTMB:false}, adjustmentKcal=0, adjustmentLabel="", usingGoalBased=false;
+    var floor = p.sex==="M" ? 1500 : 1200;
+
+    var goalDailyAdjustment = null;
+    if (p.goal!=="manutencao" && p.targetWeightKg && p.bodyFatTargetPct!=null && p.bodyFatPct!=null && p.targetDate){
+      var daysLeft = Math.round((parseISODate(p.targetDate) - parseISODate(todayISO())) / 86400000);
+      if (daysLeft > 0){
+        var currentFatMass = p.weightKg * (p.bodyFatPct/100);
+        var targetFatMass = p.targetWeightKg * (p.bodyFatTargetPct/100);
+        var fatChangeKg = targetFatMass - currentFatMass;
+        goalDailyAdjustment = (fatChangeKg * 7700) / daysLeft;
+      }
+    }
+
     if (p.goal==="manutencao"){
       kcal = get;
       adjustmentLabel = "Sem ajuste — meta de manutenção";
+    } else if (goalDailyAdjustment!=null){
+      usingGoalBased = true;
+      var rawGoal = get + goalDailyAdjustment;
+      if (rawGoal < floor){ safety.belowFloor = true; kcal = floor; }
+      else { kcal = rawGoal; }
+      if (kcal < tmb) safety.belowTMB = true;
+      adjustmentLabel = (goalDailyAdjustment>=0?"Superávit":"Déficit")+" de "+Math.abs(Math.round(goalDailyAdjustment))+" kcal/dia — calculado a partir da sua meta de "+p.targetWeightKg+" kg e "+p.bodyFatTargetPct+"% de gordura até "+new Intl.DateTimeFormat("pt-BR").format(parseISODate(p.targetDate))+(safety.belowFloor?" (ajustado ao mínimo seguro)":"");
     } else if (p.goal==="emagrecimento"){
       var deficitKcal = DEFICIT_KCAL[p.pace] || 500;
       var raw = get - deficitKcal;
-      var floor = p.sex==="M" ? 1500 : 1200;
       if (raw < floor){ safety.belowFloor = true; kcal = floor; adjustmentLabel = "Déficit ajustado ao mínimo seguro"; }
-      else { kcal = raw; adjustmentLabel = "Déficit de "+deficitKcal+" kcal/dia (ritmo "+p.pace+")"; }
+      else { kcal = raw; adjustmentLabel = "Déficit de "+deficitKcal+" kcal/dia (ritmo "+p.pace+") — defina peso-meta, % de gordura-meta e data-meta para um cálculo personalizado"; }
       if (kcal < tmb) safety.belowTMB = true;
     } else {
       var pct2 = SURPLUS_PCT[p.pace] || .10;
       kcal = get*(1+pct2);
-      adjustmentLabel = "Superávit de "+Math.round(pct2*100)+"% (ritmo "+p.pace+")";
+      adjustmentLabel = "Superávit de "+Math.round(pct2*100)+"% (ritmo "+p.pace+") — defina peso-meta, % de gordura-meta e data-meta para um cálculo personalizado";
     }
     kcal = Math.round(kcal);
     adjustmentKcal = kcal - Math.round(get);
@@ -535,7 +562,7 @@
     var carb = Math.max(0, Math.round((kcal - protein*4 - fat*9)/4));
     return {
       tmb:Math.round(tmb), get:Math.round(get), kcal:kcal, protein:protein, fat:fat, carb:carb, safety:safety,
-      usingLBM: lbm!=null, leanMassKg: lbm!=null?Math.round(lbm*10)/10:null,
+      usingLBM: lbm!=null, leanMassKg: lbm!=null?Math.round(lbm*10)/10:null, usingGoalBased: usingGoalBased,
       activityFactor: act, activityLabel: activityEntry.label,
       adjustmentKcal: adjustmentKcal, adjustmentLabel: adjustmentLabel,
       proteinPerKg: proteinPerKg, proteinBaseKg: Math.round(proteinBaseKg*10)/10, fatPerKg: fatPerKg
@@ -791,8 +818,11 @@
             '<div class="kpi-v num" style="color:var(--blue);">'+fmtNum(targets.kcal)+'</div><div class="kpi-l">Meta</div>'+
           '</div>'+
           '<div class="kpi-cell" style="border-top-color:var(--teal);">'+
-            '<div class="kpi-v num" style="color:var(--teal);">'+fmtNum(targets.tmb+burn)+'</div><div class="kpi-l">Gasto</div>'+
-            '<div class="kpi-sub num">'+fmtNum(targets.tmb)+' parado + '+fmtNum(burn)+' exerc.</div>'+
+            '<div class="kpi-v num" style="color:var(--teal);">'+fmtNum(targets.tmb+burn)+'</div><div class="kpi-l">Gasto total</div>'+
+            '<div class="kpi-breakdown">'+
+              '<div class="kpi-breakdown-row"><i style="background:var(--blue-light);"></i><span>Parado</span><b class="num">'+fmtNum(targets.tmb)+'</b></div>'+
+              '<div class="kpi-breakdown-row"><i style="background:var(--teal);"></i><span>Exerc.</span><b class="num">'+fmtNum(burn)+'</b></div>'+
+            '</div>'+
           '</div>'+
           '<div class="kpi-cell" style="border-top-color:var(--orange);">'+
             '<div class="kpi-v num" style="color:var(--orange);">'+fmtNum(food.kcal)+'</div><div class="kpi-l">Consumo</div>'+
@@ -931,9 +961,13 @@
   });
   function itemRowHtml(it, mealKey, isDraft){
     var editBtn = !isDraft ? '<button type="button" class="item-edit" data-edit="'+mealKey+'|'+it.id+'" aria-label="Editar '+esc(it.name)+'">✎</button>' : '';
+    var targetKcal = state.profile.targets.kcal;
+    var pctGoal = targetKcal>0 ? Math.round((it.kcal/targetKcal)*100) : 0;
     return '<div class="item-row'+(isDraft?" draft":"")+'">'+
-      '<div><div class="item-name">'+esc(it.name)+'</div>'+(it.grams?'<div class="item-sub">'+fmtNum(it.grams)+' g</div>':'')+'</div>'+
-      '<div class="item-kcal num">'+fmtNum(it.kcal)+' kcal</div>'+
+      '<div><div class="item-name">'+esc(it.name)+'</div>'+(it.grams?'<div class="item-sub">'+fmtNum(it.grams)+' g</div>':'')+
+        '<div class="item-macros">P <b class="num">'+fmtNum(it.protein)+'</b>g · C <b class="num">'+fmtNum(it.carbs)+'</b>g · G <b class="num">'+fmtNum(it.fat)+'</b>g</div>'+
+      '</div>'+
+      '<div class="item-kcal-col"><div class="item-kcal num">'+fmtNum(it.kcal)+' kcal</div><div class="item-pct num">'+pctGoal+'% da meta</div></div>'+
       '<div class="item-actions">'+editBtn+'<button type="button" class="item-del" data-del="'+(isDraft?"draft":"saved")+'|'+it.id+'" aria-label="Remover '+esc(it.name)+'">×</button></div>'+
     '</div>';
   }
@@ -1615,7 +1649,7 @@
     sel.innerHTML = options.map(function(o){ return '<option value="'+o.key+'"'+(o.key===currentKey?" selected":"")+'>'+o.label+'</option>'; }).join("");
   }
   function readProfileForm(){
-    return {
+    return Object.assign({}, state.profile, {
       name: document.getElementById("pName").value.trim() || "Você",
       age: +document.getElementById("pAge").value || 30,
       sex: selectedSex,
@@ -1632,7 +1666,7 @@
         proteinG: (+document.getElementById("pProteinG").value) || null,
         fatG: (+document.getElementById("pFatG").value) || null
       }
-    };
+    });
   }
   function refreshProfilePreview(){
     var p = readProfileForm();
