@@ -109,18 +109,22 @@
   .warn{display:flex;gap:10px;align-items:flex-start;background:color-mix(in srgb, var(--coral) 10%, var(--surface));border:1px solid color-mix(in srgb, var(--coral) 35%, transparent);border-radius:12px;padding:12px 14px;font-size:.84rem;}
   .warn strong{color:var(--coral);}
 
-  .hero{display:grid;grid-template-columns:1fr;gap:16px;}
-  @media (min-width:640px){.hero{grid-template-columns:1.15fr 1fr;}}
   .hero-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-  .hero-subtitle{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-soft);margin:14px 0 8px;}
-  .hero-stats-sub{grid-template-columns:repeat(3,1fr);}
-  .stat-sm .sv{font-size:1.2rem;}
   .stat{background:var(--bg);border-radius:12px;padding:10px 12px;}
   .stat .sv{font-size:1.5rem;font-weight:800;line-height:1;}
   .stat .sl{font-size:.72rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
-  .ring-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;}
-  .ring-num{font-size:2.1rem;font-weight:800;line-height:1;}
-  .ring-sub{font-size:.78rem;color:var(--text-soft);text-align:center;}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .kpi{background:var(--bg);border-radius:12px;padding:10px 6px;text-align:center;}
+  .kpi-v{font-size:1.12rem;font-weight:800;line-height:1;}
+  .kpi-l{font-size:.64rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.03em;margin-top:4px;}
+  .kpi-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.72rem;color:var(--text-soft);margin-top:10px;}
+  .kpi-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .kpi-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;font-style:normal;}
+  .consumo-block{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);text-align:center;}
+  .consumo-num{font-size:2.6rem;font-weight:800;line-height:1;}
+  .consumo-label{font-size:.76rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
+  .consumo-sub{font-size:.84rem;color:var(--text-soft);margin-top:12px;}
 
   .macro-row{padding:9px 0;border-top:1px solid var(--line);}
   .macro-row:first-of-type{border-top:none;padding-top:0;}
@@ -782,25 +786,24 @@
         '</div>'+
       '</div>'+
       safetyHtml+
-      '<div class="card hero">'+
-        '<div>'+
-          '<div class="card-title">Balanço do dia</div>'+
-          '<div class="hero-stats">'+
-            '<div class="stat"><div class="sv num">'+fmtNum(targets.kcal)+'</div><div class="sl">Meta (kcal)</div></div>'+
-            '<div class="stat"><div class="sv num">'+fmtNum(food.kcal)+'</div><div class="sl">Consumido</div></div>'+
-          '</div>'+
-          '<div class="hero-subtitle">Gasto calórico de hoje</div>'+
-          '<div class="hero-stats hero-stats-sub">'+
-            '<div class="stat stat-sm"><div class="sv num">'+fmtNum(targets.tmb)+'</div><div class="sl">Parado (TMB)</div></div>'+
-            '<div class="stat stat-sm"><div class="sv num" style="color:var(--teal);">'+fmtNum(burn)+'</div><div class="sl">Exercício</div></div>'+
-            '<div class="stat stat-sm"><div class="sv num" style="color:var(--orange);">'+fmtNum(targets.tmb+burn)+'</div><div class="sl">Total</div></div>'+
-          '</div>'+
+      '<div class="card">'+
+        '<div class="card-title">Balanço do dia</div>'+
+        '<div class="kpi-row">'+
+          '<div class="kpi"><div class="kpi-v num" style="color:var(--blue);">'+fmtNum(targets.kcal)+'</div><div class="kpi-l">Meta</div></div>'+
+          '<div class="kpi"><div class="kpi-v num" style="color:var(--teal);">'+fmtNum(targets.tmb)+'</div><div class="kpi-l">Parado</div></div>'+
+          '<div class="kpi"><div class="kpi-v num" style="color:var(--teal);">'+fmtNum(burn)+'</div><div class="kpi-l">Exercício</div></div>'+
+          '<div class="kpi"><div class="kpi-v num" style="color:var(--teal);">'+fmtNum(targets.tmb+burn)+'</div><div class="kpi-l">Total gasto</div></div>'+
         '</div>'+
-        '<div class="ring-wrap">'+
-          '<div class="ring-num num" style="color:'+color+';">'+pct+'%</div>'+
-          '<div class="ring-sub">'+(restante>=0 ? fmtNum(restante)+" kcal para bater sua meta de hoje" : "Você já passou "+fmtNum(Math.abs(restante))+" kcal da meta ajustada de hoje")+'</div>'+
-          '<div class="bar" style="width:100%;"><div class="bar-fill" style="width:'+Math.min(100,pct)+'%;background:'+color+';"></div></div>'+
-          '<div class="sl" style="margin-top:6px;">Saldo restante: <b class="num" style="color:'+(restante<0?"var(--coral)":"var(--text)")+';">'+fmtSigned(restante)+'</b></div>'+
+        '<div class="kpi-legend">'+
+          '<span><i style="background:var(--blue);"></i>Meta</span>'+
+          '<span><i style="background:var(--teal);"></i>Gasto</span>'+
+          '<span><i style="background:var(--orange);"></i>Consumo</span>'+
+        '</div>'+
+        '<div class="consumo-block">'+
+          '<div class="consumo-num num" style="color:var(--orange);">'+fmtNum(food.kcal)+'</div>'+
+          '<div class="consumo-label">kcal consumidas hoje</div>'+
+          '<div class="bar" style="margin-top:14px;"><div class="bar-fill" style="width:'+Math.min(100,pct)+'%;background:'+color+';"></div></div>'+
+          '<div class="consumo-sub"><b class="num">'+pct+'%</b> da meta ajustada de <b class="num">'+fmtNum(metaAjustada)+'</b> kcal — '+(restante>=0 ? '<b class="num">'+fmtNum(restante)+'</b> kcal restantes' : '<b class="num" style="color:var(--coral);">'+fmtNum(Math.abs(restante))+'</b> kcal acima da meta')+'</div>'+
         '</div>'+
       '</div>'+
       '<div class="card">'+
