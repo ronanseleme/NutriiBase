@@ -112,6 +112,9 @@
   .hero{display:grid;grid-template-columns:1fr;gap:16px;}
   @media (min-width:640px){.hero{grid-template-columns:1.15fr 1fr;}}
   .hero-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .hero-subtitle{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-soft);margin:14px 0 8px;}
+  .hero-stats-sub{grid-template-columns:repeat(3,1fr);}
+  .stat-sm .sv{font-size:1.2rem;}
   .stat{background:var(--bg);border-radius:12px;padding:10px 12px;}
   .stat .sv{font-size:1.5rem;font-weight:800;line-height:1;}
   .stat .sl{font-size:.72rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
@@ -146,8 +149,11 @@
   .item-name{font-weight:600;}
   .item-sub{color:var(--text-soft);font-size:.78rem;}
   .item-kcal{font-weight:700;font-size:1.02rem;min-width:3.6em;text-align:right;}
-  .item-del{border:none;background:transparent;color:var(--text-soft);cursor:pointer;width:24px;height:24px;border-radius:50%;font-size:1rem;}
+  .item-actions{display:flex;gap:2px;}
+  .item-del,.item-edit{border:none;background:transparent;color:var(--text-soft);cursor:pointer;width:24px;height:24px;border-radius:50%;font-size:1rem;flex:0 0 auto;}
   .item-del:hover{background:var(--line);color:var(--coral);}
+  .item-edit{font-size:.82rem;}
+  .item-edit:hover{background:var(--line);color:var(--blue);}
   .section-empty{color:var(--text-soft);font-style:italic;font-size:.85rem;padding:8px 0;}
   .draft-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--orange);font-weight:800;margin:10px 0 6px;}
 
@@ -621,6 +627,10 @@
         if (parsed && parsed.profile && parsed.logs){
           if (!parsed.currentDate) parsed.currentDate = todayISO();
           if (!parsed.ui) parsed.ui = {tab:"dashboard", foodMeal:"cafeDaManha"};
+          // Always recompute targets fresh — a profile saved by an older version of
+          // the app may have a stored `targets` object missing fields the current
+          // calculation (and the Metas screen) expects.
+          parsed.profile.targets = computeTargets(parsed.profile);
           state = parsed;
           return;
         }
@@ -631,6 +641,8 @@
   }
   function uid(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "id-"+Date.now()+"-"+Math.random().toString(16).slice(2); }
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function fmtNum(n){ return Number(n||0).toLocaleString("pt-BR", {maximumFractionDigits:1}); }
+  function fmtSigned(n){ n=Number(n||0); return (n>=0?"+":"")+fmtNum(n); }
 
   /* ---------- totals ---------- */
   function mealTotals(items){
@@ -704,8 +716,8 @@
     var bars = series.map(function(s){
       var h = s.saldo!=null ? Math.max(3, Math.round((Math.abs(s.saldo)/maxAbs)*60)) : 2;
       var color = s.saldo==null ? "var(--line)" : (s.saldo>0 ? "var(--coral)" : "var(--teal)");
-      var title = s.saldo!=null ? (s.label+": "+(s.saldo>0?"+":"")+s.saldo+" kcal") : (s.label+": sem dado");
-      var valLabel = s.saldo!=null ? '<div class="val-label">'+(s.saldo>0?"+":"")+s.saldo+'</div>' : '<div class="val-label">&nbsp;</div>';
+      var title = s.saldo!=null ? (s.label+": "+fmtSigned(s.saldo)+" kcal") : (s.label+": sem dado");
+      var valLabel = s.saldo!=null ? '<div class="val-label">'+fmtSigned(s.saldo)+'</div>' : '<div class="val-label">&nbsp;</div>';
       return '<div class="bar-col" title="'+esc(title)+'">'+valLabel+'<div class="fill" style="height:'+h+'px;background:'+color+';"></div><div class="bx-label">'+esc(s.label)+'</div></div>';
     }).join("");
     return '<div class="chart-bars">'+bars+'</div>'+
@@ -774,16 +786,21 @@
         '<div>'+
           '<div class="card-title">Balanço do dia</div>'+
           '<div class="hero-stats">'+
-            '<div class="stat"><div class="sv num">'+targets.kcal+'</div><div class="sl">Meta (kcal)</div></div>'+
-            '<div class="stat"><div class="sv num">'+food.kcal+'</div><div class="sl">Consumido</div></div>'+
-            '<div class="stat"><div class="sv num" style="color:var(--teal);">'+burn+'</div><div class="sl">Gasto exercício</div></div>'+
-            '<div class="stat"><div class="sv num" style="color:'+(restante<0?"var(--coral)":"var(--text)")+';">'+(restante>=0?"+":"")+restante+'</div><div class="sl">Saldo restante</div></div>'+
+            '<div class="stat"><div class="sv num">'+fmtNum(targets.kcal)+'</div><div class="sl">Meta (kcal)</div></div>'+
+            '<div class="stat"><div class="sv num">'+fmtNum(food.kcal)+'</div><div class="sl">Consumido</div></div>'+
+          '</div>'+
+          '<div class="hero-subtitle">Gasto calórico de hoje</div>'+
+          '<div class="hero-stats hero-stats-sub">'+
+            '<div class="stat stat-sm"><div class="sv num">'+fmtNum(targets.tmb)+'</div><div class="sl">Parado (TMB)</div></div>'+
+            '<div class="stat stat-sm"><div class="sv num" style="color:var(--teal);">'+fmtNum(burn)+'</div><div class="sl">Exercício</div></div>'+
+            '<div class="stat stat-sm"><div class="sv num" style="color:var(--orange);">'+fmtNum(targets.tmb+burn)+'</div><div class="sl">Total</div></div>'+
           '</div>'+
         '</div>'+
         '<div class="ring-wrap">'+
           '<div class="ring-num num" style="color:'+color+';">'+pct+'%</div>'+
-          '<div class="ring-sub">'+(restante>=0 ? esc(String(restante))+" kcal para bater sua meta de hoje" : "Você já passou "+Math.abs(restante)+" kcal da meta ajustada de hoje")+'</div>'+
+          '<div class="ring-sub">'+(restante>=0 ? fmtNum(restante)+" kcal para bater sua meta de hoje" : "Você já passou "+fmtNum(Math.abs(restante))+" kcal da meta ajustada de hoje")+'</div>'+
           '<div class="bar" style="width:100%;"><div class="bar-fill" style="width:'+Math.min(100,pct)+'%;background:'+color+';"></div></div>'+
+          '<div class="sl" style="margin-top:6px;">Saldo restante: <b class="num" style="color:'+(restante<0?"var(--coral)":"var(--text)")+';">'+fmtSigned(restante)+'</b></div>'+
         '</div>'+
       '</div>'+
       '<div class="card">'+
@@ -836,8 +853,8 @@
     var pct = target>0 ? Math.min(100, Math.round((consumed/target)*100)) : 0;
     var over = target>0 && consumed>target;
     var fill = over ? "var(--coral)" : "var(--teal)";
-    var extra = over ? ' <span style="color:var(--coral);">(+'+(consumed-target)+' g)</span>' : "";
-    return '<div class="macro-row"><div class="macro-line"><span class="label">'+label+'</span><span class="vals">'+consumed+' / '+target+' g'+extra+'</span></div><div class="bar"><div class="bar-fill" style="width:'+pct+'%;background:'+fill+';"></div></div></div>';
+    var extra = over ? ' <span style="color:var(--coral);">(+'+fmtNum(consumed-target)+' g)</span>' : "";
+    return '<div class="macro-row"><div class="macro-line"><span class="label">'+label+'</span><span class="vals">'+fmtNum(consumed)+' / '+fmtNum(target)+' g'+extra+'</span></div><div class="bar"><div class="bar-fill" style="width:'+pct+'%;background:'+fill+';"></div></div></div>';
   }
 
   function changeDate(delta){
@@ -852,7 +869,7 @@
     var active = state.ui.foodMeal || "cafeDaManha";
     var tabsHtml = MEALS.map(function(m){
       var t = mealTotals(day.meals[m.key]);
-      return '<button type="button" class="meal-chip'+(m.key===active?" active":"")+'" data-meal="'+m.key+'">'+m.label+' <span class="ct">'+t.kcal+'</span></button>';
+      return '<button type="button" class="meal-chip'+(m.key===active?" active":"")+'" data-meal="'+m.key+'">'+m.label+' <span class="ct">'+fmtNum(t.kcal)+'</span></button>';
     }).join("");
 
     var saved = day.meals[active] || [];
@@ -888,6 +905,14 @@
     });
   }
   document.getElementById("view-food").addEventListener("click", function(e){
+    var editBtn = e.target.closest("[data-edit]");
+    if (editBtn){
+      var eparts = editBtn.dataset.edit.split("|");
+      var eday = ensureDay(state.currentDate);
+      var eitem = (eday.meals[eparts[0]]||[]).filter(function(it){ return it.id===eparts[1]; })[0];
+      if (eitem) openFoodModal(eparts[0], eitem);
+      return;
+    }
     var del = e.target.closest("[data-del]");
     if (!del) return;
     var day = ensureDay(state.currentDate);
@@ -902,26 +927,46 @@
     renderFood(); renderDashboard();
   });
   function itemRowHtml(it, mealKey, isDraft){
+    var editBtn = !isDraft ? '<button type="button" class="item-edit" data-edit="'+mealKey+'|'+it.id+'" aria-label="Editar '+esc(it.name)+'">✎</button>' : '';
     return '<div class="item-row'+(isDraft?" draft":"")+'">'+
-      '<div><div class="item-name">'+esc(it.name)+'</div>'+(it.grams?'<div class="item-sub">'+it.grams+' g</div>':'')+'</div>'+
-      '<div class="item-kcal num">'+it.kcal+' kcal</div>'+
-      '<button type="button" class="item-del" data-del="'+(isDraft?"draft":"saved")+'|'+it.id+'" aria-label="Remover '+esc(it.name)+'">×</button>'+
+      '<div><div class="item-name">'+esc(it.name)+'</div>'+(it.grams?'<div class="item-sub">'+fmtNum(it.grams)+' g</div>':'')+'</div>'+
+      '<div class="item-kcal num">'+fmtNum(it.kcal)+' kcal</div>'+
+      '<div class="item-actions">'+editBtn+'<button type="button" class="item-del" data-del="'+(isDraft?"draft":"saved")+'|'+it.id+'" aria-label="Remover '+esc(it.name)+'">×</button></div>'+
     '</div>';
   }
 
   /* --- food modal --- */
   var foodOverlay = document.getElementById("foodOverlay");
-  var addingMeal=null, selectedFood=null, foodMode="db", aiResultApplied=false;
-  function openFoodModal(mealKey){
+  var addingMeal=null, selectedFood=null, foodMode="db", aiResultApplied=false, editingFoodRef=null;
+  function openFoodModal(mealKey, editItem){
     addingMeal=mealKey; selectedFood=null; aiResultApplied=false;
-    document.getElementById("foodSub").textContent = "Adicionando a: "+(MEALS.filter(function(m){return m.key===mealKey;})[0]||{}).label;
+    editingFoodRef = editItem ? {mealKey:mealKey, itemId:editItem.id} : null;
+    document.getElementById("foodTitle").textContent = editItem ? "Editar alimento" : "Adicionar alimento";
+    document.getElementById("foodSub").textContent = (editItem?"Editando em: ":"Adicionando a: ")+(MEALS.filter(function(m){return m.key===mealKey;})[0]||{}).label;
+    document.getElementById("confirmFood").textContent = editItem ? "Salvar alterações" : "Adicionar ao rascunho";
     document.getElementById("foodSearch").value="";
     document.getElementById("selectedFoodSlot").innerHTML="";
     document.getElementById("aiFoodInput").value="";
     document.getElementById("aiFoodResult").innerHTML="";
     ["cName","cKcal","cProt","cCarb","cFat"].forEach(function(id){ document.getElementById(id).value=""; });
     renderFoodResults("");
-    setFoodMode("db");
+    if (editItem){
+      var dbMatch = editItem.grams!=null ? FOODS.filter(function(f){return f.name===editItem.name;})[0] : null;
+      if (dbMatch){
+        selectedFood = {base:dbMatch, grams:editItem.grams};
+        renderSelectedFood();
+        setFoodMode("db");
+      } else {
+        document.getElementById("cName").value = editItem.name;
+        document.getElementById("cKcal").value = editItem.kcal;
+        document.getElementById("cProt").value = editItem.protein;
+        document.getElementById("cCarb").value = editItem.carbs;
+        document.getElementById("cFat").value = editItem.fat;
+        setFoodMode("manual");
+      }
+    } else {
+      setFoodMode("db");
+    }
     foodOverlay.hidden=false;
     document.getElementById("foodSearch").focus();
   }
@@ -1017,22 +1062,33 @@
   foodOverlay.addEventListener("click", function(e){ if (e.target===foodOverlay) foodOverlay.hidden=true; });
   document.getElementById("confirmFood").addEventListener("click", function(){
     var entry;
+    var keepId = editingFoodRef ? editingFoodRef.itemId : uid();
     if (foodMode==="db"){
       if (!selectedFood) return;
       var m = scaledFood(selectedFood.base, selectedFood.grams);
-      entry = {id:uid(), name:selectedFood.base.name, grams:selectedFood.grams, kcal:m.kcal, protein:m.protein, carbs:m.carbs, fat:m.fat};
+      entry = {id:keepId, name:selectedFood.base.name, grams:selectedFood.grams, kcal:m.kcal, protein:m.protein, carbs:m.carbs, fat:m.fat};
     } else {
-      entry = {id:uid(), name:document.getElementById("cName").value.trim(), grams:null,
+      entry = {id:keepId, name:document.getElementById("cName").value.trim(), grams:null,
         kcal:Math.round(+document.getElementById("cKcal").value||0), protein:Math.round(+document.getElementById("cProt").value||0),
         carbs:Math.round(+document.getElementById("cCarb").value||0), fat:Math.round(+document.getElementById("cFat").value||0)};
     }
-    draft[addingMeal] = (draft[addingMeal]||[]).concat([entry]);
+    if (editingFoodRef){
+      var day = ensureDay(state.currentDate);
+      var arr = day.meals[editingFoodRef.mealKey];
+      var idx = arr.map(function(it){return it.id;}).indexOf(editingFoodRef.itemId);
+      if (idx!==-1) arr[idx] = entry;
+      state.isDemo=false; save();
+    } else {
+      draft[addingMeal] = (draft[addingMeal]||[]).concat([entry]);
+    }
     foodOverlay.hidden=true;
     renderFood();
+    renderDashboard();
   });
 
   /* ================= WORKOUT ================= */
   var workoutForm = {type:"musculacao", mode:"duracao", durationMin:30, intensity:"moderada", distanceKm:5, paceMinKm:6, note:""};
+  var editingWorkoutId = null;
   function updateWorkoutEstimate(){
     var el = document.getElementById("workoutEstimateVal");
     if (el) el.textContent = computeWorkoutKcal(workoutForm, state.profile.weightKg) + " kcal";
@@ -1063,20 +1119,23 @@
     var savedList = (day.workouts||[]).length
       ? day.workouts.map(function(w){
           var sub = w.mode==="distancia" ? (w.distanceKm+" km · pace "+w.paceMinKm+" min/km") : ((w.durationMin||0)+" min · "+(w.intensity||""));
-          return '<div class="item-row"><div><div class="item-name">'+esc((WORKOUT_TYPES.filter(function(t){return t.key===w.type;})[0]||{}).label||w.type)+'</div><div class="item-sub">'+esc(sub)+(w.note?" · "+esc(w.note):"")+'</div></div><div class="item-kcal num">'+w.kcal+' kcal</div><button type="button" class="item-del" data-delw="'+w.id+'" aria-label="Remover treino">×</button></div>';
+          return '<div class="item-row"><div><div class="item-name">'+esc((WORKOUT_TYPES.filter(function(t){return t.key===w.type;})[0]||{}).label||w.type)+'</div><div class="item-sub">'+esc(sub)+(w.note?" · "+esc(w.note):"")+'</div></div><div class="item-kcal num">'+fmtNum(w.kcal)+' kcal</div><div class="item-actions"><button type="button" class="item-edit" data-editw="'+w.id+'" aria-label="Editar treino">✎</button><button type="button" class="item-del" data-delw="'+w.id+'" aria-label="Remover treino">×</button></div></div>';
         }).join("")
       : '<div class="section-empty">Nenhum treino registrado hoje.</div>';
 
     document.getElementById("view-workout").innerHTML =
-      '<div class="card"><div class="card-title">Registrar treino</div>'+
+      '<div class="card"><div class="card-title">'+(editingWorkoutId?"Editar treino":"Registrar treino")+'</div>'+
         '<div class="field"><label for="wType">Tipo de atividade</label><select id="wType">'+typeOptions+'</select></div>'+
         modeToggle+
         '<div style="margin-top:10px;">'+fieldsHtml+'</div>'+
         '<div class="field"><label for="wNote">Observações (opcional)</label><textarea id="wNote" placeholder="Ex: treino de perna, RPE 8">'+esc(workoutForm.note)+'</textarea></div>'+
-        '<div class="estimate-box"><span class="muted">Gasto estimado</span><span class="ev num" id="workoutEstimateVal">'+kcalEstimate+' kcal</span></div>'+
-        '<button type="button" class="btn btn-primary btn-block" id="saveWorkoutBtn">Salvar treino</button>'+
+        '<div class="estimate-box"><span class="muted">Gasto estimado</span><span class="ev num" id="workoutEstimateVal">'+fmtNum(kcalEstimate)+' kcal</span></div>'+
+        '<div style="display:flex;gap:8px;">'+
+          '<button type="button" class="btn btn-primary btn-block" id="saveWorkoutBtn">'+(editingWorkoutId?"Salvar alterações":"Salvar treino")+'</button>'+
+          (editingWorkoutId ? '<button type="button" class="btn" id="cancelEditWorkout">Cancelar</button>' : '')+
+        '</div>'+
       '</div>'+
-      '<div class="card"><div class="card-title">Treinos de '+formatDateLabel(state.currentDate)+' <span class="pill pill-teal">'+dayWorkoutKcal(day)+' kcal</span></div>'+savedList+'</div>';
+      '<div class="card"><div class="card-title">Treinos de '+formatDateLabel(state.currentDate)+' <span class="pill pill-teal">'+fmtNum(dayWorkoutKcal(day))+' kcal</span></div>'+savedList+'</div>';
 
     document.getElementById("wType").addEventListener("change", function(){ workoutForm.type=this.value; workoutForm.mode="duracao"; renderWorkout(); });
     var modeBtns = document.getElementById("wMode");
@@ -1088,15 +1147,39 @@
     var paceEl=document.getElementById("wPace"); if (paceEl) paceEl.addEventListener("input", function(){ workoutForm.paceMinKm=+this.value||0; updateWorkoutEstimate(); });
     document.getElementById("wNote").addEventListener("input", function(){ workoutForm.note=this.value; });
     document.getElementById("saveWorkoutBtn").addEventListener("click", function(){
-      var entry = Object.assign({id:uid(), kcal:computeWorkoutKcal(workoutForm, state.profile.weightKg)}, workoutForm);
-      day.workouts.push(entry);
+      var entry = Object.assign({id: editingWorkoutId || uid(), kcal:computeWorkoutKcal(workoutForm, state.profile.weightKg)}, workoutForm);
+      if (editingWorkoutId){
+        var idx = day.workouts.map(function(w){return w.id;}).indexOf(editingWorkoutId);
+        if (idx!==-1) day.workouts[idx] = entry;
+        editingWorkoutId = null;
+      } else {
+        day.workouts.push(entry);
+      }
       state.isDemo=false; save(); renderWorkout(); renderDashboard();
+    });
+    var cancelEditBtn = document.getElementById("cancelEditWorkout");
+    if (cancelEditBtn) cancelEditBtn.addEventListener("click", function(){
+      editingWorkoutId = null;
+      workoutForm = {type:"musculacao", mode:"duracao", durationMin:30, intensity:"moderada", distanceKm:5, paceMinKm:6, note:""};
+      renderWorkout();
     });
   }
   document.getElementById("view-workout").addEventListener("click", function(e){
+    var editBtn = e.target.closest("[data-editw]");
+    if (editBtn){
+      var eday = ensureDay(state.currentDate);
+      var w = (eday.workouts||[]).filter(function(x){ return x.id===editBtn.dataset.editw; })[0];
+      if (w){
+        editingWorkoutId = w.id;
+        workoutForm = {type:w.type, mode:w.mode||"duracao", durationMin:w.durationMin||30, intensity:w.intensity||"moderada", distanceKm:w.distanceKm||5, paceMinKm:w.paceMinKm||6, note:w.note||""};
+        renderWorkout();
+      }
+      return;
+    }
     var b = e.target.closest("[data-delw]"); if (!b) return;
     var day = ensureDay(state.currentDate);
     day.workouts = day.workouts.filter(function(w){ return w.id!==b.dataset.delw; });
+    if (editingWorkoutId===b.dataset.delw) editingWorkoutId=null;
     state.isDemo=false; save(); renderWorkout(); renderDashboard();
   });
 
@@ -1119,16 +1202,16 @@
     '</div>';
   }
   function calcMemoryKcalHtml(p, t){
-    var tmbFormula = t.usingLBM ? ("Katch-McArdle — usa sua massa magra estimada de "+t.leanMassKg+" kg") : "Harris-Benedict (revisada)";
-    return calcStepHtml("TMB — o que seu corpo gasta parado, em repouso", t.tmb+" kcal", "Fórmula: "+tmbFormula) +
-      calcStepHtml("× Fator de atividade — "+esc(t.activityLabel), "GET "+t.get+" kcal", "GET = Gasto Energético Total (TMB × "+t.activityFactor+")") +
-      calcStepHtml(esc(t.adjustmentLabel), (t.adjustmentKcal>=0?"+":"")+t.adjustmentKcal+" kcal") +
-      calcStepHtml("Meta calórica diária", t.kcal+" kcal", "", true);
+    var tmbFormula = t.usingLBM ? ("Katch-McArdle — usa sua massa magra estimada de "+fmtNum(t.leanMassKg)+" kg") : "Harris-Benedict (revisada)";
+    return calcStepHtml("TMB — o que seu corpo gasta parado, em repouso", fmtNum(t.tmb)+" kcal", "Fórmula: "+tmbFormula) +
+      calcStepHtml("× Fator de atividade — "+esc(t.activityLabel), "GET "+fmtNum(t.get)+" kcal", "GET = Gasto Energético Total (TMB × "+t.activityFactor+")") +
+      calcStepHtml(esc(t.adjustmentLabel), fmtSigned(t.adjustmentKcal)+" kcal") +
+      calcStepHtml("Meta calórica diária", fmtNum(t.kcal)+" kcal", "", true);
   }
   function calcMemoryMacroHtml(p, t){
-    return calcStepHtml("Proteína — "+t.proteinPerKg+" g/kg × "+t.proteinBaseKg+" kg"+(t.usingLBM?" de massa magra":" de peso corporal"), t.protein+" g") +
-      calcStepHtml("Gordura — "+t.fatPerKg+" g/kg × "+p.weightKg+" kg de peso corporal", t.fat+" g") +
-      calcStepHtml("Carboidrato — preenche o restante das calorias da meta", t.carb+" g");
+    return calcStepHtml("Proteína — "+t.proteinPerKg+" g/kg × "+fmtNum(t.proteinBaseKg)+" kg"+(t.usingLBM?" de massa magra":" de peso corporal"), fmtNum(t.protein)+" g") +
+      calcStepHtml("Gordura — "+t.fatPerKg+" g/kg × "+fmtNum(p.weightKg)+" kg de peso corporal", fmtNum(t.fat)+" g") +
+      calcStepHtml("Carboidrato — preenche o restante das calorias da meta", fmtNum(t.carb)+" g");
   }
   function goalBar(pct, color){
     return '<div class="bar"><div class="bar-fill" style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color+';"></div></div>';
@@ -1195,10 +1278,10 @@
       '</div>'+
       '<div class="card"><div class="card-title">Metas calóricas e de macros</div>'+
         '<div class="target-preview" style="margin:0 0 16px;">'+
-          '<div><span class="tv num">'+t.kcal+'</span><span class="tl">Kcal/dia</span></div>'+
-          '<div><span class="tv num">'+t.protein+'</span><span class="tl">Prot g</span></div>'+
-          '<div><span class="tv num">'+t.carb+'</span><span class="tl">Carb g</span></div>'+
-          '<div><span class="tv num">'+t.fat+'</span><span class="tl">Gord g</span></div>'+
+          '<div><span class="tv num">'+fmtNum(t.kcal)+'</span><span class="tl">Kcal/dia</span></div>'+
+          '<div><span class="tv num">'+fmtNum(t.protein)+'</span><span class="tl">Prot g</span></div>'+
+          '<div><span class="tv num">'+fmtNum(t.carb)+'</span><span class="tl">Carb g</span></div>'+
+          '<div><span class="tv num">'+fmtNum(t.fat)+'</span><span class="tl">Gord g</span></div>'+
         '</div>'+
         '<div class="calc-memory-title">Memória de cálculo — meta calórica</div>'+
         '<div class="calc-steps">'+calcMemoryKcalHtml(p, t)+'</div>'+
@@ -1372,9 +1455,9 @@
     if (diasRestantes>0){
       var ajuste = Math.round((metaMensalSaldo - saldoAcumulado) / diasRestantes);
       var novaMeta = t.get + ajuste;
-      redistribuicao = '<div class="redistribute">Nos <b>'+diasRestantes+'</b> dias restantes do mês, para ainda bater o objetivo mensal sua meta ajustada seria de aproximadamente <b>'+Math.round(novaMeta)+' kcal/dia</b>.</div>';
+      redistribuicao = '<div class="redistribute">Nos <b>'+diasRestantes+'</b> dias restantes do mês, para ainda bater o objetivo mensal sua meta ajustada seria de aproximadamente <b>'+fmtNum(Math.round(novaMeta))+' kcal/dia</b>.</div>';
     } else if (tracked.length){
-      redistribuicao = '<div class="redistribute">Mês encerrado — saldo calórico acumulado de <b>'+(saldoAcumulado>=0?"+":"")+saldoAcumulado+' kcal</b> em relação à meta.</div>';
+      redistribuicao = '<div class="redistribute">Mês encerrado — saldo calórico acumulado de <b>'+fmtSigned(saldoAcumulado)+' kcal</b> em relação à meta.</div>';
     } else {
       redistribuicao = '<div class="redistribute muted">Sem registros neste mês ainda.</div>';
     }
@@ -1387,7 +1470,7 @@
     var barsHtml = bars.map(function(b){
       var h = b.saldo!=null ? Math.max(3, Math.round((Math.abs(b.saldo)/maxAbs)*40)) : 2;
       var color = b.saldo==null ? "var(--line)" : (b.saldo>0 ? "var(--coral)" : "var(--teal)");
-      var title = b.saldo!=null ? (b.d+": "+(b.saldo>0?"+":"")+b.saldo+" kcal") : (b.d+": sem dado");
+      var title = b.saldo!=null ? (b.d+": "+fmtSigned(b.saldo)+" kcal") : (b.d+": sem dado");
       return '<div title="'+title+'" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:52px;">'+
         '<div style="width:60%;height:'+h+'px;background:'+color+';border-radius:3px 3px 0 0;"></div></div>';
     }).join("");
@@ -1552,10 +1635,10 @@
     var p = readProfileForm();
     var t = computeTargets(p);
     document.getElementById("targetPreview").innerHTML =
-      '<div><span class="tv num">'+t.tmb+'</span><span class="tl">TMB</span></div>'+
-      '<div><span class="tv num">'+t.get+'</span><span class="tl">GET</span></div>'+
-      '<div><span class="tv num">'+t.kcal+'</span><span class="tl">Meta kcal</span></div>'+
-      '<div><span class="tv num">'+t.carb+'</span><span class="tl">Carb g</span></div>';
+      '<div><span class="tv num">'+fmtNum(t.tmb)+'</span><span class="tl">TMB</span></div>'+
+      '<div><span class="tv num">'+fmtNum(t.get)+'</span><span class="tl">GET</span></div>'+
+      '<div><span class="tv num">'+fmtNum(t.kcal)+'</span><span class="tl">Meta kcal</span></div>'+
+      '<div><span class="tv num">'+fmtNum(t.carb)+'</span><span class="tl">Carb g</span></div>';
     var w = document.getElementById("safetyWarnSlot");
     var warnHtml = (t.safety.belowFloor || t.safety.belowTMB)
       ? '<div class="warn" style="margin-bottom:12px;"><span>⚠️</span><div>'+(t.safety.belowFloor?"Déficit muito agressivo — meta ajustada para o mínimo seguro. ":"")+(t.safety.belowTMB?"A meta ainda fica abaixo da sua TMB.":"")+'</div></div>'
