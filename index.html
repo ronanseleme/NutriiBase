@@ -257,7 +257,7 @@
 <div class="overlay" id="profileOverlay" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
     <h2 id="profileTitle">Seu perfil</h2>
-    <p class="modal-sub">Usado para calcular sua TMB, GET e meta diária (Mifflin-St Jeor). Nada é salvo até você clicar em "Salvar perfil".</p>
+    <p class="modal-sub">Usado para calcular sua TMB, GET e meta diária (Harris-Benedict). Nada é salvo até você clicar em "Salvar perfil".</p>
     <form id="profileForm">
       <div class="field"><label for="pName">Nome</label><input type="text" id="pName" required></div>
       <div class="field-row">
@@ -374,7 +374,7 @@
     {key:"moderado", label:"Moderado"},
     {key:"agressivo", label:"Agressivo"}
   ];
-  var DEFICIT_PCT = {lento:.10, moderado:.15, agressivo:.20};
+  var DEFICIT_KCAL = {lento:300, moderado:500, agressivo:700};
   var SURPLUS_PCT = {lento:.05, moderado:.10, agressivo:.18};
   var RESTRICTION_TAGS = ["Vegetariano","Vegano","Low carb","Sem lactose","Sem glúten","Sem açúcar"];
   var WORKOUT_TYPES = [
@@ -487,14 +487,14 @@
     var lbm = leanMassKg(p);
     var tmb = lbm!=null
       ? (370 + 21.6*lbm)
-      : (p.sex==="M" ? 10*p.weightKg+6.25*p.heightCm-5*p.age+5 : 10*p.weightKg+6.25*p.heightCm-5*p.age-161);
+      : (p.sex==="M" ? 66 + 13.7*p.weightKg + 5*p.heightCm - 6.8*p.age : 655 + 9.6*p.weightKg + 1.8*p.heightCm - 4.7*p.age);
     var act = (ACTIVITY.filter(function(a){return a.key===p.activity;})[0] || ACTIVITY.filter(function(a){return a.key==="moderado";})[0]).factor;
     var get = tmb*act;
     var kcal, safety={belowFloor:false, belowTMB:false};
     if (p.goal==="manutencao"){ kcal = get; }
     else if (p.goal==="emagrecimento"){
-      var pct = DEFICIT_PCT[p.pace] || .15;
-      var raw = get*(1-pct);
+      var deficitKcal = DEFICIT_KCAL[p.pace] || 500;
+      var raw = get - deficitKcal;
       var floor = p.sex==="M" ? 1500 : 1200;
       if (raw < floor){ safety.belowFloor = true; kcal = floor; } else { kcal = raw; }
       if (kcal < tmb) safety.belowTMB = true;
