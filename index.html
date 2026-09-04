@@ -184,6 +184,16 @@
   .weight-compare .wv{font-size:1.3rem;font-weight:800;}
   .weight-compare .wl{font-size:.7rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em;}
   .badges{display:flex;flex-wrap:wrap;gap:8px;}
+  .calc-memory-title{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-soft);margin-bottom:6px;}
+  .calc-steps{display:flex;flex-direction:column;}
+  .calc-step{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:9px 0;border-top:1px solid var(--line);}
+  .calc-step:first-child{border-top:none;padding-top:0;}
+  .calc-step .cs-label{font-size:.85rem;font-weight:600;}
+  .calc-step .cs-sub{font-size:.74rem;color:var(--text-soft);margin-top:2px;}
+  .calc-step .cs-value{font-weight:700;white-space:nowrap;font-size:.95rem;}
+  .calc-step.total{border-top:2px solid var(--line-strong);margin-top:4px;padding-top:12px;}
+  .calc-step.total .cs-label{font-weight:700;}
+  .calc-step.total .cs-value{color:var(--orange);font-size:1.15rem;}
   .redistribute{font-size:.86rem;background:var(--bg);border-radius:12px;padding:12px 14px;}
   .redistribute b{color:var(--blue);}
 
@@ -488,28 +498,40 @@
     var tmb = lbm!=null
       ? (370 + 21.6*lbm)
       : (p.sex==="M" ? 66 + 13.7*p.weightKg + 5*p.heightCm - 6.8*p.age : 655 + 9.6*p.weightKg + 1.8*p.heightCm - 4.7*p.age);
-    var act = (ACTIVITY.filter(function(a){return a.key===p.activity;})[0] || ACTIVITY.filter(function(a){return a.key==="moderado";})[0]).factor;
+    var activityEntry = ACTIVITY.filter(function(a){return a.key===p.activity;})[0] || ACTIVITY.filter(function(a){return a.key==="moderado";})[0];
+    var act = activityEntry.factor;
     var get = tmb*act;
-    var kcal, safety={belowFloor:false, belowTMB:false};
-    if (p.goal==="manutencao"){ kcal = get; }
-    else if (p.goal==="emagrecimento"){
+    var kcal, safety={belowFloor:false, belowTMB:false}, adjustmentKcal=0, adjustmentLabel="";
+    if (p.goal==="manutencao"){
+      kcal = get;
+      adjustmentLabel = "Sem ajuste — meta de manutenção";
+    } else if (p.goal==="emagrecimento"){
       var deficitKcal = DEFICIT_KCAL[p.pace] || 500;
       var raw = get - deficitKcal;
       var floor = p.sex==="M" ? 1500 : 1200;
-      if (raw < floor){ safety.belowFloor = true; kcal = floor; } else { kcal = raw; }
+      if (raw < floor){ safety.belowFloor = true; kcal = floor; adjustmentLabel = "Déficit ajustado ao mínimo seguro"; }
+      else { kcal = raw; adjustmentLabel = "Déficit de "+deficitKcal+" kcal/dia (ritmo "+p.pace+")"; }
       if (kcal < tmb) safety.belowTMB = true;
     } else {
       var pct2 = SURPLUS_PCT[p.pace] || .10;
       kcal = get*(1+pct2);
+      adjustmentLabel = "Superávit de "+Math.round(pct2*100)+"% (ritmo "+p.pace+")";
     }
     kcal = Math.round(kcal);
+    adjustmentKcal = kcal - Math.round(get);
     var proteinBaseKg = lbm!=null ? lbm : p.weightKg;
     var proteinPerKg = p.goal==="emagrecimento" ? 2.0 : 1.8;
     var fatPerKg = 0.9;
     var protein = (p.macroOverride && p.macroOverride.proteinG!=null) ? p.macroOverride.proteinG : Math.round(proteinPerKg*proteinBaseKg);
     var fat = (p.macroOverride && p.macroOverride.fatG!=null) ? p.macroOverride.fatG : Math.round(fatPerKg*p.weightKg);
     var carb = Math.max(0, Math.round((kcal - protein*4 - fat*9)/4));
-    return {tmb:Math.round(tmb), get:Math.round(get), kcal:kcal, protein:protein, fat:fat, carb:carb, safety:safety, usingLBM: lbm!=null, leanMassKg: lbm!=null?Math.round(lbm*10)/10:null};
+    return {
+      tmb:Math.round(tmb), get:Math.round(get), kcal:kcal, protein:protein, fat:fat, carb:carb, safety:safety,
+      usingLBM: lbm!=null, leanMassKg: lbm!=null?Math.round(lbm*10)/10:null,
+      activityFactor: act, activityLabel: activityEntry.label,
+      adjustmentKcal: adjustmentKcal, adjustmentLabel: adjustmentLabel,
+      proteinPerKg: proteinPerKg, proteinBaseKg: Math.round(proteinBaseKg*10)/10, fatPerKg: fatPerKg
+    };
   }
   function suggestedMacros(p){
     var lbm = leanMassKg(p);
@@ -733,6 +755,7 @@
               '<span class="info-chip">'+p.age+' anos</span>'+
               '<span class="info-chip">peso <b>'+p.weightKg+' kg</b></span>'+
               '<span class="info-chip">'+p.heightCm+' cm</span>'+
+              '<span class="info-chip" title="Taxa metabólica basal — o que seu corpo gasta parado, em repouso">TMB <b>'+targets.tmb+' kcal</b> parado</span>'+
               '<span class="info-chip">'+esc(activityLabel)+'</span>'+
               '<span class="info-chip">'+esc(goalLabel)+'</span>'+
             '</div>'+
@@ -1089,6 +1112,24 @@
     }
     return count;
   }
+  function calcStepHtml(label, value, sub, isTotal){
+    return '<div class="calc-step'+(isTotal?" total":"")+'">'+
+      '<div><div class="cs-label">'+label+'</div>'+(sub?'<div class="cs-sub">'+sub+'</div>':'')+'</div>'+
+      '<div class="cs-value num">'+value+'</div>'+
+    '</div>';
+  }
+  function calcMemoryKcalHtml(p, t){
+    var tmbFormula = t.usingLBM ? ("Katch-McArdle — usa sua massa magra estimada de "+t.leanMassKg+" kg") : "Harris-Benedict (revisada)";
+    return calcStepHtml("TMB — o que seu corpo gasta parado, em repouso", t.tmb+" kcal", "Fórmula: "+tmbFormula) +
+      calcStepHtml("× Fator de atividade — "+esc(t.activityLabel), "GET "+t.get+" kcal", "GET = Gasto Energético Total (TMB × "+t.activityFactor+")") +
+      calcStepHtml(esc(t.adjustmentLabel), (t.adjustmentKcal>=0?"+":"")+t.adjustmentKcal+" kcal") +
+      calcStepHtml("Meta calórica diária", t.kcal+" kcal", "", true);
+  }
+  function calcMemoryMacroHtml(p, t){
+    return calcStepHtml("Proteína — "+t.proteinPerKg+" g/kg × "+t.proteinBaseKg+" kg"+(t.usingLBM?" de massa magra":" de peso corporal"), t.protein+" g") +
+      calcStepHtml("Gordura — "+t.fatPerKg+" g/kg × "+p.weightKg+" kg de peso corporal", t.fat+" g") +
+      calcStepHtml("Carboidrato — preenche o restante das calorias da meta", t.carb+" g");
+  }
   function goalBar(pct, color){
     return '<div class="bar"><div class="bar-fill" style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color+';"></div></div>';
   }
@@ -1153,12 +1194,16 @@
         '<div class="field"><label for="metaTargetDate">Data-meta (opcional)</label><input type="date" id="metaTargetDate" value="'+(p.targetDate||"")+'"></div>'+
       '</div>'+
       '<div class="card"><div class="card-title">Metas calóricas e de macros</div>'+
-        '<div class="target-preview" style="margin:0;">'+
+        '<div class="target-preview" style="margin:0 0 16px;">'+
           '<div><span class="tv num">'+t.kcal+'</span><span class="tl">Kcal/dia</span></div>'+
           '<div><span class="tv num">'+t.protein+'</span><span class="tl">Prot g</span></div>'+
           '<div><span class="tv num">'+t.carb+'</span><span class="tl">Carb g</span></div>'+
           '<div><span class="tv num">'+t.fat+'</span><span class="tl">Gord g</span></div>'+
         '</div>'+
+        '<div class="calc-memory-title">Memória de cálculo — meta calórica</div>'+
+        '<div class="calc-steps">'+calcMemoryKcalHtml(p, t)+'</div>'+
+        '<div class="calc-memory-title" style="margin-top:16px;">Memória de cálculo — macros</div>'+
+        '<div class="calc-steps">'+calcMemoryMacroHtml(p, t)+'</div>'+
       '</div>'+
       '<div class="card"><div class="card-title">Meta de treinos semanais</div>'+
         '<div class="field"><label for="metaWeeklyWorkouts">Treinos por semana</label><input type="number" id="metaWeeklyWorkouts" min="0" max="14" value="'+(weeklyGoal!=null?weeklyGoal:"")+'" placeholder="Ex: 4"></div>'+
