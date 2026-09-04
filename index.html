@@ -1094,8 +1094,9 @@
   }
   function renderMetas(){
     var p = state.profile, t = p.targets;
+    var leanMassNow = leanMassKg(p);
 
-    var weightHtml;
+    var progressHtml;
     if (p.targetWeightKg){
       var entries = Object.keys(state.logs).filter(function(k){ return state.logs[k].weight!=null; }).sort();
       var startWeight = entries.length ? state.logs[entries[0]].weight : p.weightKg;
@@ -1103,28 +1104,39 @@
       var doneDelta = startWeight - p.weightKg;
       var pct = totalDelta!==0 ? Math.round((doneDelta/totalDelta)*100) : 100;
       var remaining = Math.abs(p.weightKg - p.targetWeightKg);
-      weightHtml =
+      progressHtml =
         '<div class="weight-compare" style="margin-bottom:10px;">'+
           '<div><div class="wv num">'+startWeight+'</div><div class="wl">Início</div></div>'+
-          '<div><div class="wv num">'+p.weightKg+'</div><div class="wl">Atual</div></div>'+
-          '<div><div class="wv num">'+p.targetWeightKg+'</div><div class="wl">Meta</div></div>'+
+          '<div><div class="wv num">'+p.weightKg+'</div><div class="wl">Peso atual</div></div>'+
+          '<div><div class="wv num">'+p.targetWeightKg+'</div><div class="wl">Peso-meta</div></div>'+
         '</div>'+
         goalBar(pct, pct>=100?"var(--teal)":"var(--blue)")+
-        '<p class="muted" style="font-size:.8rem;margin-top:8px;">Faltam '+remaining.toFixed(1)+' kg para a meta'+(p.targetDate?(" até "+new Intl.DateTimeFormat("pt-BR").format(parseISODate(p.targetDate))):"")+'.</p>';
+        '<p class="muted" style="font-size:.8rem;margin:8px 0 0;">Faltam '+remaining.toFixed(1)+' kg para a meta'+(p.targetDate?(" até "+new Intl.DateTimeFormat("pt-BR").format(parseISODate(p.targetDate))):"")+'.</p>';
     } else {
-      weightHtml = '<p class="muted" style="font-size:.85rem;">Defina um peso-meta na edição do perfil para acompanhar o progresso aqui.</p>';
+      progressHtml = "";
     }
 
-    var bodyFatHtml = '';
-    if (p.bodyFatPct){
-      var bfTarget = p.bodyFatTargetPct;
-      bodyFatHtml =
-        '<div class="hero-stats" style="margin-bottom:10px;">'+
-          '<div class="stat"><div class="sv num">'+p.bodyFatPct+'%</div><div class="sl">Atual</div></div>'+
-          '<div class="stat"><div class="sv num">'+(bfTarget!=null?bfTarget+"%":"—")+'</div><div class="sl">Meta</div></div>'+
-        '</div>';
-    } else {
-      bodyFatHtml = '<p class="muted" style="font-size:.85rem;margin-bottom:10px;">Informe seu % de gordura atual na edição do perfil para comparar com a meta.</p>';
+    var bodyFatRowHtml = p.bodyFatPct
+      ? '<div class="hero-stats" style="margin:10px 0;">'+
+          '<div class="stat"><div class="sv num">'+p.bodyFatPct+'%</div><div class="sl">Gordura atual</div></div>'+
+          '<div class="stat"><div class="sv num">'+(p.bodyFatTargetPct!=null?p.bodyFatTargetPct+"%":"—")+'</div><div class="sl">Gordura-meta</div></div>'+
+        '</div>'
+      : '<p class="muted" style="font-size:.85rem;margin:10px 0 0;">Informe seu % de gordura atual acima para combinar peso e composição corporal na meta.</p>';
+
+    var combinationHtml = "";
+    if (leanMassNow!=null){
+      var parts = [];
+      if (p.bodyFatTargetPct!=null && p.bodyFatTargetPct>0 && p.bodyFatTargetPct<70){
+        var impliedWeight = leanMassNow/(1-p.bodyFatTargetPct/100);
+        parts.push(p.bodyFatTargetPct+"% de gordura equivaleria a aproximadamente <b>"+impliedWeight.toFixed(1)+" kg</b>");
+      }
+      if (p.targetWeightKg){
+        var impliedBF = Math.max(0, 100*(1-leanMassNow/p.targetWeightKg));
+        parts.push(p.targetWeightKg+" kg equivaleria a aproximadamente <b>"+impliedBF.toFixed(1)+"%</b> de gordura");
+      }
+      if (parts.length){
+        combinationHtml = '<p class="muted" style="font-size:.8rem;margin:10px 0 0;">Mantendo sua massa magra atual (~'+leanMassNow.toFixed(1)+' kg): '+parts.join(" · ")+".</p>";
+      }
     }
 
     var weeklyGoal = p.weeklyWorkoutGoal;
@@ -1132,10 +1144,13 @@
     var weeklyPct = weeklyGoal ? Math.round((doneThisWeek/weeklyGoal)*100) : 0;
 
     document.getElementById("view-metas").innerHTML =
-      '<div class="card"><div class="card-title">Meta de peso corporal</div>'+weightHtml+'</div>'+
-      '<div class="card"><div class="card-title">Meta de composição corporal</div>'+
-        bodyFatHtml+
-        '<div class="field"><label for="metaBodyFatTarget">% gordura-meta (opcional)</label><input type="number" id="metaBodyFatTarget" step="0.1" min="3" max="60" value="'+(p.bodyFatTargetPct!=null?p.bodyFatTargetPct:"")+'"></div>'+
+      '<div class="card"><div class="card-title">Meta de peso e composição corporal</div>'+
+        progressHtml + bodyFatRowHtml + combinationHtml +
+        '<div class="field-row" style="margin-top:14px;">'+
+          '<div class="field"><label for="metaTargetWeight">Peso-meta (kg)</label><input type="number" id="metaTargetWeight" step="0.1" min="0" value="'+(p.targetWeightKg!=null?p.targetWeightKg:"")+'"></div>'+
+          '<div class="field"><label for="metaBodyFatTarget">% gordura-meta</label><input type="number" id="metaBodyFatTarget" step="0.1" min="3" max="60" value="'+(p.bodyFatTargetPct!=null?p.bodyFatTargetPct:"")+'"></div>'+
+        '</div>'+
+        '<div class="field"><label for="metaTargetDate">Data-meta (opcional)</label><input type="date" id="metaTargetDate" value="'+(p.targetDate||"")+'"></div>'+
       '</div>'+
       '<div class="card"><div class="card-title">Metas calóricas e de macros</div>'+
         '<div class="target-preview" style="margin:0;">'+
@@ -1152,9 +1167,11 @@
       '<button type="button" class="btn btn-primary btn-block" id="saveMetas">Salvar metas</button>';
 
     document.getElementById("saveMetas").addEventListener("click", function(){
+      state.profile.targetWeightKg = (+document.getElementById("metaTargetWeight").value) || null;
       state.profile.bodyFatTargetPct = (+document.getElementById("metaBodyFatTarget").value) || null;
+      state.profile.targetDate = document.getElementById("metaTargetDate").value || null;
       state.profile.weeklyWorkoutGoal = (+document.getElementById("metaWeeklyWorkouts").value) || null;
-      state.isDemo=false; save(); renderMetas();
+      state.isDemo=false; save(); renderAll();
     });
   }
 
