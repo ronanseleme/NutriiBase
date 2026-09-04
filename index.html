@@ -1,4 +1,4 @@
-<title>NutriBase</title>
+<title>NutriiBase</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
     --on-accent:#FFFFFF;
     --shadow:0 1px 2px rgba(43,43,51,.06),0 10px 26px -16px rgba(43,43,51,.28);
   }
-  /* NutriBase is a deliberately light, brand-locked page (orange/blue on white) —
+  /* NutriiBase is a deliberately light, brand-locked page (orange/blue on white) —
      no dark variant, per product decision. */
 
   *{box-sizing:border-box;}
@@ -114,17 +114,15 @@
   .stat .sv{font-size:1.5rem;font-weight:800;line-height:1;}
   .stat .sl{font-size:.72rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
 
-  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  .kpi{background:var(--bg);border-radius:12px;padding:10px 6px;text-align:center;}
-  .kpi-v{font-size:1.12rem;font-weight:800;line-height:1;}
-  .kpi-l{font-size:.64rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.03em;margin-top:4px;}
-  .kpi-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.72rem;color:var(--text-soft);margin-top:10px;}
-  .kpi-legend span{display:inline-flex;align-items:center;gap:5px;}
-  .kpi-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;font-style:normal;}
-  .consumo-block{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);text-align:center;}
-  .consumo-num{font-size:2.6rem;font-weight:800;line-height:1;}
-  .consumo-label{font-size:.76rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
-  .consumo-sub{font-size:.84rem;color:var(--text-soft);margin-top:12px;}
+  .kpi-strip{display:flex;background:var(--bg);border-radius:14px;border:1px solid var(--line);overflow:hidden;}
+  .kpi-cell{flex:1;min-width:0;padding:12px 6px 11px;text-align:center;border-top:3px solid transparent;display:flex;flex-direction:column;justify-content:center;gap:3px;}
+  .kpi-cell + .kpi-cell{border-left:1px solid var(--line);}
+  .kpi-v{font-size:1.28rem;font-weight:800;line-height:1;letter-spacing:-.01em;}
+  .kpi-l{font-size:.6rem;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  .kpi-sub{font-size:.58rem;color:var(--text-soft);line-height:1.25;}
+  .kpi-progress{margin-top:14px;}
+  .kpi-progress-label{display:flex;justify-content:space-between;font-size:.76rem;color:var(--text-soft);margin-bottom:6px;}
+  .kpi-progress-label b{color:var(--text);}
 
   .macro-row{padding:9px 0;border-top:1px solid var(--line);}
   .macro-row:first-of-type{border-top:none;padding-top:0;}
@@ -246,7 +244,7 @@
 
 <div class="topbar">
   <div class="topbar-inner">
-    <div class="brand"><span class="dot"></span>NutriBase</div>
+    <div class="brand"><span class="dot"></span>NutriiBase</div>
     <button type="button" class="profile-btn" id="openProfile" aria-label="Editar perfil" title="Editar perfil">···</button>
   </div>
   <nav class="tabs" id="tabs" aria-label="Navegação principal">
@@ -271,7 +269,7 @@
     <section id="view-insights" data-view hidden></section>
   </main>
 
-  <footer>NutriBase — seu controle calórico e de treino, guardado só neste dispositivo.</footer>
+  <footer>NutriiBase — seu controle calórico e de treino, guardado só neste dispositivo.</footer>
 </div>
 
 <div class="overlay" id="profileOverlay" hidden>
@@ -675,7 +673,7 @@
     var slot = document.getElementById("bannerSlot");
     if (!state.isDemo){ slot.innerHTML=""; return; }
     slot.innerHTML = '<div class="card" style="border-left:4px solid var(--orange);">'+
-      '<p style="margin:0 0 10px;font-size:.86rem;"><strong>Dados de exemplo</strong> — perfil e histórico da Ana, só para mostrar como o NutriBase funciona. Edite seu perfil para começar a registrar de verdade.</p>'+
+      '<p style="margin:0 0 10px;font-size:.86rem;"><strong>Dados de exemplo</strong> — perfil e histórico da Ana, só para mostrar como o NutriiBase funciona. Edite seu perfil para começar a registrar de verdade.</p>'+
       '<div style="display:flex;gap:8px;"><button type="button" class="btn btn-primary btn-small" id="bannerEdit">Editar perfil</button><button type="button" class="btn btn-small" id="bannerDismiss">Dispensar</button></div>'+
     '</div>';
     document.getElementById("bannerEdit").addEventListener("click", openProfileModal);
@@ -788,22 +786,24 @@
       safetyHtml+
       '<div class="card">'+
         '<div class="card-title">Balanço do dia</div>'+
-        '<div class="kpi-row">'+
-          '<div class="kpi"><div class="kpi-v num" style="color:var(--blue);">'+fmtNum(targets.kcal)+'</div><div class="kpi-l">Meta</div></div>'+
-          '<div class="kpi"><div class="kpi-v num" style="color:var(--teal);">'+fmtNum(targets.tmb)+'</div><div class="kpi-l">Parado</div></div>'+
-          '<div class="kpi"><div class="kpi-v num" style="color:var(--teal);">'+fmtNum(burn)+'</div><div class="kpi-l">Exercício</div></div>'+
-          '<div class="kpi"><div class="kpi-v num" style="color:var(--teal);">'+fmtNum(targets.tmb+burn)+'</div><div class="kpi-l">Total gasto</div></div>'+
+        '<div class="kpi-strip">'+
+          '<div class="kpi-cell" style="border-top-color:var(--blue);">'+
+            '<div class="kpi-v num" style="color:var(--blue);">'+fmtNum(targets.kcal)+'</div><div class="kpi-l">Meta</div>'+
+          '</div>'+
+          '<div class="kpi-cell" style="border-top-color:var(--teal);">'+
+            '<div class="kpi-v num" style="color:var(--teal);">'+fmtNum(targets.tmb+burn)+'</div><div class="kpi-l">Gasto</div>'+
+            '<div class="kpi-sub num">'+fmtNum(targets.tmb)+' parado + '+fmtNum(burn)+' exerc.</div>'+
+          '</div>'+
+          '<div class="kpi-cell" style="border-top-color:var(--orange);">'+
+            '<div class="kpi-v num" style="color:var(--orange);">'+fmtNum(food.kcal)+'</div><div class="kpi-l">Consumo</div>'+
+          '</div>'+
+          '<div class="kpi-cell" style="border-top-color:'+(restante<0?"var(--coral)":"var(--teal)")+';">'+
+            '<div class="kpi-v num" style="color:'+(restante<0?"var(--coral)":"var(--teal)")+';">'+fmtSigned(restante)+'</div><div class="kpi-l">Saldo</div>'+
+          '</div>'+
         '</div>'+
-        '<div class="kpi-legend">'+
-          '<span><i style="background:var(--blue);"></i>Meta</span>'+
-          '<span><i style="background:var(--teal);"></i>Gasto</span>'+
-          '<span><i style="background:var(--orange);"></i>Consumo</span>'+
-        '</div>'+
-        '<div class="consumo-block">'+
-          '<div class="consumo-num num" style="color:var(--orange);">'+fmtNum(food.kcal)+'</div>'+
-          '<div class="consumo-label">kcal consumidas hoje</div>'+
-          '<div class="bar" style="margin-top:14px;"><div class="bar-fill" style="width:'+Math.min(100,pct)+'%;background:'+color+';"></div></div>'+
-          '<div class="consumo-sub"><b class="num">'+pct+'%</b> da meta ajustada de <b class="num">'+fmtNum(metaAjustada)+'</b> kcal — '+(restante>=0 ? '<b class="num">'+fmtNum(restante)+'</b> kcal restantes' : '<b class="num" style="color:var(--coral);">'+fmtNum(Math.abs(restante))+'</b> kcal acima da meta')+'</div>'+
+        '<div class="kpi-progress">'+
+          '<div class="kpi-progress-label"><span>'+pct+'% da meta ajustada</span><b class="num">'+fmtNum(metaAjustada)+' kcal</b></div>'+
+          '<div class="bar"><div class="bar-fill" style="width:'+Math.min(100,pct)+'%;background:'+color+';"></div></div>'+
         '</div>'+
       '</div>'+
       '<div class="card">'+
@@ -1365,7 +1365,7 @@
       return;
     }
     if (sampleFn === null){
-      view.innerHTML = '<div class="card"><div class="chat-unavailable">O assistente de IA não está disponível neste visualizador. Você ainda pode usar todo o resto do NutriBase normalmente.</div></div>';
+      view.innerHTML = '<div class="card"><div class="chat-unavailable">O assistente de IA não está disponível neste visualizador. Você ainda pode usar todo o resto do NutriiBase normalmente.</div></div>';
       return;
     }
     var msgsHtml = chatHistory.length ? chatHistory.map(function(m,i){
