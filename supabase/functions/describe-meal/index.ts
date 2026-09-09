@@ -38,12 +38,18 @@ Deno.serve(async (req) => {
   // Confirma que quem chamou é um usuário Supabase autenticado (usa só a
   // anon/publishable key + o token do próprio usuário, nunca a service key).
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  // Projetos novos do Supabase expõem "publishable key" em vez de "anon key" —
+  // aceita os dois nomes de variável reservada, o que existir.
+  const supabaseAnonKey =
+    Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return errorResponse("unauthorized", "Faça login para usar a IA.", 401);
   }
-  const supabaseClient = createClient(supabaseUrl!, supabaseAnonKey!, {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return errorResponse("upstream_error", "Configuração do servidor incompleta (SUPABASE_URL/ANON_KEY).", 500);
+  }
+  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
   });
   const { data: userData, error: userError } = await supabaseClient.auth.getUser();
