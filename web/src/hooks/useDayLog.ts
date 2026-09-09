@@ -3,17 +3,19 @@ import { supabase } from '../lib/supabase'
 import { emptyDayLog, emptyMeals } from '../lib/calculations'
 import {
   MEAL_KEY_FROM_DB,
+  refeicaoLocalToRow,
   refeicaoRowToLocal,
   treinoRowToLocal,
   type RefeicaoRow,
   type RegistroPesoRow,
   type TreinoRow,
 } from '../lib/mappers'
-import type { DayLog } from '../types'
+import type { DayLog, FoodItem, MealKey, MealsByKey } from '../types'
 
 export function useDayLog(userId: string | null, dateIso: string) {
   const [log, setLog] = useState<DayLog>(emptyDayLog())
   const [loading, setLoading] = useState(true)
+  const [draft, setDraft] = useState<MealsByKey>(emptyMeals())
 
   const reload = useCallback(async () => {
     if (!userId) {
@@ -49,6 +51,11 @@ export function useDayLog(userId: string | null, dateIso: string) {
     reload()
   }, [reload])
 
+  // Muda de dia (ou de usuário) descarta rascunhos não salvos, como no app original.
+  useEffect(() => {
+    setDraft(emptyMeals())
+  }, [userId, dateIso])
+
   const saveWeight = useCallback(
     async (kg: number) => {
       if (!userId) return { error: new Error('Sem usuário logado.') }
@@ -73,5 +80,65 @@ export function useDayLog(userId: string | null, dateIso: string) {
     [userId, dateIso],
   )
 
-  return { log, loading, saveWeight, saveBodyFat, reload }
+  const addToDraft = useCallback((mealKey: MealKey, item: FoodItem) => {
+    setDraft((d) => ({ ...d, [mealKey]: [...d[mealKey], item] }))
+  }, [])
+
+  const removeDraftItem = useCallback((mealKey: MealKey, itemId: string) => {
+    setDraft((d) => ({ ...d, [mealKey]: d[mealKey].filter((it) => it.id !== itemId) }))
+  }, [])
+
+  const saveMeal = useCallback(
+    async (mealKey: MealKey) => {
+      if (!userId) return { error: new Error('Sem usuário logado.') }
+      const items = draft[mealKey]
+      if (!items.length) return { error: null }
+      const rows = items.map((it) => refeicaoLocalToRow(it, userId, dateIso, mealKey))
+      const { data, error } = await supabase.from('refeicoes').insert(rows).select()
+      if (error) return { error }
+      const inserted = (data as RefeicaoRow[]) || []
+      const merged =
+        inserted.length === items.length ? items.map((it, i) => ({ ...it, id: inserted[i].id })) : items
+      setLog((l) => ({ ...l, meals: { ...l.meals, [mealKey]: [...l.meals[mealKey], ...merged] } }))
+      setDraft((d) => ({ ...d, [mealKey]: [] }))
+      return { error: null }
+    },
+    [userId, dateIso, draft],
+  )
+
+  const deleteFoodItem = useCallback(async (mealKey: MealKey, itemId: string) => {
+    setLog((l) => ({ ...l, meals: { ...l.meals, [mealKey]: l.meals[mealKey].filter((it) => it.id !== itemId) } }))
+    const { error } = await supabase.from('refeicoes').delete().eq('id', itemId)
+    return { error }
+  }, [])
+
+  const updateFoodItem = useCallback(
+    async (mealKey: MealKey, item: FoodItem) => {
+      if (!userId) return { error: new Error('Sem usuário logado.') }
+      setLog((l) => ({
+        ...l,
+        meals: { ...l.meals, [mealKey]: l.meals[mealKey].map((it) => (it.id === item.id ? item : it)) },
+      }))
+      const { error } = await supabase
+        .from('refeicoes')
+        .update(refeicaoLocalToRow(item, userId, dateIso, mealKey))
+        .eq('id', item.id)
+      return { error }
+    },
+    [userId, dateIso],
+  )
+
+  return {
+    log,
+    loading,
+    draft,
+    saveWeight,
+    saveBodyFat,
+    addToDraft,
+    removeDraftItem,
+    saveMeal,
+    deleteFoodItem,
+    updateFoodItem,
+    reload,
+  }
 }

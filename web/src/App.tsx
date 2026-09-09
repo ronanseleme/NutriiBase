@@ -6,13 +6,27 @@ import { AuthScreen } from './components/AuthScreen'
 import { ProfileForm } from './components/ProfileForm'
 import { Dashboard } from './components/Dashboard'
 import { Logo } from './components/Logo'
+import { DateNav } from './components/DateNav'
+import { TabBar, type TabKey } from './components/TabBar'
+import { FoodTab } from './components/food/FoodTab'
 import { todayISO } from './lib/dateUtils'
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth()
   const { profile, loading: profileLoading, isNew, saveProfile } = useProfile(user?.id ?? null)
-  const [dateIso] = useState(todayISO())
-  const { log, saveWeight, saveBodyFat } = useDayLog(user?.id ?? null, dateIso)
+  const [dateIso, setDateIso] = useState(todayISO())
+  const [tab, setTab] = useState<TabKey>('dashboard')
+  const {
+    log,
+    saveWeight,
+    saveBodyFat,
+    draft,
+    addToDraft,
+    removeDraftItem,
+    saveMeal,
+    deleteFoodItem,
+    updateFoodItem,
+  } = useDayLog(user?.id ?? null, dateIso)
   const [showProfileForm, setShowProfileForm] = useState(false)
 
   if (authLoading) {
@@ -46,6 +60,7 @@ function App() {
             Sair
           </button>
         </div>
+        <TabBar active={tab} onChange={setTab} />
       </div>
 
       <div className="mx-auto max-w-md p-4">
@@ -64,14 +79,37 @@ function App() {
           </div>
         )}
 
-        <Dashboard
-          profile={profile}
-          dateIso={dateIso}
-          log={log}
-          onEditProfile={() => setShowProfileForm(true)}
-          onSaveWeight={saveWeight}
-          onSaveBodyFat={saveBodyFat}
-        />
+        {(tab === 'dashboard' || tab === 'food') && <DateNav dateIso={dateIso} onChange={setDateIso} />}
+
+        {tab === 'dashboard' && (
+          <Dashboard
+            profile={profile}
+            log={log}
+            onEditProfile={() => setShowProfileForm(true)}
+            onSaveWeight={saveWeight}
+            onSaveBodyFat={saveBodyFat}
+          />
+        )}
+
+        {tab === 'food' && (
+          <FoodTab
+            log={log}
+            draft={draft}
+            targets={profile.targets}
+            onAddToDraft={addToDraft}
+            onAddManyToDraft={(mealKey, items) => items.forEach((it) => addToDraft(mealKey, it))}
+            onRemoveDraft={removeDraftItem}
+            onSaveMeal={saveMeal}
+            onDeleteSaved={deleteFoodItem}
+            onUpdateSaved={updateFoodItem}
+          />
+        )}
+
+        {tab !== 'dashboard' && tab !== 'food' && (
+          <div className="rounded-[18px] bg-[var(--surface)] p-6 text-center text-[0.9rem] text-[var(--text-soft)] shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+            Essa aba ainda está em construção — chega numa próxima fase.
+          </div>
+        )}
       </div>
 
       {showProfileForm && (

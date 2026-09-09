@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ACTIVITY, GOALS } from '../lib/constants'
 import { dayFoodTotals, dayWorkoutKcal } from '../lib/calculations'
-import { formatDateLabel } from '../lib/dateUtils'
 import type { DayLog, Profile } from '../types'
 
 function fmtNum(n: number | null | undefined): string {
@@ -16,14 +15,13 @@ function statusColor(pct: number): string {
 
 interface Props {
   profile: Profile
-  dateIso: string
   log: DayLog
   onEditProfile: () => void
   onSaveWeight: (kg: number) => Promise<{ error: Error | null }>
   onSaveBodyFat: (pct: number) => Promise<{ error: Error | null }>
 }
 
-export function Dashboard({ profile, dateIso, log, onEditProfile, onSaveWeight, onSaveBodyFat }: Props) {
+export function Dashboard({ profile, log, onEditProfile, onSaveWeight, onSaveBodyFat }: Props) {
   const targets = profile.targets
   const food = dayFoodTotals(log.meals)
   const burn = dayWorkoutKcal(log.workouts)
@@ -72,10 +70,6 @@ export function Dashboard({ profile, dateIso, log, onEditProfile, onSaveWeight, 
             Editar
           </button>
         </div>
-      </Card>
-
-      <Card>
-        <div className="text-center text-[1.05rem] font-bold">{formatDateLabel(dateIso)}</div>
       </Card>
 
       <Card>
