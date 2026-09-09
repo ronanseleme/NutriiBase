@@ -5,6 +5,7 @@ import { useDayLog } from './hooks/useDayLog'
 import { AuthScreen } from './components/AuthScreen'
 import { ProfileForm } from './components/ProfileForm'
 import { Dashboard } from './components/Dashboard'
+import { Logo } from './components/Logo'
 import { todayISO } from './lib/dateUtils'
 
 function App() {
@@ -34,16 +35,13 @@ function App() {
 
   return (
     <div className="min-h-svh bg-[var(--bg)] pb-8">
-      <div className="sticky top-0 z-10 border-b border-[var(--line)] bg-[var(--surface)]">
+      <div className="sticky top-0 z-10 border-b border-[var(--line)] bg-[var(--surface)]/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 font-[Space_Grotesk] font-bold">
-            <span className="inline-block h-[9px] w-[9px] rotate-45 rounded-sm bg-[var(--orange)]" />
-            NutriiBase
-          </div>
+          <Logo size={28} />
           <button
             type="button"
             onClick={() => signOut()}
-            className="rounded-[8px] border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs font-bold"
+            className="rounded-[8px] border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs font-bold transition-colors hover:bg-[var(--bg)]"
           >
             Sair
           </button>

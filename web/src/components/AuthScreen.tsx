@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { mapAuthError } from '../lib/authErrors'
+import { Logo } from './Logo'
 
 type Mode = 'signin' | 'signup'
 
@@ -41,11 +42,18 @@ export function AuthScreen() {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[var(--bg)] p-4">
-      <div className="w-full max-w-sm rounded-[18px] bg-[var(--surface)] p-7 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
-        <div className="mb-5 flex items-center gap-2 font-[Space_Grotesk] text-[1.15rem] font-bold">
-          <span className="inline-block h-[9px] w-[9px] rotate-45 rounded-sm bg-[var(--orange)]" />
-          NutriiBase
+    <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-[var(--bg)] p-4">
+      <div
+        className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full opacity-20 blur-3xl"
+        style={{ background: 'var(--orange)' }}
+      />
+      <div
+        className="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full opacity-20 blur-3xl"
+        style={{ background: 'var(--blue)' }}
+      />
+      <div className="relative w-full max-w-sm rounded-[20px] bg-[var(--surface)] p-7 shadow-[0_1px_2px_rgba(43,43,51,.06),0_20px_45px_-20px_rgba(43,43,51,.35)]">
+        <div className="mb-6">
+          <Logo size={36} />
         </div>
         <h1 className="mb-1.5 text-[1.3rem] font-bold text-[var(--text)]">
           {isSignin ? 'Entrar' : 'Criar conta'}
@@ -94,7 +102,7 @@ export function AuthScreen() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-1 rounded-[10px] bg-[var(--orange)] py-2.5 font-bold text-[var(--on-accent)] disabled:opacity-70"
+            className="mt-1 rounded-[10px] bg-[var(--orange)] py-2.5 font-bold text-[var(--on-accent)] shadow-[0_8px_20px_-8px_rgba(255,107,53,.6)] transition-transform hover:brightness-105 active:scale-[0.98] disabled:opacity-70"
           >
             {loading ? (isSignin ? 'Entrando…' : 'Criando conta…') : isSignin ? 'Entrar' : 'Criar conta'}
           </button>
