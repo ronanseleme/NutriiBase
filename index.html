@@ -1066,7 +1066,7 @@
     var del = e.target.closest("[data-del]");
     if (!del) return;
     var day = ensureDay(state.currentDate);
-    var active = state.ui.foodMeal || "cafeDaManha";
+    var active = state.ui.foodMeal || "geral";
     var parts = del.dataset.del.split("|");
     if (parts[0]==="saved"){
       day.meals[active] = day.meals[active].filter(function(it){ return it.id!==parts[1]; });
@@ -1096,8 +1096,12 @@
     addingMeal=mealKey; selectedFood=null; aiResultApplied=false;
     editingFoodRef = editItem ? {mealKey:mealKey, itemId:editItem.id} : null;
     document.getElementById("foodTitle").textContent = editItem ? "Editar alimento" : "Adicionar alimento";
-    document.getElementById("foodSub").textContent = (editItem?"Editando em: ":"Adicionando a: ")+(MEALS.filter(function(m){return m.key===mealKey;})[0]||{}).label;
+    var draftCount = (draft[mealKey]||[]).length;
+    document.getElementById("foodSub").textContent = editItem
+      ? "Editando em: "+(MEALS.filter(function(m){return m.key===mealKey;})[0]||{}).label
+      : "Adicionando a: "+(MEALS.filter(function(m){return m.key===mealKey;})[0]||{}).label+" — "+draftCount+(draftCount===1?" item no rascunho":" itens no rascunho");
     document.getElementById("confirmFood").textContent = editItem ? "Salvar alterações" : "Adicionar ao rascunho";
+    document.getElementById("cancelFood").textContent = (!editItem && draftCount) ? "Concluído" : "Cancelar";
     document.getElementById("foodSearch").value="";
     document.getElementById("selectedFoodSlot").innerHTML="";
     document.getElementById("aiFoodInput").value="";
@@ -1232,13 +1236,30 @@
       var idx = arr.map(function(it){return it.id;}).indexOf(editingFoodRef.itemId);
       if (idx!==-1) arr[idx] = entry;
       state.isDemo=false; save();
+      foodOverlay.hidden=true;
+      renderFood();
+      renderDashboard();
     } else {
       draft[addingMeal] = (draft[addingMeal]||[]).concat([entry]);
+      renderFood();
+      renderDashboard();
+      resetFoodModalForNextItem();
     }
-    foodOverlay.hidden=true;
-    renderFood();
-    renderDashboard();
   });
+  function resetFoodModalForNextItem(){
+    selectedFood = null; aiResultApplied = false;
+    document.getElementById("foodSearch").value = "";
+    document.getElementById("selectedFoodSlot").innerHTML = "";
+    document.getElementById("aiFoodInput").value = "";
+    document.getElementById("aiFoodResult").innerHTML = "";
+    ["cName","cKcal","cProt","cCarb","cFat"].forEach(function(id){ document.getElementById(id).value=""; });
+    renderFoodResults("");
+    setFoodMode("db");
+    var count = (draft[addingMeal]||[]).length;
+    document.getElementById("foodSub").textContent = "Adicionando a: "+(MEALS.filter(function(m){return m.key===addingMeal;})[0]||{}).label+" — "+count+(count===1?" item no rascunho":" itens no rascunho");
+    document.getElementById("cancelFood").textContent = count ? "Concluído" : "Cancelar";
+    document.getElementById("foodSearch").focus();
+  }
 
   /* --- AI meal description --- */
   var mealAiOverlay = document.getElementById("mealAiOverlay");
