@@ -422,6 +422,8 @@
     </div>
     <form id="customFoodForm" hidden>
       <div class="field"><label for="cName">Nome do alimento</label><input type="text" id="cName" placeholder="Ex: Marmita da vovó"></div>
+      <div class="field"><label for="cGrams">Gramas (quantidade)</label><input type="number" id="cGrams" min="0" placeholder="Ex: 150"></div>
+      <p class="muted" style="font-size:.78rem;margin:-8px 0 12px;">Mudar as gramas recalcula kcal e macros proporcionalmente.</p>
       <div class="field-row">
         <div class="field"><label for="cKcal">Calorias (kcal)</label><input type="number" id="cKcal" min="0"></div>
         <div class="field"><label for="cProt">Proteína (g)</label><input type="number" id="cProt" min="0" step="0.1"></div>
@@ -1282,7 +1284,7 @@
 
   /* --- food modal --- */
   var foodOverlay = document.getElementById("foodOverlay");
-  var addingMeal=null, selectedFood=null, foodMode="db", aiResultApplied=false, editingFoodRef=null;
+  var addingMeal=null, selectedFood=null, foodMode="db", aiResultApplied=false, editingFoodRef=null, customFoodLastGrams=0;
   function openFoodModal(mealKey, editItem){
     addingMeal=mealKey; selectedFood=null; aiResultApplied=false;
     editingFoodRef = editItem ? {mealKey:mealKey, itemId:editItem.id} : null;
@@ -1297,7 +1299,8 @@
     document.getElementById("selectedFoodSlot").innerHTML="";
     document.getElementById("aiFoodInput").value="";
     document.getElementById("aiFoodResult").innerHTML="";
-    ["cName","cKcal","cProt","cCarb","cFat"].forEach(function(id){ document.getElementById(id).value=""; });
+    ["cName","cGrams","cKcal","cProt","cCarb","cFat"].forEach(function(id){ document.getElementById(id).value=""; });
+    customFoodLastGrams = 0;
     renderFoodResults("");
     if (editItem){
       var dbMatch = editItem.grams!=null ? FOODS.filter(function(f){return f.name===editItem.name;})[0] : null;
@@ -1307,6 +1310,8 @@
         setFoodMode("db");
       } else {
         document.getElementById("cName").value = editItem.name;
+        document.getElementById("cGrams").value = editItem.grams || "";
+        customFoodLastGrams = editItem.grams || 0;
         document.getElementById("cKcal").value = editItem.kcal;
         document.getElementById("cProt").value = editItem.protein;
         document.getElementById("cCarb").value = editItem.carbs;
@@ -1355,6 +1360,8 @@
       document.getElementById("aiFoodResult").innerHTML = "";
       var data = items[0] || {};
       document.getElementById("cName").value = String(data.name || desc).slice(0,80);
+      document.getElementById("cGrams").value = data.grams || "";
+      customFoodLastGrams = data.grams || 0;
       document.getElementById("cKcal").value = data.kcal||0;
       document.getElementById("cProt").value = data.protein||0;
       document.getElementById("cCarb").value = data.carbs||0;
@@ -1404,6 +1411,19 @@
   ["cName","cKcal","cProt","cCarb","cFat"].forEach(function(id){
     document.getElementById(id).addEventListener("input", updateConfirmState);
   });
+  document.getElementById("cGrams").addEventListener("input", function(){
+    var newG = Math.max(0, +this.value||0);
+    if (customFoodLastGrams>0 && newG>0 && newG!==customFoodLastGrams){
+      var ratio = newG/customFoodLastGrams;
+      document.getElementById("cKcal").value = Math.round((+document.getElementById("cKcal").value||0) * ratio);
+      ["cProt","cCarb","cFat"].forEach(function(id){
+        var el = document.getElementById(id);
+        el.value = Math.round((+el.value||0) * ratio * 10)/10;
+      });
+    }
+    customFoodLastGrams = newG;
+    updateConfirmState();
+  });
   document.getElementById("cancelFood").addEventListener("click", function(){ foodOverlay.hidden=true; });
   foodOverlay.addEventListener("click", function(e){ if (e.target===foodOverlay) foodOverlay.hidden=true; });
   document.getElementById("confirmFood").addEventListener("click", function(){
@@ -1414,7 +1434,8 @@
       var m = scaledFood(selectedFood.base, selectedFood.grams);
       entry = {id:keepId, name:selectedFood.base.name, grams:selectedFood.grams, kcal:m.kcal, protein:m.protein, carbs:m.carbs, fat:m.fat};
     } else {
-      entry = {id:keepId, name:document.getElementById("cName").value.trim(), grams:null,
+      var gramsVal = +document.getElementById("cGrams").value || 0;
+      entry = {id:keepId, name:document.getElementById("cName").value.trim(), grams:gramsVal>0?gramsVal:null,
         kcal:Math.round(+document.getElementById("cKcal").value||0), protein:Math.round(+document.getElementById("cProt").value||0),
         carbs:Math.round(+document.getElementById("cCarb").value||0), fat:Math.round(+document.getElementById("cFat").value||0)};
     }
@@ -1443,7 +1464,8 @@
     document.getElementById("selectedFoodSlot").innerHTML = "";
     document.getElementById("aiFoodInput").value = "";
     document.getElementById("aiFoodResult").innerHTML = "";
-    ["cName","cKcal","cProt","cCarb","cFat"].forEach(function(id){ document.getElementById(id).value=""; });
+    ["cName","cGrams","cKcal","cProt","cCarb","cFat"].forEach(function(id){ document.getElementById(id).value=""; });
+    customFoodLastGrams = 0;
     renderFoodResults("");
     setFoodMode("db");
     var count = (draft[addingMeal]||[]).length;
