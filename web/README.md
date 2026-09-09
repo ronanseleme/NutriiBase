@@ -35,10 +35,30 @@ só no lado do servidor (Supabase Edge Function `describe-meal`).
 - [x] Fase 5 — Metas (KPI peso/gordura compartilhado com o Painel, barra de
       progresso, metas de peso/gordura/data, memória de cálculo de
       kcal e macros, meta de treinos semanais)
-- [ ] Fase 6 — Chat IA / Insights
+- [x] Fase 6 — Chat IA / Insights (uma única aba "Chat & Insights" com
+      alternância interna entre os dois modos, IA via Edge Function própria)
 - [ ] Deploy: build estático + GitHub Actions para GitHub Pages
 
 Painel, Alimentação e Treino já compartilham a navegação de data (‹ Hoje ›)
-e a barra de abas — Chat IA/Insights mostram um aviso "em construção" até
-serem implementadas. O gráfico mensal/anual de gasto por treino do app
-original ainda não foi portado (fica para uma passada futura).
+e a barra de abas. Chat IA e Insights foram unificados em uma única aba
+("Chat & Insights", com um alternador Chat/Insights no topo) a pedido do
+produto, em vez de duas abas separadas. O gráfico mensal/anual de gasto por
+treino do app original ainda não foi portado (fica para uma passada futura).
+
+### Chat IA / Insights
+
+Usa uma nova Edge Function, `chat-assistant` (mesmo padrão do
+`describe-meal`: autentica o usuário via Supabase e chama a Anthropic
+server-side com a secret `ANTHROPIC_API_KEY`, nunca exposta no frontend).
+O contexto (perfil, metas e histórico recente) é montado no cliente a
+partir dos dados já carregados e enviado como texto para a função, que
+devolve:
+- Chat: `{ reply, chips }` — resposta + até 3 sugestões de continuação.
+- Insights ("Gerar dicas personalizadas"): `{ tips: string[] }`.
+
+As demais seções de Insights (saldo calórico do mês, peso no mês,
+consistência/streak, pontos de atenção) são calculadas localmente a partir
+de `refeicoes`/`treinos`/`registros_peso`, sem IA — iguais ao app original.
+
+Deploy da função: `supabase functions deploy chat-assistant` (a secret
+`ANTHROPIC_API_KEY` já configurada para o `describe-meal` é reaproveitada).

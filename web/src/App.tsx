@@ -12,6 +12,7 @@ import { TabBar, type TabKey } from './components/TabBar'
 import { FoodTab } from './components/food/FoodTab'
 import { WorkoutTab } from './components/workout/WorkoutTab'
 import { MetasTab } from './components/metas/MetasTab'
+import { AssistantTab } from './components/assistant/AssistantTab'
 import { todayISO } from './lib/dateUtils'
 
 function App() {
@@ -131,11 +132,7 @@ function App() {
           />
         )}
 
-        {tab !== 'dashboard' && tab !== 'food' && tab !== 'workout' && tab !== 'goals' && (
-          <div className="rounded-[18px] bg-[var(--surface)] p-6 text-center text-[0.9rem] text-[var(--text-soft)] shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
-            Essa aba ainda está em construção — chega numa próxima fase.
-          </div>
-        )}
+        {tab === 'assistant' && <AssistantTab userId={user.id} profile={profile} />}
       </div>
 
       {showProfileForm && (

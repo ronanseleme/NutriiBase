@@ -1,12 +1,11 @@
-export type TabKey = 'dashboard' | 'food' | 'workout' | 'goals' | 'chat' | 'insights'
+export type TabKey = 'dashboard' | 'food' | 'workout' | 'goals' | 'assistant'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'dashboard', label: 'Painel' },
   { key: 'food', label: 'Alimentação' },
   { key: 'workout', label: 'Treino' },
   { key: 'goals', label: 'Metas' },
-  { key: 'chat', label: 'Chat IA' },
-  { key: 'insights', label: 'Insights' },
+  { key: 'assistant', label: 'Chat & Insights' },
 ]
 
 interface Props {
