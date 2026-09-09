@@ -194,9 +194,10 @@
   .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .ai-meal-item{position:relative;border:1px solid var(--line-strong);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);}
   .ai-meal-item .aimi-name{width:100%;font-weight:700;font-size:.9rem;padding:7px 30px 7px 9px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);margin-bottom:8px;}
+  .ai-meal-item .aimi-grams{margin-bottom:8px;max-width:140px;}
   .ai-meal-item .aimi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
-  .ai-meal-item .aimi-row label{display:flex;flex-direction:column;gap:3px;font-size:.62rem;text-transform:uppercase;letter-spacing:.03em;color:var(--text-soft);font-weight:700;}
-  .ai-meal-item .aimi-row input{padding:6px 7px;border-radius:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);font-size:.82rem;width:100%;}
+  .ai-meal-item .aimi-grams label,.ai-meal-item .aimi-row label{display:flex;flex-direction:column;gap:3px;font-size:.62rem;text-transform:uppercase;letter-spacing:.03em;color:var(--text-soft);font-weight:700;}
+  .ai-meal-item .aimi-grams input,.ai-meal-item .aimi-row input{padding:6px 7px;border-radius:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);font-size:.82rem;width:100%;}
   .ai-meal-item .item-del{position:absolute;top:8px;right:8px;}
   .ai-meal-items-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);font-weight:800;margin:4px 0 8px;}
   .segmented{display:flex;border:1px solid var(--line-strong);border-radius:9px;overflow:hidden;}
@@ -1470,6 +1471,7 @@
     box.innerHTML = '<div class="ai-meal-items-label">Confira e ajuste antes de adicionar</div>' + mealAiParsed.map(function(it, idx){
       return '<div class="ai-meal-item" data-idx="'+idx+'">'+
         '<input type="text" class="aimi-name" data-f="name" value="'+esc(it.name)+'">'+
+        '<div class="aimi-grams"><label>Quantidade (g)<input type="number" data-f="grams" min="0" value="'+(it.grams||0)+'"></label></div>'+
         '<div class="aimi-row">'+
           '<label>Kcal<input type="number" class="aimi-kcal" data-f="kcal" min="0" value="'+it.kcal+'"></label>'+
           '<label>Prot (g)<input type="number" class="aimi-prot" data-f="protein" min="0" value="'+it.protein+'"></label>'+
@@ -1484,7 +1486,23 @@
   document.getElementById("mealAiItems").addEventListener("input", function(e){
     var row = e.target.closest("[data-idx]"); if (!row) return;
     var idx = +row.dataset.idx, field = e.target.dataset.f; if (!field || !mealAiParsed[idx]) return;
-    mealAiParsed[idx][field] = field==="name" ? e.target.value : Math.max(0, Math.round(+e.target.value||0));
+    var it = mealAiParsed[idx];
+    if (field==="name"){ it.name = e.target.value; return; }
+    if (field==="grams"){
+      it.grams = Math.max(0, Math.round(+e.target.value||0));
+      if (it.per100){
+        it.kcal = Math.round(it.per100.kcal * it.grams/100);
+        it.protein = Math.round(it.per100.protein * it.grams/100);
+        it.carbs = Math.round(it.per100.carbs * it.grams/100);
+        it.fat = Math.round(it.per100.fat * it.grams/100);
+        row.querySelector('[data-f="kcal"]').value = it.kcal;
+        row.querySelector('[data-f="protein"]').value = it.protein;
+        row.querySelector('[data-f="carbs"]').value = it.carbs;
+        row.querySelector('[data-f="fat"]').value = it.fat;
+      }
+      return;
+    }
+    it[field] = Math.max(0, Math.round(+e.target.value||0));
   });
   document.getElementById("mealAiItems").addEventListener("click", function(e){
     var del = e.target.closest("[data-ai-del]"); if (!del) return;
@@ -1501,7 +1519,13 @@
     callDescribeMealAI(desc).then(function(items){
       btn.disabled=false;
       document.getElementById("mealAiResult").innerHTML = "";
-      mealAiParsed = items;
+      mealAiParsed = items.map(function(it){
+        var g = it.grams>0 ? it.grams : 100;
+        return {
+          name:it.name, grams:g, kcal:it.kcal, protein:it.protein, carbs:it.carbs, fat:it.fat,
+          per100:{kcal:it.kcal/g*100, protein:it.protein/g*100, carbs:it.carbs/g*100, fat:it.fat/g*100}
+        };
+      });
       if (!mealAiParsed.length) document.getElementById("mealAiResult").innerHTML = '<div class="ai-error">Não consegui identificar alimentos nessa descrição. Tente detalhar mais.</div>';
       renderMealAiItems();
     }).catch(function(err){
@@ -1514,7 +1538,7 @@
   document.getElementById("confirmMealAi").addEventListener("click", function(){
     if (!mealAiParsed.length || !mealAiMeal) return;
     var entries = mealAiParsed.filter(function(it){ return it.name.trim(); }).map(function(it){
-      return {id:uid(), name:it.name.trim(), grams:null, kcal:it.kcal, protein:it.protein, carbs:it.carbs, fat:it.fat, descricaoIa:mealAiLastDesc};
+      return {id:uid(), name:it.name.trim(), grams:it.grams>0?it.grams:null, kcal:it.kcal, protein:it.protein, carbs:it.carbs, fat:it.fat, descricaoIa:mealAiLastDesc};
     });
     draft[mealAiMeal] = (draft[mealAiMeal]||[]).concat(entries);
     mealAiOverlay.hidden = true;

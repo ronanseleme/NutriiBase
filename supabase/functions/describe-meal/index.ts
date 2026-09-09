@@ -69,10 +69,12 @@ Deno.serve(async (req) => {
 
   const prompt =
     "O usuário vai descrever, em português do Brasil, tudo que comeu em uma única refeição, " +
-    "podendo ter vários alimentos. Separe a descrição em itens individuais e estime as " +
-    "informações nutricionais TOTAIS de cada item (não por 100g). Responda APENAS com um " +
-    "array JSON válido, sem markdown, sem texto antes ou depois, no formato exato: " +
-    '[{"name": string, "kcal": number, "protein": number, "carbs": number, "fat": number}, ...] ' +
+    "podendo ter vários alimentos. Separe a descrição em itens individuais. Para cada item, " +
+    "estime a quantidade em GRAMAS da porção (peso da porção descrita, ex: '176 gramas de sobrecoxa assada' -> grams=176; " +
+    "se a porção não tiver peso explícito, estime um peso razoável) e as informações nutricionais " +
+    "TOTAIS para essa quantidade (não por 100g). Responda APENAS com um array JSON válido, sem " +
+    "markdown, sem texto antes ou depois, no formato exato: " +
+    '[{"name": string, "grams": number, "kcal": number, "protein": number, "carbs": number, "fat": number}, ...] ' +
     "(protein/carbs/fat em gramas, um objeto por item identificado).\n\nRefeição descrita: " +
     descricao;
 
@@ -125,6 +127,7 @@ Deno.serve(async (req) => {
 
   const clean = items.map((it: any) => ({
     name: String(it?.name || "Item").slice(0, 80),
+    grams: Math.max(0, Math.round(Number(it?.grams) || 0)),
     kcal: Math.max(0, Math.round(Number(it?.kcal) || 0)),
     protein: Math.max(0, Math.round(Number(it?.protein) || 0)),
     carbs: Math.max(0, Math.round(Number(it?.carbs) || 0)),
