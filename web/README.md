@@ -32,11 +32,13 @@ só no lado do servidor (Supabase Edge Function `describe-meal`).
       completa, gramas recalculando macros, editar/excluir)
 - [x] Fase 4 — Treino (registrar/editar/excluir, duração+intensidade ou
       distância+pace para corrida, gasto estimado em tempo real)
-- [ ] Fase 5 — Metas
+- [x] Fase 5 — Metas (KPI peso/gordura compartilhado com o Painel, barra de
+      progresso, metas de peso/gordura/data, memória de cálculo de
+      kcal e macros, meta de treinos semanais)
 - [ ] Fase 6 — Chat IA / Insights
 - [ ] Deploy: build estático + GitHub Actions para GitHub Pages
 
 Painel, Alimentação e Treino já compartilham a navegação de data (‹ Hoje ›)
-e a barra de abas — Metas/Chat/Insights mostram um aviso "em construção"
-até serem implementadas. O gráfico mensal/anual de gasto por treino do
-app original ainda não foi portado (fica para uma passada futura).
+e a barra de abas — Chat IA/Insights mostram um aviso "em construção" até
+serem implementadas. O gráfico mensal/anual de gasto por treino do app
+original ainda não foi portado (fica para uma passada futura).

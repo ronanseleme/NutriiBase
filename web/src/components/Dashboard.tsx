@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ACTIVITY, GOALS } from '../lib/constants'
 import { dayFoodTotals, dayWorkoutKcal } from '../lib/calculations'
+import { WeightBodyFatKpi } from './WeightBodyFatKpi'
 import type { DayLog, Profile } from '../types'
 
 function fmtNum(n: number | null | undefined): string {
@@ -70,6 +71,11 @@ export function Dashboard({ profile, log, onEditProfile, onSaveWeight, onSaveBod
             Editar
           </button>
         </div>
+      </Card>
+
+      <Card>
+        <CardTitle>Peso e composição corporal</CardTitle>
+        <WeightBodyFatKpi profile={profile} />
       </Card>
 
       <Card>

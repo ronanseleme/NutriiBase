@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useProfile } from './hooks/useProfile'
 import { useDayLog } from './hooks/useDayLog'
+import { useMetasExtras } from './hooks/useMetasExtras'
 import { AuthScreen } from './components/AuthScreen'
 import { ProfileForm } from './components/ProfileForm'
 import { Dashboard } from './components/Dashboard'
@@ -10,6 +11,7 @@ import { DateNav } from './components/DateNav'
 import { TabBar, type TabKey } from './components/TabBar'
 import { FoodTab } from './components/food/FoodTab'
 import { WorkoutTab } from './components/workout/WorkoutTab'
+import { MetasTab } from './components/metas/MetasTab'
 import { todayISO } from './lib/dateUtils'
 
 function App() {
@@ -30,6 +32,7 @@ function App() {
     saveWorkout,
     deleteWorkout,
   } = useDayLog(user?.id ?? null, dateIso)
+  const { startWeight, weekWorkoutCount } = useMetasExtras(user?.id ?? null, profile?.weightKg ?? 70)
   const [showProfileForm, setShowProfileForm] = useState(false)
 
   if (authLoading) {
@@ -119,7 +122,16 @@ function App() {
           />
         )}
 
-        {tab !== 'dashboard' && tab !== 'food' && tab !== 'workout' && (
+        {tab === 'goals' && (
+          <MetasTab
+            profile={profile}
+            startWeight={startWeight}
+            weekWorkoutCount={weekWorkoutCount}
+            onSaveProfile={saveProfile}
+          />
+        )}
+
+        {tab !== 'dashboard' && tab !== 'food' && tab !== 'workout' && tab !== 'goals' && (
           <div className="rounded-[18px] bg-[var(--surface)] p-6 text-center text-[0.9rem] text-[var(--text-soft)] shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
             Essa aba ainda está em construção — chega numa próxima fase.
           </div>
