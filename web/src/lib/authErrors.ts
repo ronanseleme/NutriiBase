@@ -1,5 +1,11 @@
 export function mapAuthError(message: string | undefined | null): string {
   const msg = message || ''
+  if (/access_denied/i.test(msg)) {
+    return 'Login cancelado.'
+  }
+  if (/oauth/i.test(msg)) {
+    return 'Não foi possível continuar com o Google. Tente novamente.'
+  }
   if (/already registered|already exists|user_already_exists/i.test(msg)) {
     return 'Este e-mail já está cadastrado. Tente entrar.'
   }

@@ -26,12 +26,18 @@ export function useProfile(userId: string | null) {
       .then(({ data, error }) => {
         if (cancelled) return
         if (error || !data) {
+          // Sem linha ainda (não deveria acontecer com o trigger de auto-criação,
+          // mas cobre contas antigas de antes dele existir).
           setProfile(newProfile(userId))
           setIsNew(true)
         } else {
-          const base = dbProfileToLocal(data as ProfileRow)
+          const row = data as ProfileRow
+          const base = dbProfileToLocal(row)
           setProfile({ ...base, targets: computeTargets(base) })
-          setIsNew(false)
+          // A linha já existe desde o cadastro (trigger auto-cria, inclusive no
+          // login com Google) — "novo" aqui significa "ainda não completou o
+          // onboarding", não "sem linha no banco".
+          setIsNew(row.idade == null || row.altura_cm == null || row.peso_atual_kg == null)
         }
         setLoading(false)
       })

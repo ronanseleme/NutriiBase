@@ -238,3 +238,31 @@ create policy "metas_mensais_update_own" on public.metas_mensais
 drop policy if exists "metas_mensais_delete_own" on public.metas_mensais;
 create policy "metas_mensais_delete_own" on public.metas_mensais
   for delete using (auth.uid() = user_id);
+
+-- ========== auto-criação de profile em todo novo usuário (e-mail ou OAuth) ==========
+-- Sem isso, um usuário que entra pelo Google nunca passa pelo ProfileForm
+-- salvando a linha em profiles — o trigger garante que a linha sempre existe,
+-- com nome pré-preenchido a partir do Google quando disponível, e o resto
+-- com os defaults da tabela (nivel_atividade/objetivo/ritmo). Não existem
+-- colunas de role/créditos neste projeto — só os campos nutricionais acima.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, nome)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', '')
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
