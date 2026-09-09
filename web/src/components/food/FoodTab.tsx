@@ -77,8 +77,10 @@ function MealChip({ label, active, onClick }: { label: string; active: boolean; 
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 rounded-full border px-3.5 py-2 text-[0.82rem] font-semibold whitespace-nowrap ${
-        active ? 'border-[var(--blue)] bg-[var(--blue)] text-white' : 'border-[var(--line-strong)] bg-[var(--surface)]'
+      className={`shrink-0 rounded-full border px-3.5 py-2 text-[0.82rem] font-semibold whitespace-nowrap transition-all ${
+        active
+          ? 'border-transparent bg-[image:var(--blue-gradient)] text-white shadow-[0_6px_14px_-6px_rgba(47,111,237,.5)]'
+          : 'border-[var(--line-strong)] bg-[var(--surface)]'
       }`}
     >
       {label}

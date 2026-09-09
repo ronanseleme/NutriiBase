@@ -37,6 +37,11 @@ só no lado do servidor (Supabase Edge Function `describe-meal`).
       kcal e macros, meta de treinos semanais)
 - [x] Fase 6 — Chat IA / Insights (uma única aba "Chat & Insights" com
       alternância interna entre os dois modos, IA via Edge Function própria)
+- [x] Redesign visual — marca real (anel azul + folha verde + brilho laranja),
+      paleta de cores atualizada (`--blue`, `--green`, `--orange`, gradientes),
+      componentes visuais compartilhados (`nb-card`, `nb-btn-*`, `nb-input`,
+      `nb-segmented`) aplicados em todas as abas, tela de login e barra
+      superior com acabamento mais "digital"
 - [ ] Deploy: build estático + GitHub Actions para GitHub Pages
 
 Painel, Alimentação e Treino já compartilham a navegação de data (‹ Hoje ›)
@@ -62,3 +67,18 @@ de `refeicoes`/`treinos`/`registros_peso`, sem IA — iguais ao app original.
 
 Deploy da função: `supabase functions deploy chat-assistant` (a secret
 `ANTHROPIC_API_KEY` já configurada para o `describe-meal` é reaproveitada).
+
+### Marca e design system
+
+A logo (`web/src/components/Logo.tsx`) é a marca real do NutriiBase — anel
+azul incompleto, folha verde com nervura, brilho laranja de 4 pontas — em
+três variantes (`full`, `mark`, `wordmark`), recriada em SVG a partir das
+imagens fornecidas (não há arquivo de imagem original no repositório, só o
+SVG recriado). O favicon usa a variante `mark`.
+
+Tokens de cor em `web/src/index.css` (`--blue`, `--green`, `--orange`,
+`--teal`, `--coral` + gradientes `--brand-gradient`/`--accent-gradient`/
+`--blue-gradient`) e classes compartilhadas (`nb-card`, `nb-modal`,
+`nb-input`, `nb-btn` + `nb-btn-primary`/`nb-btn-blue`/`nb-btn-secondary`,
+`nb-segmented`) centralizam o visual — trocar um token/classe atualiza
+todas as telas de uma vez.

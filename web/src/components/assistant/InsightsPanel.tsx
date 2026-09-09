@@ -68,8 +68,7 @@ export function InsightsPanel({ profile, monthMap, recentMap, y, m, onPrevMonth,
     }
   }
 
-  const cardCls =
-    'rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]'
+  const cardCls = 'nb-card'
 
   return (
     <div className="flex flex-col gap-4">
@@ -172,7 +171,7 @@ export function InsightsPanel({ profile, monthMap, recentMap, y, m, onPrevMonth,
           type="button"
           onClick={generateAiTips}
           disabled={aiLoading}
-          className="w-full rounded-[10px] bg-[var(--blue)] py-2.5 font-bold text-white disabled:opacity-60"
+          className="nb-btn nb-btn-blue w-full py-2.5"
         >
           {aiLoading ? 'Analisando seu perfil e histórico…' : 'Gerar dicas personalizadas'}
         </button>

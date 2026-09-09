@@ -49,8 +49,8 @@ export function ChatPanel({ context }: Props) {
   const lastChips = last && last.role === 'assistant' ? last.chips : undefined
 
   return (
-    <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
-      <div className="mb-3 font-[Space_Grotesk] font-bold">Assistente nutricional</div>
+    <div className="nb-card">
+      <div className="nb-card-title">Assistente nutricional</div>
       <div className="mb-3 flex max-h-[420px] flex-col gap-2.5 overflow-y-auto">
         {history.length === 0 && (
           <p className="text-[0.86rem] text-[var(--text-soft)]">
@@ -93,14 +93,15 @@ export function ChatPanel({ context }: Props) {
           }}
           disabled={busy}
           placeholder="Digite sua pergunta…"
-          className="flex-1 rounded-full border border-[var(--line-strong)] bg-[var(--bg)] px-3.5 py-2.5 text-[0.86rem] outline-none focus:border-[var(--blue)] disabled:opacity-60"
+          className="nb-input flex-1 rounded-full text-[0.86rem] disabled:opacity-60"
         />
         <button
           type="button"
           onClick={() => send()}
           disabled={busy || !input.trim()}
           aria-label="Enviar"
-          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[var(--orange)] text-white disabled:opacity-50"
+          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-white shadow-[0_10px_22px_-10px_rgba(255,107,53,.6)] transition-transform active:scale-95 disabled:opacity-50"
+          style={{ background: 'var(--accent-gradient)' }}
         >
           {busy ? '…' : '➤'}
         </button>

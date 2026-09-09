@@ -31,8 +31,8 @@ export function MealSummary({ meals, targets }: { meals: MealsByKey; targets: Ta
   const dayTotals = dayFoodTotals(meals)
 
   return (
-    <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
-      <div className="mb-3 font-[Space_Grotesk] font-bold">Resumo por refeição</div>
+    <div className="nb-card">
+      <div className="nb-card-title">Resumo por refeição</div>
       <div className="mb-1.5 grid grid-cols-[1fr_repeat(4,44px)] gap-1 border-b border-[var(--line)] pb-1.5 text-[0.62rem] font-bold uppercase tracking-wide text-[var(--text-soft)]">
         <span />
         <span className="text-right">Kcal</span>

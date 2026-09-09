@@ -38,7 +38,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]">
-      <div className="max-h-[88vh] w-full max-w-md overflow-auto rounded-[18px] bg-[var(--surface)] p-6 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+      <div className="nb-modal max-h-[88vh] w-full max-w-md overflow-auto">
         <h2 className="mb-1 text-[1.3rem] font-bold">Seu perfil</h2>
         <p className="mb-4 text-[0.84rem] text-[var(--text-soft)]">
           Usado para calcular sua TMB, GET e meta diária. Nada é salvo até você clicar em "Salvar perfil".
@@ -57,7 +57,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className={inputCls}
+              className="nb-input"
             />
           </Field>
 
@@ -70,7 +70,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
                 required
                 value={form.age}
                 onChange={(e) => setForm({ ...form, age: +e.target.value })}
-                className={inputCls}
+                className="nb-input"
               />
             </Field>
             <Field label="Sexo biológico">
@@ -80,8 +80,8 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
                     key={s}
                     type="button"
                     onClick={() => setForm({ ...form, sex: s })}
-                    className={`flex-1 py-2 text-sm font-semibold ${
-                      form.sex === s ? 'bg-[var(--blue)] text-white' : 'bg-[var(--bg)] text-[var(--text)]'
+                    className={`flex-1 py-2 text-sm font-semibold transition-colors ${
+                      form.sex === s ? 'bg-[image:var(--blue-gradient)] text-white' : 'bg-[var(--bg)] text-[var(--text)]'
                     }`}
                   >
                     {s === 'F' ? 'Feminino' : 'Masculino'}
@@ -100,7 +100,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
                 required
                 value={form.heightCm}
                 onChange={(e) => setForm({ ...form, heightCm: +e.target.value })}
-                className={inputCls}
+                className="nb-input"
               />
             </Field>
             <Field label="Peso atual (kg)">
@@ -112,7 +112,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
                 required
                 value={form.weightKg}
                 onChange={(e) => setForm({ ...form, weightKg: +e.target.value })}
-                className={inputCls}
+                className="nb-input"
               />
             </Field>
           </div>
@@ -126,7 +126,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
               placeholder="Deixe em branco se não souber"
               value={form.bodyFatPct ?? ''}
               onChange={(e) => setForm({ ...form, bodyFatPct: e.target.value ? +e.target.value : null })}
-              className={inputCls}
+              className="nb-input"
             />
           </Field>
 
@@ -134,7 +134,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
             <select
               value={form.activity}
               onChange={(e) => setForm({ ...form, activity: e.target.value as Profile['activity'] })}
-              className={inputCls}
+              className="nb-input"
             >
               {ACTIVITY.map((a) => (
                 <option key={a.key} value={a.key}>
@@ -149,7 +149,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
               <select
                 value={form.goal}
                 onChange={(e) => setForm({ ...form, goal: e.target.value as Profile['goal'] })}
-                className={inputCls}
+                className="nb-input"
               >
                 {GOALS.map((g) => (
                   <option key={g.key} value={g.key}>
@@ -162,7 +162,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
               <select
                 value={form.pace}
                 onChange={(e) => setForm({ ...form, pace: e.target.value as Profile['pace'] })}
-                className={inputCls}
+                className="nb-input"
               >
                 {PACES.map((p) => (
                   <option key={p.key} value={p.key}>
@@ -174,14 +174,10 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
           </div>
 
           <div className="mt-3 flex justify-end gap-2.5">
-            <button type="button" onClick={onClose} className="rounded-[8px] border border-[var(--line-strong)] px-4 py-2 text-sm font-bold">
+            <button type="button" onClick={onClose} className="nb-btn nb-btn-secondary px-4 py-2 text-sm">
               Cancelar
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-[8px] bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white disabled:opacity-70"
-            >
+            <button type="submit" disabled={saving} className="nb-btn nb-btn-primary px-4 py-2 text-sm">
               {saving ? 'Salvando…' : 'Salvar perfil'}
             </button>
           </div>
@@ -190,9 +186,6 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
     </div>
   )
 }
-
-const inputCls =
-  'rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2.5 text-[var(--text)] outline-none focus:border-[var(--blue)]'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

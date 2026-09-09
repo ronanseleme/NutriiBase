@@ -44,7 +44,7 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, onSaveProfile
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+      <div className="nb-card">
         <div className="mb-3 font-[Space_Grotesk] font-bold">Meta de peso e composição corporal</div>
         <WeightBodyFatKpi profile={profile} />
 
@@ -73,7 +73,7 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, onSaveProfile
         <GoalsForm profile={profile} onSave={onSaveProfile} />
       </div>
 
-      <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+      <div className="nb-card">
         <div className="mb-3 font-[Space_Grotesk] font-bold">Metas calóricas e de macros</div>
         <div className="mb-4 grid grid-cols-4 gap-2 rounded-[12px] bg-[var(--bg)] p-3 text-center">
           <div>
@@ -110,7 +110,7 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, onSaveProfile
       </div>
 
       {weeklyGoal ? (
-        <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+        <div className="nb-card">
           <div className="mb-1 font-[Space_Grotesk] font-bold">Meta de treinos semanais</div>
           <p className="mb-2 text-[0.82rem] text-[var(--text-soft)]">
             {weekWorkoutCount} de {weeklyGoal} treinos esta semana
@@ -123,7 +123,7 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, onSaveProfile
           </div>
         </div>
       ) : (
-        <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+        <div className="nb-card">
           <div className="mb-1 font-[Space_Grotesk] font-bold">Meta de treinos semanais</div>
           <p className="text-[0.85rem] text-[var(--text-soft)]">{weekWorkoutCount} treinos registrados esta semana.</p>
         </div>

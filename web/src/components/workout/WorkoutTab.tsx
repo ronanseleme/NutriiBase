@@ -62,7 +62,7 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+      <div className="nb-card">
         <div className="mb-3 font-[Space_Grotesk] font-bold">{editingId ? 'Editar treino' : 'Registrar treino'}</div>
 
         <label className="mb-3 flex flex-col gap-1.5">
@@ -70,7 +70,7 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
           <select
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value as WorkoutForm['type'], mode: 'duracao' })}
-            className="rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2.5 outline-none focus:border-[var(--blue)]"
+            className="nb-input"
           >
             {WORKOUT_TYPES.map((t) => (
               <option key={t.key} value={t.key}>
@@ -81,18 +81,18 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
         </label>
 
         {isRun && (
-          <div className="mb-3 flex overflow-hidden rounded-[9px] border border-[var(--line-strong)]">
+          <div className="nb-segmented mb-3">
             <button
               type="button"
               onClick={() => setForm({ ...form, mode: 'duracao' })}
-              className={`flex-1 py-2 text-[0.8rem] font-semibold ${form.mode === 'duracao' ? 'bg-[var(--blue)] text-white' : 'bg-[var(--surface)]'}`}
+              className={`flex-1 py-2 text-[0.8rem] font-semibold transition-colors ${form.mode === 'duracao' ? 'bg-[image:var(--blue-gradient)] text-white' : 'bg-[var(--surface)]'}`}
             >
               Tempo + intensidade
             </button>
             <button
               type="button"
               onClick={() => setForm({ ...form, mode: 'distancia' })}
-              className={`flex-1 py-2 text-[0.8rem] font-semibold ${form.mode === 'distancia' ? 'bg-[var(--blue)] text-white' : 'bg-[var(--surface)]'}`}
+              className={`flex-1 py-2 text-[0.8rem] font-semibold transition-colors ${form.mode === 'distancia' ? 'bg-[image:var(--blue-gradient)] text-white' : 'bg-[var(--surface)]'}`}
             >
               Distância + pace
             </button>
@@ -109,7 +109,7 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
                 min={0}
                 value={form.distanceKm}
                 onChange={(e) => setForm({ ...form, distanceKm: +e.target.value || 0 })}
-                className="rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2.5 outline-none focus:border-[var(--blue)]"
+                className="nb-input"
               />
             </label>
             <label className="flex flex-col gap-1.5">
@@ -120,7 +120,7 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
                 min={0}
                 value={form.paceMinKm}
                 onChange={(e) => setForm({ ...form, paceMinKm: +e.target.value || 0 })}
-                className="rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2.5 outline-none focus:border-[var(--blue)]"
+                className="nb-input"
               />
             </label>
           </div>
@@ -134,19 +134,19 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
                   min={1}
                   value={form.durationMin}
                   onChange={(e) => setForm({ ...form, durationMin: +e.target.value || 0 })}
-                  className="rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2.5 outline-none focus:border-[var(--blue)]"
+                  className="nb-input"
                 />
               </label>
             </div>
             <div className="flex flex-col gap-1.5">
               <span className="text-[0.8rem] font-bold text-[var(--text-soft)]">Intensidade</span>
-              <div className="flex overflow-hidden rounded-[9px] border border-[var(--line-strong)]">
+              <div className="nb-segmented">
                 {INTENSITIES.map((i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setForm({ ...form, intensity: i })}
-                    className={`flex-1 py-2 text-[0.8rem] font-semibold capitalize ${form.intensity === i ? 'bg-[var(--blue)] text-white' : 'bg-[var(--surface)]'}`}
+                    className={`flex-1 py-2 text-[0.8rem] font-semibold capitalize transition-colors ${form.intensity === i ? 'bg-[image:var(--blue-gradient)] text-white' : 'bg-[var(--surface)]'}`}
                   >
                     {i}
                   </button>
@@ -162,7 +162,7 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
             placeholder="Ex: treino de perna, RPE 8"
             value={form.note}
             onChange={(e) => setForm({ ...form, note: e.target.value })}
-            className="min-h-12 rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] p-2.5 outline-none focus:border-[var(--blue)]"
+            className="nb-input min-h-12"
           />
         </label>
 
@@ -178,19 +178,19 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 rounded-[10px] bg-[var(--orange)] py-2.5 font-bold text-white disabled:opacity-60"
+            className="nb-btn nb-btn-primary flex-1 py-2.5"
           >
             {saving ? 'Salvando…' : editingId ? 'Salvar alterações' : 'Salvar treino'}
           </button>
           {editingId && (
-            <button type="button" onClick={cancelEdit} className="rounded-[10px] border border-[var(--line-strong)] px-4 py-2.5 text-sm font-bold">
+            <button type="button" onClick={cancelEdit} className="nb-btn nb-btn-secondary px-4 py-2.5 text-sm">
               Cancelar
             </button>
           )}
         </div>
       </div>
 
-      <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+      <div className="nb-card">
         <div className="mb-3 flex items-center justify-between">
           <span className="font-[Space_Grotesk] font-bold">Treinos de hoje</span>
           <span className="rounded-full bg-[color-mix(in_srgb,var(--teal)_14%,var(--surface))] px-2.5 py-1 text-[0.75rem] font-bold text-[var(--teal)]">

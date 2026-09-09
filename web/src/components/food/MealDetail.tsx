@@ -44,14 +44,15 @@ export function MealDetail({
   }
 
   return (
-    <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+    <div className="nb-card">
       <div className="mb-3 flex items-center justify-between">
-        <div className="font-[Space_Grotesk] font-bold">{mealLabel}</div>
+        <div className="nb-card-title mb-0">{mealLabel}</div>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setShowAi(true)}
-            className="rounded-full border border-[var(--line-strong)] px-3 py-1.5 text-[0.78rem] font-bold"
+            className="rounded-full px-3 py-1.5 text-[0.78rem] font-bold text-[var(--blue)]"
+            style={{ background: 'color-mix(in srgb, var(--blue) 12%, var(--surface))' }}
           >
             ✨ Descrever com IA
           </button>
@@ -96,7 +97,7 @@ export function MealDetail({
         type="button"
         onClick={handleSave}
         disabled={!draft.length || saving}
-        className="mt-3 w-full rounded-[10px] bg-[var(--orange)] py-2.5 font-bold text-white disabled:opacity-40"
+        className="nb-btn nb-btn-primary mt-3 w-full py-2.5"
       >
         {saving ? 'Salvando…' : `Salvar refeição${draft.length ? ` (${draft.length})` : ''}`}
       </button>

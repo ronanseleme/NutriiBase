@@ -36,8 +36,8 @@ export function AssistantTab({ userId, profile }: Props) {
         <button
           type="button"
           onClick={() => setSubView('chat')}
-          className={`flex-1 rounded-full py-2 text-[0.84rem] font-bold transition-colors ${
-            subView === 'chat' ? 'bg-[var(--blue)] text-white' : 'text-[var(--text-soft)]'
+          className={`flex-1 rounded-full py-2 text-[0.84rem] font-bold transition-all ${
+            subView === 'chat' ? 'bg-[image:var(--brand-gradient)] text-white shadow-[0_6px_14px_-6px_rgba(47,111,237,.55)]' : 'text-[var(--text-soft)]'
           }`}
         >
           Chat IA
@@ -45,8 +45,8 @@ export function AssistantTab({ userId, profile }: Props) {
         <button
           type="button"
           onClick={() => setSubView('insights')}
-          className={`flex-1 rounded-full py-2 text-[0.84rem] font-bold transition-colors ${
-            subView === 'insights' ? 'bg-[var(--blue)] text-white' : 'text-[var(--text-soft)]'
+          className={`flex-1 rounded-full py-2 text-[0.84rem] font-bold transition-all ${
+            subView === 'insights' ? 'bg-[image:var(--brand-gradient)] text-white shadow-[0_6px_14px_-6px_rgba(47,111,237,.55)]' : 'text-[var(--text-soft)]'
           }`}
         >
           Insights

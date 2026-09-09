@@ -119,14 +119,10 @@ export function Dashboard({ profile, log, onEditProfile, onSaveWeight, onSaveBod
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-[18px] bg-[var(--surface)] p-4 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
-      {children}
-    </div>
-  )
+  return <div className="nb-card">{children}</div>
 }
 function CardTitle({ children }: { children: React.ReactNode }) {
-  return <div className="mb-3 font-[Space_Grotesk] font-bold">{children}</div>
+  return <div className="nb-card-title">{children}</div>
 }
 function Chip({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
@@ -203,13 +199,13 @@ function WeightInput({
         placeholder={placeholder}
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        className="flex-1 rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2.5 outline-none focus:border-[var(--blue)]"
+        className="nb-input flex-1"
       />
       <button
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="rounded-[10px] bg-[var(--orange)] px-4 py-2.5 text-sm font-bold text-white disabled:opacity-70"
+        className="nb-btn nb-btn-primary px-4 py-2.5 text-sm"
       >
         {saving ? 'Salvando…' : saved ? '✓ Salvo!' : 'Salvar'}
       </button>

@@ -56,31 +56,28 @@ function App() {
 
   return (
     <div className="min-h-svh bg-[var(--bg)] pb-8">
-      <div className="sticky top-0 z-10 border-b border-[var(--line)] bg-[var(--surface)]/90 backdrop-blur-sm">
+      <div className="sticky top-0 z-10 bg-[var(--surface)]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <Logo size={28} />
           <button
             type="button"
             onClick={() => signOut()}
-            className="rounded-[8px] border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs font-bold transition-colors hover:bg-[var(--bg)]"
+            className="nb-btn nb-btn-secondary px-3 py-1.5 text-xs"
           >
             Sair
           </button>
         </div>
         <TabBar active={tab} onChange={setTab} />
+        <div className="h-[3px] bg-[image:var(--brand-gradient)] opacity-80" />
       </div>
 
       <div className="mx-auto max-w-md p-4">
         {isNew && (
-          <div className="mb-4 rounded-[18px] border-l-4 border-[var(--orange)] bg-[var(--surface)] p-4">
+          <div className="nb-card mb-4 border-l-4 border-[var(--orange)]">
             <p className="mb-2.5 text-[0.86rem]">
               <strong>Bem-vindo(a)!</strong> Complete seu perfil para calcularmos sua meta calórica e de macros.
             </p>
-            <button
-              type="button"
-              onClick={() => setShowProfileForm(true)}
-              className="rounded-[8px] bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white"
-            >
+            <button type="button" onClick={() => setShowProfileForm(true)} className="nb-btn nb-btn-primary px-4 py-2 text-sm">
               Editar perfil
             </button>
           </div>

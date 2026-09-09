@@ -6,7 +6,7 @@ interface Props {
   onSave: (updates: Partial<Omit<Profile, 'id' | 'targets'>>) => Promise<{ error: Error | null }>
 }
 
-const inputCls = 'rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2.5 text-[var(--text)] outline-none focus:border-[var(--blue)] w-full'
+const inputCls = 'nb-input'
 
 export function GoalsForm({ profile, onSave }: Props) {
   const [targetWeightKg, setTargetWeightKg] = useState(profile.targetWeightKg != null ? String(profile.targetWeightKg) : '')
@@ -68,7 +68,7 @@ export function GoalsForm({ profile, onSave }: Props) {
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="w-full rounded-[10px] bg-[var(--orange)] py-2.5 font-bold text-white disabled:opacity-60"
+        className="nb-btn nb-btn-primary w-full py-2.5"
       >
         {saving ? 'Salvando…' : saved ? '✓ Salvo!' : 'Salvar metas'}
       </button>

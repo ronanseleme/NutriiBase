@@ -15,7 +15,7 @@ export function DateNav({ dateIso, onChange }: Props) {
   }
 
   return (
-    <div className="mb-4 flex items-center justify-center gap-4 rounded-[18px] bg-[var(--surface)] px-4 py-3 shadow-[0_1px_2px_rgba(43,43,51,.06),0_10px_26px_-16px_rgba(43,43,51,.28)]">
+    <div className="nb-card mb-4 flex items-center justify-center gap-4 px-4 py-3">
       <button
         type="button"
         onClick={() => shift(-1)}

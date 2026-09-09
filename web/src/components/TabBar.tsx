@@ -5,7 +5,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'food', label: 'Alimentação' },
   { key: 'workout', label: 'Treino' },
   { key: 'goals', label: 'Metas' },
-  { key: 'assistant', label: 'Chat & Insights' },
+  { key: 'assistant', label: 'Chat/Insights' },
 ]
 
 interface Props {
@@ -21,8 +21,10 @@ export function TabBar({ active, onChange }: Props) {
           key={t.key}
           type="button"
           onClick={() => onChange(t.key)}
-          className={`shrink-0 rounded-full px-3.5 py-1.5 text-[0.82rem] font-semibold transition-colors ${
-            active === t.key ? 'bg-[var(--blue)] text-white' : 'text-[var(--text-soft)] hover:bg-[var(--bg)]'
+          className={`shrink-0 rounded-full px-3.5 py-1.5 text-[0.82rem] font-semibold transition-all ${
+            active === t.key
+              ? 'bg-[image:var(--brand-gradient)] text-white shadow-[0_6px_14px_-6px_rgba(47,111,237,.55)]'
+              : 'text-[var(--text-soft)] hover:bg-[var(--bg)]'
           }`}
         >
           {t.label}

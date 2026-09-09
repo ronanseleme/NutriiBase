@@ -154,19 +154,19 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, onAdd, onUpdate,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]">
-      <div className="max-h-[88vh] w-full max-w-md overflow-auto rounded-[20px] bg-[var(--surface)] p-6 shadow-[0_20px_45px_-20px_rgba(43,43,51,.35)]">
+      <div className="nb-modal max-h-[88vh] w-full max-w-md overflow-auto">
         <h2 className="mb-1 text-[1.2rem] font-bold">{isEdit ? 'Editar alimento' : 'Adicionar alimento'}</h2>
         <p className="mb-4 text-[0.84rem] text-[var(--text-soft)]">
           {isEdit ? `Editando em: ${mealLabel}` : `Adicionando a: ${mealLabel} — ${draftCount} item(ns) no rascunho`}
         </p>
 
-        <div className="mb-4 flex overflow-hidden rounded-[9px] border border-[var(--line-strong)]">
+        <div className="nb-segmented mb-4">
           {(['db', 'ai', 'manual'] as Mode[]).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => setMode(m)}
-              className={`flex-1 py-2 text-sm font-semibold ${mode === m ? 'bg-[var(--blue)] text-white' : 'bg-[var(--surface)]'}`}
+              className={`flex-1 py-2 text-sm font-semibold transition-colors ${mode === m ? 'bg-[image:var(--blue-gradient)] text-white' : 'bg-[var(--surface)]'}`}
             >
               {m === 'db' ? 'Base' : m === 'ai' ? 'Perguntar à IA' : 'Manual'}
             </button>
@@ -180,7 +180,7 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, onAdd, onUpdate,
               placeholder="Buscar alimento (ex: arroz, frango, banana)…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="mb-3 w-full rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2.5 outline-none focus:border-[var(--blue)]"
+              className="nb-input mb-3"
             />
             <div className="mb-3 max-h-52 overflow-auto rounded-[10px] border border-[var(--line)]">
               {results.length === 0 && (
@@ -208,7 +208,7 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, onAdd, onUpdate,
                     min={1}
                     value={selected.grams}
                     onChange={(e) => setSelected({ ...selected, grams: Math.max(1, +e.target.value || 1) })}
-                    className="rounded-[8px] border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-2"
+                    className="nb-input bg-[var(--surface)] py-2"
                   />
                 </label>
                 <PreviewMacros m={scaledFood(selected.base, selected.grams)} />
@@ -223,13 +223,13 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, onAdd, onUpdate,
               placeholder="Descreva o alimento e a porção. Ex: 2 fatias de pão integral com um ovo frito e queijo"
               value={aiDesc}
               onChange={(e) => setAiDesc(e.target.value)}
-              className="mb-2 min-h-14 w-full rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] p-2.5 outline-none focus:border-[var(--blue)]"
+              className="nb-input mb-2 min-h-14"
             />
             <button
               type="button"
               onClick={askAI}
               disabled={aiLoading || !aiDesc.trim()}
-              className="mb-3 w-full rounded-[10px] bg-[var(--blue)] py-2.5 font-bold text-white disabled:opacity-60"
+              className="nb-btn nb-btn-blue mb-3 w-full py-2.5"
             >
               {aiLoading ? 'Consultando IA…' : 'Perguntar à IA'}
             </button>
@@ -241,14 +241,14 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, onAdd, onUpdate,
         {mode === 'manual' && <ManualFields manual={manual} setManual={setManual} onGramsChange={handleGramsChange} />}
 
         <div className="mt-4 flex justify-end gap-2.5">
-          <button type="button" onClick={onClose} className="rounded-[8px] border border-[var(--line-strong)] px-4 py-2 text-sm font-bold">
+          <button type="button" onClick={onClose} className="nb-btn nb-btn-secondary px-4 py-2 text-sm">
             {!isEdit && addedCount > 0 ? 'Concluído' : 'Cancelar'}
           </button>
           <button
             type="button"
             onClick={handleConfirm}
             disabled={!confirmEnabled || saving}
-            className="rounded-[8px] bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+            className="nb-btn nb-btn-primary px-4 py-2 text-sm"
           >
             {saving ? 'Salvando…' : isEdit ? 'Salvar alterações' : 'Adicionar ao rascunho'}
           </button>
@@ -295,7 +295,7 @@ function ManualFields({
   setManual: (fn: (m: ManualState) => ManualState) => void
   onGramsChange: (g: number) => void
 }) {
-  const inputCls = 'rounded-[10px] border border-[var(--line-strong)] bg-[var(--bg)] px-3 py-2.5 outline-none focus:border-[var(--blue)] w-full'
+  const inputCls = 'nb-input'
   return (
     <div className="flex flex-col gap-3">
       <label className="flex flex-col gap-1.5">
