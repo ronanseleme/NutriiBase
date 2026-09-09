@@ -166,6 +166,8 @@
   .summary-row:last-of-type{border-bottom:none;}
   .summary-row .sr-kcal,.summary-row .sr-macro{text-align:right;font-weight:600;}
   .summary-total{border-top:2px solid var(--line-strong);margin-top:2px;padding-top:11px;font-weight:800;}
+  .sr-share-bar{grid-column:1/-1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:2px;}
+  .sr-share-fill{height:100%;border-radius:3px;background:var(--blue-light);}
   .suggestion-box{margin-top:14px;padding:12px 14px;background:var(--bg);border-radius:12px;font-size:.85rem;display:flex;gap:8px;align-items:flex-start;}
   .item-macros{font-size:.72rem;color:var(--text-soft);margin-top:3px;}
   .item-macros b{color:inherit;font-weight:700;}
@@ -185,6 +187,13 @@
   .field input,.field select,.field textarea{padding:9px 11px;border-radius:9px;border:1px solid var(--line-strong);background:var(--bg);color:var(--text);}
   .field textarea{resize:vertical;min-height:60px;}
   .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .ai-meal-item{position:relative;border:1px solid var(--line-strong);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg);}
+  .ai-meal-item .aimi-name{width:100%;font-weight:700;font-size:.9rem;padding:7px 30px 7px 9px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);margin-bottom:8px;}
+  .ai-meal-item .aimi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .ai-meal-item .aimi-row label{display:flex;flex-direction:column;gap:3px;font-size:.62rem;text-transform:uppercase;letter-spacing:.03em;color:var(--text-soft);font-weight:700;}
+  .ai-meal-item .aimi-row input{padding:6px 7px;border-radius:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--text);font-size:.82rem;width:100%;}
+  .ai-meal-item .item-del{position:absolute;top:8px;right:8px;}
+  .ai-meal-items-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);font-weight:800;margin:4px 0 8px;}
   .segmented{display:flex;border:1px solid var(--line-strong);border-radius:9px;overflow:hidden;}
   .segmented button{flex:1;padding:8px;border:none;background:var(--bg);color:var(--text);cursor:pointer;font-size:.85rem;}
   .segmented button.active{background:var(--blue);color:var(--on-accent);font-weight:700;}
@@ -379,6 +388,23 @@
     <div class="modal-footer">
       <button type="button" class="btn" id="cancelFood">Cancelar</button>
       <button type="button" class="btn btn-primary" id="confirmFood" disabled>Adicionar ao rascunho</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="mealAiOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mealAiTitle">
+    <h2 id="mealAiTitle">Descrever refeição com IA</h2>
+    <p class="modal-sub" id="mealAiSub"></p>
+    <div class="ai-food-box">
+      <textarea id="mealAiInput" placeholder="Descreva tudo que você comeu nesta refeição. Ex: 2 ovos mexidos, uma fatia de pão integral, café com leite e uma banana"></textarea>
+      <button type="button" class="btn btn-blue" id="mealAiAsk">Perguntar à IA</button>
+    </div>
+    <div id="mealAiResult"></div>
+    <div id="mealAiItems"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn" id="cancelMealAi">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="confirmMealAi" disabled>Adicionar ao rascunho</button>
     </div>
   </div>
 </div>
@@ -618,9 +644,10 @@
     var m = {}; MEALS.forEach(function(k){ m[k.key]=[]; }); return m;
   }
   function ensureDay(iso){
-    if (!state.logs[iso]) state.logs[iso] = {weight:null, meals:emptyMeals(), workouts:[]};
+    if (!state.logs[iso]) state.logs[iso] = {weight:null, bodyFatPct:null, meals:emptyMeals(), workouts:[]};
     if (!state.logs[iso].meals) state.logs[iso].meals = emptyMeals();
     if (!state.logs[iso].workouts) state.logs[iso].workouts = [];
+    if (state.logs[iso].bodyFatPct===undefined) state.logs[iso].bodyFatPct = null;
     return state.logs[iso];
   }
   function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
@@ -656,7 +683,7 @@
       var iso = toISODate(addDays(new Date(), pair[0]));
       logs[iso] = {weight:pair[1], meals:emptyMeals(), workouts:[]};
     });
-    return {profile:profile, logs:logs, currentDate:t, isDemo:true, ui:{tab:"dashboard", foodMeal:"cafeDaManha"}};
+    return {profile:profile, logs:logs, currentDate:t, isDemo:true, ui:{tab:"dashboard", foodMeal:"geral"}};
   }
 
   function load(){
@@ -667,7 +694,7 @@
         var parsed = JSON.parse(raw);
         if (parsed && parsed.profile && parsed.logs){
           if (!parsed.currentDate) parsed.currentDate = todayISO();
-          if (!parsed.ui) parsed.ui = {tab:"dashboard", foodMeal:"cafeDaManha"};
+          if (!parsed.ui) parsed.ui = {tab:"dashboard", foodMeal:"geral"};
           // Always recompute targets fresh — a profile saved by an older version of
           // the app may have a stored `targets` object missing fields the current
           // calculation (and the Metas screen) expects.
@@ -830,6 +857,7 @@
         '</div>'+
       '</div>'+
       safetyHtml+
+      '<div class="card"><div class="card-title">Peso e composição corporal</div>'+weightBodyFatKpiHtml(p)+'</div>'+
       '<div class="card">'+
         '<div class="card-title">Balanço do dia</div>'+
         '<div class="kpi-strip">'+
@@ -879,6 +907,8 @@
       '<div class="card">'+
         '<div class="card-title">Peso do dia <span class="muted" style="font-weight:500;font-size:.78rem;">(opcional)</span></div>'+
         '<div class="weight-form"><input type="number" id="weightInput" step="0.1" min="0" inputmode="decimal" value="'+(day.weight!=null?day.weight:"")+'" placeholder="kg"><button type="button" class="btn btn-primary btn-small" id="saveWeight">Salvar</button></div>'+
+        '<div class="card-title" style="margin:16px 0 12px;">Percentual de gordura do dia <span class="muted" style="font-weight:500;font-size:.78rem;">(opcional)</span></div>'+
+        '<div class="weight-form"><input type="number" id="bodyFatDayInput" step="0.1" min="0" max="70" inputmode="decimal" value="'+(day.bodyFatPct!=null?day.bodyFatPct:"")+'" placeholder="%"><button type="button" class="btn btn-primary btn-small" id="saveBodyFatDay">Salvar</button></div>'+
       '</div>';
 
     document.getElementById("pbEditProfile").addEventListener("click", openProfileModal);
@@ -895,6 +925,14 @@
       if (!v || v<=0) return;
       day.weight = v;
       if (state.currentDate === todayISO()){ state.profile.weightKg = v; state.profile.targets = computeTargets(state.profile); }
+      state.isDemo=false; save();
+      flashSaved(this, renderAll);
+    });
+    document.getElementById("saveBodyFatDay").addEventListener("click", function(){
+      var v = +document.getElementById("bodyFatDayInput").value;
+      if (!v || v<=0) return;
+      day.bodyFatPct = v;
+      if (state.currentDate === todayISO()){ state.profile.bodyFatPct = v; state.profile.targets = computeTargets(state.profile); }
       state.isDemo=false; save();
       flashSaved(this, renderAll);
     });
@@ -935,16 +973,18 @@
     return labels[lowest]+" está a "+Math.round(ratios[lowest]*100)+"% da meta até agora — que tal incluir "+food+" na próxima refeição?";
   }
   function renderMealSummaryHtml(day, targets){
+    var dayTotals = dayFoodTotals(day);
     var rows = MEALS.map(function(m){
       var t = mealTotals(day.meals[m.key]);
+      var share = dayTotals.kcal>0 ? Math.round((t.kcal/dayTotals.kcal)*100) : 0;
       return '<div class="summary-row"><span class="sr-name">'+m.label+'</span>'+
         '<span class="sr-kcal num">'+fmtNum(t.kcal)+'</span>'+
         '<span class="sr-macro num" style="color:var(--protein);">'+fmtNum(t.protein)+'</span>'+
         '<span class="sr-macro num" style="color:var(--carb);">'+fmtNum(t.carbs)+'</span>'+
         '<span class="sr-macro num" style="color:var(--fat);">'+fmtNum(t.fat)+'</span>'+
+        (t.kcal>0 ? '<div class="sr-share-bar" title="'+share+'% do total do dia"><div class="sr-share-fill" style="width:'+share+'%;"></div></div>' : '<div class="sr-share-bar"></div>')+
       '</div>';
     }).join("");
-    var dayTotals = dayFoodTotals(day);
     var totalRow = '<div class="summary-row summary-total"><span class="sr-name">Total</span>'+
       '<span class="sr-kcal num">'+fmtNum(dayTotals.kcal)+'</span>'+
       '<span class="sr-macro num" style="color:var(--protein);">'+fmtNum(dayTotals.protein)+'</span>'+
@@ -960,45 +1000,55 @@
   }
   function renderFood(){
     var day = ensureDay(state.currentDate);
-    var active = state.ui.foodMeal || "cafeDaManha";
-    var tabsHtml = MEALS.map(function(m){
-      var t = mealTotals(day.meals[m.key]);
-      return '<button type="button" class="meal-chip'+(m.key===active?" active":"")+'" data-meal="'+m.key+'">'+m.label+' <span class="ct">'+fmtNum(t.kcal)+'</span></button>';
-    }).join("");
+    var active = state.ui.foodMeal || "geral";
+    var dayTotals = dayFoodTotals(day);
+    var tabsHtml = '<button type="button" class="meal-chip'+(active==="geral"?" active":"")+'" data-meal="geral">Geral <span class="ct">'+fmtNum(dayTotals.kcal)+'</span></button>'+
+      MEALS.map(function(m){
+        var t = mealTotals(day.meals[m.key]);
+        return '<button type="button" class="meal-chip'+(m.key===active?" active":"")+'" data-meal="'+m.key+'">'+m.label+' <span class="ct">'+fmtNum(t.kcal)+'</span></button>';
+      }).join("");
 
-    var saved = day.meals[active] || [];
-    var drafted = draft[active] || [];
-    var savedHtml = saved.length
-      ? saved.map(function(it){ return itemRowHtml(it, active, false); }).join("")
-      : '<div class="section-empty">Nenhum alimento salvo ainda nesta refeição.</div>';
-    var draftHtml = "";
-    if (drafted.length){
-      draftHtml = '<div class="draft-label">Rascunho — ainda não salvo</div>' + drafted.map(function(it){ return itemRowHtml(it, active, true); }).join("");
+    var saved = active!=="geral" ? (day.meals[active] || []) : [];
+    var drafted = active!=="geral" ? (draft[active] || []) : [];
+    var bodyHtml;
+    if (active==="geral"){
+      bodyHtml = renderMealSummaryHtml(day, state.profile.targets);
+    } else {
+      var savedHtml = saved.length
+        ? saved.map(function(it){ return itemRowHtml(it, active, false); }).join("")
+        : '<div class="section-empty">Nenhum alimento salvo ainda nesta refeição.</div>';
+      var draftHtml = "";
+      if (drafted.length){
+        draftHtml = '<div class="draft-label">Rascunho — ainda não salvo</div>' + drafted.map(function(it){ return itemRowHtml(it, active, true); }).join("");
+      }
+      bodyHtml = '<div class="card">'+
+        '<div class="card-title">'+(MEALS.filter(function(m){return m.key===active;})[0]||{}).label+
+          '<div style="display:flex;gap:8px;"><button type="button" class="btn btn-small" id="mealAiBtn">✨ Descrever com IA</button><button type="button" class="btn btn-small" id="addFoodBtn">+ Adicionar</button></div></div>'+
+        savedHtml + draftHtml +
+        '<button type="button" class="btn btn-primary btn-block" id="saveMealBtn" style="margin-top:10px;" '+(drafted.length?"":"disabled")+'>Salvar refeição'+(drafted.length?" ("+drafted.length+")":"")+'</button>'+
+      '</div>';
     }
 
     document.getElementById("view-food").innerHTML =
       '<div class="card"><div class="card-title">Alimentação · '+formatDateLabel(state.currentDate)+'</div>'+
         '<div class="meal-tabs">'+tabsHtml+'</div>'+
       '</div>'+
-      renderMealSummaryHtml(day, state.profile.targets)+
-      '<div class="card">'+
-        '<div class="card-title">'+(MEALS.filter(function(m){return m.key===active;})[0]||{}).label+
-          '<button type="button" class="btn btn-small" id="addFoodBtn">+ Adicionar</button></div>'+
-        savedHtml + draftHtml +
-        '<button type="button" class="btn btn-primary btn-block" id="saveMealBtn" style="margin-top:10px;" '+(drafted.length?"":"disabled")+'>Salvar refeição'+(drafted.length?" ("+drafted.length+")":"")+'</button>'+
-      '</div>';
+      bodyHtml;
 
     document.querySelectorAll(".meal-chip").forEach(function(b){
       b.addEventListener("click", function(){ state.ui.foodMeal = b.dataset.meal; save(); renderFood(); });
     });
-    document.getElementById("addFoodBtn").addEventListener("click", function(){ openFoodModal(active); });
-    document.getElementById("saveMealBtn").addEventListener("click", function(){
-      if (!drafted.length) return;
-      day.meals[active] = (day.meals[active]||[]).concat(drafted);
-      draft[active] = [];
-      state.isDemo=false; save();
-      flashSaved(this, function(){ renderFood(); renderDashboard(); });
-    });
+    if (active!=="geral"){
+      document.getElementById("addFoodBtn").addEventListener("click", function(){ openFoodModal(active); });
+      document.getElementById("mealAiBtn").addEventListener("click", function(){ openMealAiModal(active); });
+      document.getElementById("saveMealBtn").addEventListener("click", function(){
+        if (!drafted.length) return;
+        day.meals[active] = (day.meals[active]||[]).concat(drafted);
+        draft[active] = [];
+        state.isDemo=false; save();
+        flashSaved(this, function(){ renderFood(); renderDashboard(); });
+      });
+    }
   }
   document.getElementById("view-food").addEventListener("click", function(e){
     var editBtn = e.target.closest("[data-edit]");
@@ -1182,6 +1232,99 @@
       draft[addingMeal] = (draft[addingMeal]||[]).concat([entry]);
     }
     foodOverlay.hidden=true;
+    renderFood();
+    renderDashboard();
+  });
+
+  /* --- AI meal description --- */
+  var mealAiOverlay = document.getElementById("mealAiOverlay");
+  var mealAiMeal = null, mealAiParsed = [];
+  function openMealAiModal(mealKey){
+    mealAiMeal = mealKey; mealAiParsed = [];
+    document.getElementById("mealAiSub").textContent = "Descrevendo para: "+(MEALS.filter(function(m){return m.key===mealKey;})[0]||{}).label;
+    document.getElementById("mealAiInput").value = "";
+    document.getElementById("mealAiResult").innerHTML = "";
+    document.getElementById("mealAiItems").innerHTML = "";
+    document.getElementById("confirmMealAi").disabled = true;
+    var askBtn = document.getElementById("mealAiAsk");
+    askBtn.disabled = !sampleFn;
+    if (!sampleFn) document.getElementById("mealAiResult").innerHTML = '<div class="ai-error">Assistente de IA indisponível neste momento.</div>';
+    mealAiOverlay.hidden = false;
+    document.getElementById("mealAiInput").focus();
+  }
+  function renderMealAiItems(){
+    var box = document.getElementById("mealAiItems");
+    if (!mealAiParsed.length){ box.innerHTML=""; document.getElementById("confirmMealAi").disabled=true; return; }
+    box.innerHTML = '<div class="ai-meal-items-label">Confira e ajuste antes de adicionar</div>' + mealAiParsed.map(function(it, idx){
+      return '<div class="ai-meal-item" data-idx="'+idx+'">'+
+        '<input type="text" class="aimi-name" data-f="name" value="'+esc(it.name)+'">'+
+        '<div class="aimi-row">'+
+          '<label>Kcal<input type="number" class="aimi-kcal" data-f="kcal" min="0" value="'+it.kcal+'"></label>'+
+          '<label>Prot (g)<input type="number" class="aimi-prot" data-f="protein" min="0" value="'+it.protein+'"></label>'+
+          '<label>Carb (g)<input type="number" class="aimi-carb" data-f="carbs" min="0" value="'+it.carbs+'"></label>'+
+          '<label>Gord (g)<input type="number" class="aimi-fat" data-f="fat" min="0" value="'+it.fat+'"></label>'+
+        '</div>'+
+        '<button type="button" class="item-del" data-ai-del="'+idx+'" aria-label="Remover '+esc(it.name)+'">×</button>'+
+      '</div>';
+    }).join("");
+    document.getElementById("confirmMealAi").disabled = false;
+  }
+  document.getElementById("mealAiItems").addEventListener("input", function(e){
+    var row = e.target.closest("[data-idx]"); if (!row) return;
+    var idx = +row.dataset.idx, field = e.target.dataset.f; if (!field || !mealAiParsed[idx]) return;
+    mealAiParsed[idx][field] = field==="name" ? e.target.value : Math.max(0, Math.round(+e.target.value||0));
+  });
+  document.getElementById("mealAiItems").addEventListener("click", function(e){
+    var del = e.target.closest("[data-ai-del]"); if (!del) return;
+    mealAiParsed.splice(+del.dataset.aiDel, 1);
+    renderMealAiItems();
+  });
+  document.getElementById("mealAiAsk").addEventListener("click", function(){
+    var desc = document.getElementById("mealAiInput").value.trim();
+    if (!desc || !sampleFn) return;
+    var btn = this; btn.disabled = true;
+    document.getElementById("mealAiResult").innerHTML = '<div class="ai-loading">Consultando IA…</div>';
+    document.getElementById("mealAiItems").innerHTML = "";
+    var prompt = "O usuário vai descrever, em português do Brasil, TUDO que comeu em uma única refeição, podendo ter vários alimentos. "+
+      "Separe a descrição em itens individuais e estime as informações nutricionais TOTAIS de cada item (não por 100g). "+
+      "Responda apenas com um array JSON no formato exato [{\"name\": string, \"kcal\": number, \"protein\": number, \"carbs\": number, \"fat\": number}, ...] "+
+      "(protein/carbs/fat em gramas, um objeto por item identificado).\n\nRefeição descrita: "+desc;
+    sampleFn.json(prompt, {modelTier:"quick", cache:true}).then(function(data){
+      btn.disabled=false;
+      document.getElementById("mealAiResult").innerHTML = "";
+      var list = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : []);
+      mealAiParsed = list.map(function(it){
+        return {
+          name: String((it&&it.name)||"Item").slice(0,80),
+          kcal: Math.max(0, Math.round(Number(it&&it.kcal)||0)),
+          protein: Math.max(0, Math.round(Number(it&&it.protein)||0)),
+          carbs: Math.max(0, Math.round(Number(it&&it.carbs)||0)),
+          fat: Math.max(0, Math.round(Number(it&&it.fat)||0))
+        };
+      });
+      if (!mealAiParsed.length) document.getElementById("mealAiResult").innerHTML = '<div class="ai-error">Não consegui identificar alimentos nessa descrição. Tente detalhar mais.</div>';
+      renderMealAiItems();
+    }).catch(function(err){
+      btn.disabled=false;
+      var map = {
+        not_granted:"Você optou por não usar a IA nesta sessão.",
+        rate_limited:"Muitas solicitações em pouco tempo — aguarde um instante e tente de novo.",
+        invalid_json:"A IA não retornou um resultado utilizável. Tente descrever de outra forma.",
+        refused:"Não consegui interpretar essa refeição. Tente reformular a descrição.",
+        upstream_error:"Problema temporário para consultar a IA. Tente novamente."
+      };
+      document.getElementById("mealAiResult").innerHTML = '<div class="ai-error">'+(map[err.code]||"Não foi possível obter uma estimativa agora.")+'</div>';
+    });
+  });
+  document.getElementById("cancelMealAi").addEventListener("click", function(){ mealAiOverlay.hidden=true; });
+  mealAiOverlay.addEventListener("click", function(e){ if (e.target===mealAiOverlay) mealAiOverlay.hidden=true; });
+  document.getElementById("confirmMealAi").addEventListener("click", function(){
+    if (!mealAiParsed.length || !mealAiMeal) return;
+    var entries = mealAiParsed.filter(function(it){ return it.name.trim(); }).map(function(it){
+      return {id:uid(), name:it.name.trim(), grams:null, kcal:it.kcal, protein:it.protein, carbs:it.carbs, fat:it.fat};
+    });
+    draft[mealAiMeal] = (draft[mealAiMeal]||[]).concat(entries);
+    mealAiOverlay.hidden = true;
     renderFood();
     renderDashboard();
   });
@@ -1387,36 +1530,37 @@
   function goalBar(pct, color){
     return '<div class="bar"><div class="bar-fill" style="width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color+';"></div></div>';
   }
+  function weightBodyFatKpiHtml(p){
+    var remaining = [];
+    if (p.targetWeightKg) remaining.push(fmtNum(Math.abs(p.weightKg-p.targetWeightKg))+" kg");
+    if (p.bodyFatPct!=null && p.bodyFatTargetPct!=null) remaining.push(fmtNum(Math.abs(Math.round((p.bodyFatPct-p.bodyFatTargetPct)*10)/10))+" p.p. de gordura");
+    var remainingHtml = remaining.length
+      ? '<p class="kpi-progress-label" style="justify-content:center;margin-top:10px;"><span>Faltam '+remaining.join(" e ")+' para a meta</span></p>'
+      : '<p class="muted" style="text-align:center;font-size:.82rem;margin-top:10px;">Defina peso-meta e % de gordura-meta para ver quanto falta.</p>';
+    return '<div class="kpi-strip">'+
+        '<div class="kpi-cell" style="border-top-color:var(--blue);"><div class="kpi-v num" style="color:var(--blue);">'+fmtNum(p.weightKg)+'</div><div class="kpi-l">Peso atual</div></div>'+
+        '<div class="kpi-cell" style="border-top-color:var(--teal);"><div class="kpi-v num" style="color:var(--teal);">'+(p.targetWeightKg?fmtNum(p.targetWeightKg):"—")+'</div><div class="kpi-l">Peso-meta</div></div>'+
+        '<div class="kpi-cell" style="border-top-color:var(--orange);"><div class="kpi-v num" style="color:var(--orange);">'+(p.bodyFatPct!=null?fmtNum(p.bodyFatPct)+"%":"—")+'</div><div class="kpi-l">Gordura atual</div></div>'+
+        '<div class="kpi-cell" style="border-top-color:var(--blue-light);"><div class="kpi-v num" style="color:var(--blue-light);">'+(p.bodyFatTargetPct!=null?fmtNum(p.bodyFatTargetPct)+"%":"—")+'</div><div class="kpi-l">Gordura-meta</div></div>'+
+      '</div>'+
+      remainingHtml;
+  }
   function renderMetas(){
     var p = state.profile, t = p.targets;
     var leanMassNow = leanMassKg(p);
 
-    var progressHtml;
+    var kpiStripHtml = weightBodyFatKpiHtml(p);
+
+    var progressBarHtml = "";
     if (p.targetWeightKg){
       var entries = Object.keys(state.logs).filter(function(k){ return state.logs[k].weight!=null; }).sort();
       var startWeight = entries.length ? state.logs[entries[0]].weight : p.weightKg;
       var totalDelta = startWeight - p.targetWeightKg;
       var doneDelta = startWeight - p.weightKg;
       var pct = totalDelta!==0 ? Math.round((doneDelta/totalDelta)*100) : 100;
-      var remaining = Math.abs(p.weightKg - p.targetWeightKg);
-      progressHtml =
-        '<div class="weight-compare" style="margin-bottom:10px;">'+
-          '<div><div class="wv num">'+startWeight+'</div><div class="wl">Início</div></div>'+
-          '<div><div class="wv num">'+p.weightKg+'</div><div class="wl">Peso atual</div></div>'+
-          '<div><div class="wv num">'+p.targetWeightKg+'</div><div class="wl">Peso-meta</div></div>'+
-        '</div>'+
-        goalBar(pct, pct>=100?"var(--teal)":"var(--blue)")+
-        '<p class="muted" style="font-size:.8rem;margin:8px 0 0;">Faltam '+remaining.toFixed(1)+' kg para a meta'+(p.targetDate?(" até "+new Intl.DateTimeFormat("pt-BR").format(parseISODate(p.targetDate))):"")+'.</p>';
-    } else {
-      progressHtml = "";
+      progressBarHtml = '<div style="margin-top:14px;">'+goalBar(pct, pct>=100?"var(--teal)":"var(--blue)")+
+        '<p class="muted" style="font-size:.8rem;margin:8px 0 0;">Começou em '+fmtNum(startWeight)+' kg'+(p.targetDate?(" · meta até "+new Intl.DateTimeFormat("pt-BR").format(parseISODate(p.targetDate))):"")+'.</p></div>';
     }
-
-    var bodyFatRowHtml = p.bodyFatPct
-      ? '<div class="hero-stats" style="margin:10px 0;">'+
-          '<div class="stat"><div class="sv num">'+p.bodyFatPct+'%</div><div class="sl">Gordura atual</div></div>'+
-          '<div class="stat"><div class="sv num">'+(p.bodyFatTargetPct!=null?p.bodyFatTargetPct+"%":"—")+'</div><div class="sl">Gordura-meta</div></div>'+
-        '</div>'
-      : '<p class="muted" style="font-size:.85rem;margin:10px 0 0;">Informe seu % de gordura atual acima para combinar peso e composição corporal na meta.</p>';
 
     var combinationHtml = "";
     if (leanMassNow!=null){
@@ -1440,7 +1584,7 @@
 
     document.getElementById("view-metas").innerHTML =
       '<div class="card"><div class="card-title">Meta de peso e composição corporal</div>'+
-        progressHtml + bodyFatRowHtml + combinationHtml +
+        kpiStripHtml + progressBarHtml + combinationHtml +
         '<div class="field-row" style="margin-top:14px;">'+
           '<div class="field"><label for="metaTargetWeight">Peso-meta (kg)</label><input type="number" id="metaTargetWeight" step="0.1" min="0" value="'+(p.targetWeightKg!=null?p.targetWeightKg:"")+'"></div>'+
           '<div class="field"><label for="metaBodyFatTarget">% gordura-meta</label><input type="number" id="metaBodyFatTarget" step="0.1" min="3" max="60" value="'+(p.bodyFatTargetPct!=null?p.bodyFatTargetPct:"")+'"></div>'+
@@ -1885,7 +2029,7 @@
 
   /* ================= INIT ================= */
   document.addEventListener("keydown", function(e){
-    if (e.key==="Escape"){ profileOverlay.hidden=true; foodOverlay.hidden=true; }
+    if (e.key==="Escape"){ profileOverlay.hidden=true; foodOverlay.hidden=true; mealAiOverlay.hidden=true; }
   });
 
   function renderAll(){
