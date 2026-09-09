@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NutriiBase</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -243,6 +248,15 @@
   .modal h2{font-weight:700;font-size:1.3rem;margin-bottom:4px;}
   .modal-sub{color:var(--text-soft);font-size:.84rem;margin-bottom:16px;}
   .modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+  .auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100;}
+  .auth-card{background:var(--surface);border-radius:18px;max-width:400px;width:100%;padding:28px 24px;box-shadow:var(--shadow);}
+  .auth-card .brand{margin-bottom:20px;}
+  .auth-card h1{font-size:1.3rem;margin-bottom:6px;}
+  .auth-error{background:color-mix(in srgb, var(--coral) 10%, var(--surface));border:1px solid color-mix(in srgb, var(--coral) 35%, transparent);color:var(--coral);border-radius:10px;padding:10px 12px;font-size:.82rem;margin:4px 0 14px;}
+  .auth-switch{text-align:center;margin-top:16px;font-size:.85rem;color:var(--text-soft);}
+  .auth-switch button{background:none;border:none;color:var(--blue);font-weight:700;cursor:pointer;padding:0;margin-left:4px;font-size:.85rem;}
+  .btn[data-loading]{opacity:.7;pointer-events:none;}
+  .global-toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--coral);color:#fff;padding:12px 18px;border-radius:10px;font-size:.85rem;font-weight:600;box-shadow:var(--shadow);z-index:200;max-width:90vw;text-align:center;}
   .target-preview{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0;background:var(--bg);border-radius:12px;padding:12px;}
   .target-preview div{text-align:center;}
   .target-preview .tv{font-weight:800;font-size:1.2rem;display:block;}
@@ -270,11 +284,42 @@
     .btn,.item-del,.bar-fill,.tab,.meal-chip{transition:background-color .15s ease,filter .15s ease,width .3s ease,transform .15s ease,box-shadow .15s ease;}
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Se o CDN falhar ao carregar (rede instável, bloqueador etc.), `supabase` fica
+  // `null` em vez de travar a página inteira — o app mostra uma tela de erro amigável.
+  var supabase = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(
+    'https://yvsqvvjrprovcpfqmevh.supabase.co',
+    'sb_publishable_Es3XTBHBEqoDHxUtP2-_hg_qYPjIE8i'
+  ) : null;
+</script>
+</head>
+<body>
 
-<div class="topbar">
+<div id="globalToast" class="global-toast" hidden></div>
+
+<div class="auth-screen" id="authScreen" hidden>
+  <div class="auth-card">
+    <div class="brand"><span class="dot"></span>NutriiBase</div>
+    <h1 id="authTitle">Entrar</h1>
+    <p class="modal-sub" id="authSub">Acesse sua conta para registrar sua alimentação e treinos.</p>
+    <div class="auth-error" id="authError" hidden></div>
+    <form id="authForm">
+      <div class="field"><label for="authEmail">E-mail</label><input type="email" id="authEmail" required autocomplete="email"></div>
+      <div class="field"><label for="authPassword">Senha</label><input type="password" id="authPassword" required autocomplete="current-password" minlength="6"></div>
+      <button type="submit" class="btn btn-primary btn-block" id="authSubmit">Entrar</button>
+    </form>
+    <p class="auth-switch"><span id="authSwitchText">Ainda não tem conta?</span><button type="button" id="authSwitchBtn">Criar conta</button></p>
+  </div>
+</div>
+
+<div class="topbar" id="appTopbar" hidden>
   <div class="topbar-inner">
     <div class="brand"><span class="dot"></span>NutriiBase</div>
-    <button type="button" class="profile-btn" id="openProfile" aria-label="Editar perfil" title="Editar perfil">···</button>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button type="button" class="btn btn-small" id="btnLogout" aria-label="Sair da conta" title="Sair da conta">Sair</button>
+      <button type="button" class="profile-btn" id="openProfile" aria-label="Editar perfil" title="Editar perfil">···</button>
+    </div>
   </div>
   <nav class="tabs" id="tabs" aria-label="Navegação principal">
     <button type="button" class="tab" data-tab="dashboard">Painel</button>
@@ -286,7 +331,7 @@
   </nav>
 </div>
 
-<div class="shell">
+<div class="shell" id="appShell" hidden>
   <main>
     <div id="bannerSlot"></div>
 
@@ -412,6 +457,15 @@
 <script>
 (function(){
   "use strict";
+  if (!supabase){
+    document.body.innerHTML = '<div class="auth-screen"><div class="auth-card">'+
+      '<div class="brand"><span class="dot"></span>NutriiBase</div>'+
+      '<h1>Não foi possível conectar</h1>'+
+      '<p class="modal-sub">Não conseguimos carregar a conexão com o servidor. Verifique sua internet e recarregue a página.</p>'+
+      '<button type="button" class="btn btn-primary btn-block" onclick="location.reload()">Recarregar</button>'+
+      '</div></div>';
+    return;
+  }
   var STORAGE_KEY = "nutribase.app.v2";
 
   var MEALS = [
@@ -634,11 +688,137 @@
     return Math.max(0, Math.round(met*weightKg*hours));
   }
 
+  /* ---------- Supabase mapping ---------- */
+  var MEAL_KEY_TO_DB = {cafeDaManha:"cafe_da_manha", almoco:"almoco", lanche:"lanche", jantar:"jantar", ceia:"ceia", preTreino:"pre_treino", posTreino:"pos_treino"};
+  var MEAL_KEY_FROM_DB = {};
+  Object.keys(MEAL_KEY_TO_DB).forEach(function(k){ MEAL_KEY_FROM_DB[MEAL_KEY_TO_DB[k]] = k; });
+  var GOAL_TO_DB = {ganho:"ganho_massa"};
+  var GOAL_FROM_DB = {ganho_massa:"ganho"};
+  function goalToDb(g){ return GOAL_TO_DB[g] || g; }
+  function goalFromDb(g){ return GOAL_FROM_DB[g] || g; }
+
+  function profileToDbRow(p, userId){
+    var restrText = p.restrictions ? (p.restrictions.tags||[]).concat(p.restrictions.note?[p.restrictions.note]:[]).join(", ") : "";
+    return {
+      id:userId,
+      nome:p.name||"",
+      idade:p.age||null,
+      sexo:p.sex||null,
+      altura_cm:p.heightCm||null,
+      peso_atual_kg:p.weightKg||null,
+      percentual_gordura_atual:p.bodyFatPct!=null?p.bodyFatPct:null,
+      nivel_atividade:p.activity,
+      objetivo:goalToDb(p.goal),
+      ritmo:p.pace,
+      peso_meta_kg:p.targetWeightKg!=null?p.targetWeightKg:null,
+      percentual_gordura_meta:p.bodyFatTargetPct!=null?p.bodyFatTargetPct:null,
+      data_meta:p.targetDate||null,
+      meta_treinos_semanais:p.weeklyWorkoutGoal!=null?p.weeklyWorkoutGoal:null,
+      restricoes_alimentares:restrText||null,
+      meta_calorica_diaria:p.targets?p.targets.kcal:null,
+      meta_proteina_g:p.targets?p.targets.protein:null,
+      meta_carbo_g:p.targets?p.targets.carb:null,
+      meta_gordura_g:p.targets?p.targets.fat:null
+    };
+  }
+  function dbProfileToLocal(row){
+    return {
+      id:row.id,
+      name:row.nome||"",
+      age:row.idade||30,
+      sex:row.sexo||"F",
+      heightCm:row.altura_cm||165,
+      weightKg:row.peso_atual_kg||70,
+      bodyFatPct:row.percentual_gordura_atual!=null?row.percentual_gordura_atual:null,
+      activity:row.nivel_atividade||"moderado",
+      goal:goalFromDb(row.objetivo)||"manutencao",
+      pace:row.ritmo||"moderado",
+      targetWeightKg:row.peso_meta_kg!=null?row.peso_meta_kg:null,
+      bodyFatTargetPct:row.percentual_gordura_meta!=null?row.percentual_gordura_meta:null,
+      targetDate:row.data_meta||null,
+      weeklyWorkoutGoal:row.meta_treinos_semanais!=null?row.meta_treinos_semanais:null,
+      restrictions:{tags:[], note:row.restricoes_alimentares||""},
+      macroOverride:null
+    };
+  }
+  function refeicaoRowToLocal(row){
+    return {id:row.id, name:row.nome_alimento, grams:row.porcao, kcal:row.kcal, protein:row.proteina_g, carbs:row.carboidrato_g, fat:row.gordura_g};
+  }
+  function refeicaoLocalToRow(item, userId, dataIso, mealKey, descricaoIa){
+    return {
+      user_id:userId, data:dataIso, tipo_refeicao:MEAL_KEY_TO_DB[mealKey],
+      nome_alimento:item.name, porcao:item.grams!=null?item.grams:null, unidade:item.grams!=null?"g":null,
+      kcal:item.kcal, proteina_g:item.protein, carboidrato_g:item.carbs, gordura_g:item.fat,
+      descricao_ia:descricaoIa||null
+    };
+  }
+  function treinoRowToLocal(row){
+    return {id:row.id, type:row.tipo_atividade, mode:row.distancia_km!=null?"distancia":"duracao",
+      durationMin:row.duracao_min, intensity:row.intensidade, distanceKm:row.distancia_km, paceMinKm:row.pace_min_km,
+      note:row.observacoes||"", kcal:row.kcal_estimado};
+  }
+  function treinoLocalToRow(w, userId, dataIso){
+    var isDist = w.mode==="distancia";
+    return {
+      user_id:userId, data:dataIso, tipo_atividade:w.type,
+      duracao_min: isDist ? null : (w.durationMin!=null?w.durationMin:null),
+      intensidade: isDist ? null : (w.intensity||null),
+      distancia_km: isDist ? w.distanceKm : null,
+      pace_min_km: isDist ? w.paceMinKm : null,
+      kcal_estimado:w.kcal, observacoes:w.note||null
+    };
+  }
+
+  var toastTimer = null;
+  function showToast(msg, isError){
+    var el = document.getElementById("globalToast");
+    if (!el) return;
+    el.textContent = msg;
+    el.style.background = isError===false ? "var(--teal)" : "var(--coral)";
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.hidden = true; }, 3500);
+  }
+  function runSave(btn, promise, onSuccess){
+    var original = btn ? btn.textContent : null;
+    if (btn){ btn.disabled = true; btn.textContent = "Salvando…"; }
+    return promise.then(function(res){
+      if (res && res.error){
+        if (btn){ btn.disabled=false; btn.textContent=original; }
+        showToast("Não foi possível salvar, tente novamente.");
+        return;
+      }
+      if (btn) flashSaved(btn, function(){ if (onSuccess) onSuccess(res); });
+      else if (onSuccess) onSuccess(res);
+    }).catch(function(){
+      if (btn){ btn.disabled=false; btn.textContent=original; }
+      showToast("Não foi possível salvar, tente novamente.");
+    });
+  }
+  function callDescribeMealAI(descricao){
+    return supabase.functions.invoke("describe-meal", {body:{descricao:descricao}}).then(function(res){
+      if (res.error){
+        var ctx = res.error.context;
+        var bodyPromise = (ctx && typeof ctx.json === "function") ? ctx.json().catch(function(){ return null; }) : Promise.resolve(null);
+        return bodyPromise.then(function(body){
+          var code = (body && body.error && body.error.code) || "upstream_error";
+          var message = (body && body.error && body.error.message) || res.error.message;
+          var e = new Error(message); e.code = code; throw e;
+        });
+      }
+      if (!res.data || !Array.isArray(res.data.items)){
+        var e2 = new Error("Resposta inválida da IA"); e2.code = "invalid_json"; throw e2;
+      }
+      return res.data.items;
+    });
+  }
+
   /* ---------- state ---------- */
   var state = null;
   var draft = {}; // in-memory only: {mealKey: [items]}
   var chatHistory = []; // in-memory only: [{role,content}]
-  var sampleFn; // undefined = resolving, null = unavailable, function = ready
+  var sampleFn; // undefined = resolving, null = unavailable, function = ready — Chat IA / Insights (claude.use), sem relação com o describe-meal
+  var currentUserId = null;
 
   function emptyMeals(){
     var m = {}; MEALS.forEach(function(k){ m[k.key]=[]; }); return m;
@@ -652,60 +832,59 @@
   }
   function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
 
-  function seedState(){
+  function seedState(userId){
     var profile = {
-      name:"Ana", age:29, sex:"F", heightCm:165, weightKg:63, bodyFatPct:24,
+      id:userId||null, name:"", age:30, sex:"F", heightCm:165, weightKg:70, bodyFatPct:null,
       activity:"moderado", goal:"manutencao", pace:"moderado",
-      targetWeightKg:60, targetDate:toISODate(addDays(new Date(),60)), bodyFatTargetPct:20, weeklyWorkoutGoal:4,
-      restrictions:{tags:["Sem lactose"], note:""},
+      targetWeightKg:null, targetDate:null, bodyFatTargetPct:null, weeklyWorkoutGoal:null,
+      restrictions:{tags:[], note:""},
       macroOverride:null
     };
     profile.targets = computeTargets(profile);
-
-    var F = {}; FOODS.forEach(function(f){ F[f.name]=f; });
-    function item(name, grams){
-      var m = scaledFood(F[name], grams);
-      return {id:"seed-"+name, name:name, grams:grams, kcal:m.kcal, protein:m.protein, carbs:m.carbs, fat:m.fat};
-    }
-    var t = todayISO();
-    var logs = {};
-    logs[t] = {
-      weight:63.0,
-      meals:Object.assign(emptyMeals(), {
-        cafeDaManha:[item("Aveia em flocos",40), item("Banana",100), item("Café sem açúcar",200)],
-        almoco:[item("Arroz branco cozido",150), item("Feijão carioca cozido",100), item("Peito de frango grelhado",120), item("Brócolis cozido",80)],
-        lanche:[item("Iogurte grego",170), item("Castanha do Pará",15)]
-      }),
-      workouts:[{id:"seed-w1", type:"corrida", mode:"distancia", distanceKm:5, paceMinKm:6, durationMin:null, intensity:null, note:"Corrida leve no parque", kcal: computeWorkoutKcal({type:"corrida",mode:"distancia",distanceKm:5,paceMinKm:6}, 63)}]
-    };
-    var weightSeed = [[-20,64.6],[-18,64.5],[-16,64.3],[-14,64.4],[-12,64.1],[-10,64.0],[-8,63.8],[-6,63.6],[-4,63.5],[-2,63.2]];
-    weightSeed.forEach(function(pair){
-      var iso = toISODate(addDays(new Date(), pair[0]));
-      logs[iso] = {weight:pair[1], meals:emptyMeals(), workouts:[]};
-    });
-    return {profile:profile, logs:logs, currentDate:t, isDemo:true, ui:{tab:"dashboard", foodMeal:"geral"}};
+    return {profile:profile, logs:{}, currentDate:todayISO(), isDemo:true, ui:{tab:"dashboard", foodMeal:"geral"}};
   }
 
-  function load(){
-    var raw=null;
-    try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){}
-    if (raw){
-      try{
-        var parsed = JSON.parse(raw);
-        if (parsed && parsed.profile && parsed.logs){
-          if (!parsed.currentDate) parsed.currentDate = todayISO();
-          if (!parsed.ui) parsed.ui = {tab:"dashboard", foodMeal:"geral"};
-          // Always recompute targets fresh — a profile saved by an older version of
-          // the app may have a stored `targets` object missing fields the current
-          // calculation (and the Metas screen) expects.
-          parsed.profile.targets = computeTargets(parsed.profile);
-          state = parsed;
-          return;
-        }
-      }catch(e){}
-    }
-    state = seedState();
-    save();
+  // Carrega o perfil e um histórico recente (últimos ~400 dias) do usuário logado
+  // a partir do Supabase, e monta o `state` local que o resto do app já sabe renderizar.
+  function initUserData(user){
+    state = seedState(user.id);
+    draft = {};
+    chatHistory = [];
+
+    return supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(function(profileRes){
+      if (profileRes.error){
+        showToast("Não foi possível carregar seu perfil. Tente recarregar a página.");
+      } else if (profileRes.data){
+        state.profile = dbProfileToLocal(profileRes.data);
+        state.isDemo = false;
+      }
+      state.profile.targets = computeTargets(state.profile);
+
+      var since = toISODate(addDays(new Date(), -400));
+      return Promise.all([
+        supabase.from("refeicoes").select("*").eq("user_id", user.id).gte("data", since).order("data", {ascending:true}),
+        supabase.from("treinos").select("*").eq("user_id", user.id).gte("data", since).order("data", {ascending:true}),
+        supabase.from("registros_peso").select("*").eq("user_id", user.id).gte("data", since).order("data", {ascending:true})
+      ]);
+    }).then(function(results){
+      var refeicoesRes = results[0], treinosRes = results[1], pesoRes = results[2];
+      (refeicoesRes.data||[]).forEach(function(row){
+        var day = ensureDay(row.data);
+        var mealKey = MEAL_KEY_FROM_DB[row.tipo_refeicao];
+        if (mealKey && day.meals[mealKey]) day.meals[mealKey].push(refeicaoRowToLocal(row));
+      });
+      (treinosRes.data||[]).forEach(function(row){
+        ensureDay(row.data).workouts.push(treinoRowToLocal(row));
+      });
+      (pesoRes.data||[]).forEach(function(row){
+        var day = ensureDay(row.data);
+        day.weight = row.peso_kg;
+        if (row.percentual_gordura!=null) day.bodyFatPct = row.percentual_gordura;
+      });
+      if (refeicoesRes.error || treinosRes.error || pesoRes.error){
+        showToast("Alguns dados não puderam ser carregados. Tente recarregar a página.");
+      }
+    });
   }
   function uid(){ return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "id-"+Date.now()+"-"+Math.random().toString(16).slice(2); }
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
@@ -746,7 +925,7 @@
     var slot = document.getElementById("bannerSlot");
     if (!state.isDemo){ slot.innerHTML=""; return; }
     slot.innerHTML = '<div class="card" style="border-left:4px solid var(--orange);">'+
-      '<p style="margin:0 0 10px;font-size:.86rem;"><strong>Dados de exemplo</strong> — perfil e histórico da Ana, só para mostrar como o NutriiBase funciona. Edite seu perfil para começar a registrar de verdade.</p>'+
+      '<p style="margin:0 0 10px;font-size:.86rem;"><strong>Bem-vindo(a)!</strong> Complete seu perfil para calcularmos sua meta calórica e de macros.</p>'+
       '<div style="display:flex;gap:8px;"><button type="button" class="btn btn-primary btn-small" id="bannerEdit">Editar perfil</button><button type="button" class="btn btn-small" id="bannerDismiss">Dispensar</button></div>'+
     '</div>';
     document.getElementById("bannerEdit").addEventListener("click", openProfileModal);
@@ -920,7 +1099,7 @@
       day.weight = v;
       if (state.currentDate === todayISO()){ state.profile.weightKg = v; state.profile.targets = computeTargets(state.profile); }
       state.isDemo=false; save();
-      flashSaved(this, renderAll);
+      runSave(this, supabase.from("registros_peso").upsert({user_id:currentUserId, data:state.currentDate, peso_kg:v}, {onConflict:"user_id,data"}), renderAll);
     });
     document.getElementById("saveBodyFatDay").addEventListener("click", function(){
       var v = +document.getElementById("bodyFatDayInput").value;
@@ -928,7 +1107,7 @@
       day.bodyFatPct = v;
       if (state.currentDate === todayISO()){ state.profile.bodyFatPct = v; state.profile.targets = computeTargets(state.profile); }
       state.isDemo=false; save();
-      flashSaved(this, renderAll);
+      runSave(this, supabase.from("registros_peso").upsert({user_id:currentUserId, data:state.currentDate, percentual_gordura:v}, {onConflict:"user_id,data"}), renderAll);
     });
   }
 
@@ -1047,10 +1226,17 @@
       document.getElementById("mealAiBtn").addEventListener("click", function(){ openMealAiModal(active); });
       document.getElementById("saveMealBtn").addEventListener("click", function(){
         if (!drafted.length) return;
-        day.meals[active] = (day.meals[active]||[]).concat(drafted);
-        draft[active] = [];
-        state.isDemo=false; save();
-        flashSaved(this, function(){ renderFood(); renderDashboard(); });
+        var rows = drafted.map(function(it){ return refeicaoLocalToRow(it, currentUserId, state.currentDate, active, it.descricaoIa); });
+        runSave(this, supabase.from("refeicoes").insert(rows).select(), function(res){
+          var inserted = (res && res.data) || [];
+          var merged = inserted.length===drafted.length
+            ? drafted.map(function(it,i){ return Object.assign({}, it, {id:inserted[i].id}); })
+            : drafted;
+          day.meals[active] = (day.meals[active]||[]).concat(merged);
+          draft[active] = [];
+          state.isDemo=false; save();
+          renderFood(); renderDashboard();
+        });
       });
     }
   }
@@ -1071,10 +1257,14 @@
     if (parts[0]==="saved"){
       day.meals[active] = day.meals[active].filter(function(it){ return it.id!==parts[1]; });
       state.isDemo=false; save();
+      renderFood(); renderDashboard();
+      supabase.from("refeicoes").delete().eq("id", parts[1]).then(function(res){
+        if (res.error) showToast("Não foi possível remover o item, tente novamente.");
+      });
     } else {
       draft[active] = (draft[active]||[]).filter(function(it){ return it.id!==parts[1]; });
+      renderFood(); renderDashboard();
     }
-    renderFood(); renderDashboard();
   });
   function itemRowHtml(it, mealKey, isDraft){
     var editBtn = !isDraft ? '<button type="button" class="item-edit" data-edit="'+mealKey+'|'+it.id+'" aria-label="Editar '+esc(it.name)+'">✎</button>' : '';
@@ -1134,11 +1324,6 @@
     document.getElementById("dbSearchBlock").hidden = mode!=="db";
     document.getElementById("aiFoodBlock").hidden = mode!=="ai";
     document.getElementById("customFoodForm").hidden = mode==="db" || (mode==="ai" && !aiResultApplied);
-    if (mode==="ai"){
-      var askBtn = document.getElementById("aiFoodAsk");
-      askBtn.disabled = !sampleFn;
-      if (!sampleFn) document.getElementById("aiFoodResult").innerHTML = '<div class="ai-error">Assistente de IA indisponível neste momento.</div>';
-    }
     updateConfirmState();
   }
   function updateConfirmState(){
@@ -1148,35 +1333,37 @@
   document.getElementById("foodModeToggle").addEventListener("click", function(e){
     var b = e.target.closest("button"); if (b) setFoodMode(b.dataset.val);
   });
+  function mapAIErrorCode(code){
+    var map = {
+      unauthorized:"Sua sessão expirou — faça login de novo.",
+      bad_request:"Descreva o alimento antes de perguntar à IA.",
+      rate_limited:"Muitas solicitações em pouco tempo — aguarde um instante e tente de novo.",
+      invalid_json:"A IA não retornou um resultado utilizável. Tente descrever de outra forma.",
+      refused:"Não consegui estimar esse alimento. Tente reformular a descrição.",
+      upstream_error:"Problema temporário para consultar a IA. Tente novamente."
+    };
+    return map[code] || "Não foi possível obter uma estimativa agora.";
+  }
   document.getElementById("aiFoodAsk").addEventListener("click", function(){
     var desc = document.getElementById("aiFoodInput").value.trim();
-    if (!desc || !sampleFn) return;
+    if (!desc) return;
     var btn = this; btn.disabled = true;
     document.getElementById("aiFoodResult").innerHTML = '<div class="ai-loading">Consultando IA…</div>';
-    var prompt = "Estime as informações nutricionais TOTAIS (não por 100g) para a seguinte porção de comida, em português do Brasil. "+
-      "Responda apenas com um objeto JSON no formato exato {\"name\": string, \"kcal\": number, \"protein\": number, \"carbs\": number, \"fat\": number} "+
-      "(protein/carbs/fat em gramas, referentes à PORÇÃO INTEIRA descrita).\n\nAlimento/porção: "+desc;
-    sampleFn.json(prompt, {modelTier:"quick", cache:true}).then(function(data){
+    callDescribeMealAI(desc).then(function(items){
       btn.disabled=false;
       document.getElementById("aiFoodResult").innerHTML = "";
-      document.getElementById("cName").value = String((data&&data.name) || desc).slice(0,80);
-      document.getElementById("cKcal").value = Math.max(0, Math.round(Number(data&&data.kcal)||0));
-      document.getElementById("cProt").value = Math.max(0, Math.round(Number(data&&data.protein)||0));
-      document.getElementById("cCarb").value = Math.max(0, Math.round(Number(data&&data.carbs)||0));
-      document.getElementById("cFat").value = Math.max(0, Math.round(Number(data&&data.fat)||0));
+      var data = items[0] || {};
+      document.getElementById("cName").value = String(data.name || desc).slice(0,80);
+      document.getElementById("cKcal").value = data.kcal||0;
+      document.getElementById("cProt").value = data.protein||0;
+      document.getElementById("cCarb").value = data.carbs||0;
+      document.getElementById("cFat").value = data.fat||0;
       aiResultApplied = true;
       document.getElementById("customFoodForm").hidden = false;
       updateConfirmState();
     }).catch(function(err){
       btn.disabled=false;
-      var map = {
-        not_granted:"Você optou por não usar a IA nesta sessão.",
-        rate_limited:"Muitas solicitações em pouco tempo — aguarde um instante e tente de novo.",
-        invalid_json:"A IA não retornou um resultado utilizável. Tente descrever de outra forma.",
-        refused:"Não consegui estimar esse alimento. Tente reformular a descrição.",
-        upstream_error:"Problema temporário para consultar a IA. Tente novamente."
-      };
-      document.getElementById("aiFoodResult").innerHTML = '<div class="ai-error">'+(map[err.code]||"Não foi possível obter uma estimativa agora.")+'</div>';
+      document.getElementById("aiFoodResult").innerHTML = '<div class="ai-error">'+mapAIErrorCode(err.code)+'</div>';
     });
   });
   function normalize(s){ return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
@@ -1239,6 +1426,9 @@
       foodOverlay.hidden=true;
       renderFood();
       renderDashboard();
+      supabase.from("refeicoes").update(refeicaoLocalToRow(entry, currentUserId, state.currentDate, editingFoodRef.mealKey)).eq("id", entry.id).then(function(res){
+        if (res.error) showToast("Não foi possível salvar a alteração, tente novamente.");
+      });
     } else {
       draft[addingMeal] = (draft[addingMeal]||[]).concat([entry]);
       renderFood();
@@ -1263,17 +1453,14 @@
 
   /* --- AI meal description --- */
   var mealAiOverlay = document.getElementById("mealAiOverlay");
-  var mealAiMeal = null, mealAiParsed = [];
+  var mealAiMeal = null, mealAiParsed = [], mealAiLastDesc = "";
   function openMealAiModal(mealKey){
-    mealAiMeal = mealKey; mealAiParsed = [];
+    mealAiMeal = mealKey; mealAiParsed = []; mealAiLastDesc = "";
     document.getElementById("mealAiSub").textContent = "Descrevendo para: "+(MEALS.filter(function(m){return m.key===mealKey;})[0]||{}).label;
     document.getElementById("mealAiInput").value = "";
     document.getElementById("mealAiResult").innerHTML = "";
     document.getElementById("mealAiItems").innerHTML = "";
     document.getElementById("confirmMealAi").disabled = true;
-    var askBtn = document.getElementById("mealAiAsk");
-    askBtn.disabled = !sampleFn;
-    if (!sampleFn) document.getElementById("mealAiResult").innerHTML = '<div class="ai-error">Assistente de IA indisponível neste momento.</div>';
     mealAiOverlay.hidden = false;
     document.getElementById("mealAiInput").focus();
   }
@@ -1306,39 +1493,20 @@
   });
   document.getElementById("mealAiAsk").addEventListener("click", function(){
     var desc = document.getElementById("mealAiInput").value.trim();
-    if (!desc || !sampleFn) return;
+    if (!desc) return;
     var btn = this; btn.disabled = true;
     document.getElementById("mealAiResult").innerHTML = '<div class="ai-loading">Consultando IA…</div>';
     document.getElementById("mealAiItems").innerHTML = "";
-    var prompt = "O usuário vai descrever, em português do Brasil, TUDO que comeu em uma única refeição, podendo ter vários alimentos. "+
-      "Separe a descrição em itens individuais e estime as informações nutricionais TOTAIS de cada item (não por 100g). "+
-      "Responda apenas com um array JSON no formato exato [{\"name\": string, \"kcal\": number, \"protein\": number, \"carbs\": number, \"fat\": number}, ...] "+
-      "(protein/carbs/fat em gramas, um objeto por item identificado).\n\nRefeição descrita: "+desc;
-    sampleFn.json(prompt, {modelTier:"quick", cache:true}).then(function(data){
+    mealAiLastDesc = desc;
+    callDescribeMealAI(desc).then(function(items){
       btn.disabled=false;
       document.getElementById("mealAiResult").innerHTML = "";
-      var list = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : []);
-      mealAiParsed = list.map(function(it){
-        return {
-          name: String((it&&it.name)||"Item").slice(0,80),
-          kcal: Math.max(0, Math.round(Number(it&&it.kcal)||0)),
-          protein: Math.max(0, Math.round(Number(it&&it.protein)||0)),
-          carbs: Math.max(0, Math.round(Number(it&&it.carbs)||0)),
-          fat: Math.max(0, Math.round(Number(it&&it.fat)||0))
-        };
-      });
+      mealAiParsed = items;
       if (!mealAiParsed.length) document.getElementById("mealAiResult").innerHTML = '<div class="ai-error">Não consegui identificar alimentos nessa descrição. Tente detalhar mais.</div>';
       renderMealAiItems();
     }).catch(function(err){
       btn.disabled=false;
-      var map = {
-        not_granted:"Você optou por não usar a IA nesta sessão.",
-        rate_limited:"Muitas solicitações em pouco tempo — aguarde um instante e tente de novo.",
-        invalid_json:"A IA não retornou um resultado utilizável. Tente descrever de outra forma.",
-        refused:"Não consegui interpretar essa refeição. Tente reformular a descrição.",
-        upstream_error:"Problema temporário para consultar a IA. Tente novamente."
-      };
-      document.getElementById("mealAiResult").innerHTML = '<div class="ai-error">'+(map[err.code]||"Não foi possível obter uma estimativa agora.")+'</div>';
+      document.getElementById("mealAiResult").innerHTML = '<div class="ai-error">'+mapAIErrorCode(err.code)+'</div>';
     });
   });
   document.getElementById("cancelMealAi").addEventListener("click", function(){ mealAiOverlay.hidden=true; });
@@ -1346,7 +1514,7 @@
   document.getElementById("confirmMealAi").addEventListener("click", function(){
     if (!mealAiParsed.length || !mealAiMeal) return;
     var entries = mealAiParsed.filter(function(it){ return it.name.trim(); }).map(function(it){
-      return {id:uid(), name:it.name.trim(), grams:null, kcal:it.kcal, protein:it.protein, carbs:it.carbs, fat:it.fat};
+      return {id:uid(), name:it.name.trim(), grams:null, kcal:it.kcal, protein:it.protein, carbs:it.carbs, fat:it.fat, descricaoIa:mealAiLastDesc};
     });
     draft[mealAiMeal] = (draft[mealAiMeal]||[]).concat(entries);
     mealAiOverlay.hidden = true;
@@ -1488,15 +1656,23 @@
     document.getElementById("wNote").addEventListener("input", function(){ workoutForm.note=this.value; });
     document.getElementById("saveWorkoutBtn").addEventListener("click", function(){
       var entry = Object.assign({id: editingWorkoutId || uid(), kcal:computeWorkoutKcal(workoutForm, state.profile.weightKg)}, workoutForm);
-      if (editingWorkoutId){
-        var idx = day.workouts.map(function(w){return w.id;}).indexOf(editingWorkoutId);
-        if (idx!==-1) day.workouts[idx] = entry;
-        editingWorkoutId = null;
-      } else {
-        day.workouts.push(entry);
-      }
-      state.isDemo=false; save();
-      flashSaved(this, function(){ renderWorkout(); renderDashboard(); });
+      var isEdit = !!editingWorkoutId;
+      var dbRow = treinoLocalToRow(entry, currentUserId, state.currentDate);
+      var promise = isEdit
+        ? supabase.from("treinos").update(dbRow).eq("id", entry.id)
+        : supabase.from("treinos").insert(dbRow).select();
+      runSave(this, promise, function(res){
+        if (isEdit){
+          var idx = day.workouts.map(function(w){return w.id;}).indexOf(editingWorkoutId);
+          if (idx!==-1) day.workouts[idx] = entry;
+          editingWorkoutId = null;
+        } else {
+          if (res && res.data && res.data[0]) entry.id = res.data[0].id;
+          day.workouts.push(entry);
+        }
+        state.isDemo=false; save();
+        renderWorkout(); renderDashboard();
+      });
     });
     var cancelEditBtn = document.getElementById("cancelEditWorkout");
     if (cancelEditBtn) cancelEditBtn.addEventListener("click", function(){
@@ -1519,9 +1695,13 @@
     }
     var b = e.target.closest("[data-delw]"); if (!b) return;
     var day = ensureDay(state.currentDate);
-    day.workouts = day.workouts.filter(function(w){ return w.id!==b.dataset.delw; });
-    if (editingWorkoutId===b.dataset.delw) editingWorkoutId=null;
+    var delId = b.dataset.delw;
+    day.workouts = day.workouts.filter(function(w){ return w.id!==delId; });
+    if (editingWorkoutId===delId) editingWorkoutId=null;
     state.isDemo=false; save(); renderWorkout(); renderDashboard();
+    supabase.from("treinos").delete().eq("id", delId).then(function(res){
+      if (res.error) showToast("Não foi possível remover o treino, tente novamente.");
+    });
   });
 
   /* ================= METAS ================= */
@@ -1674,7 +1854,7 @@
       state.profile.weeklyWorkoutGoal = (+document.getElementById("metaWeeklyWorkouts").value) || null;
       state.profile.targets = computeTargets(state.profile);
       state.isDemo=false; save();
-      flashSaved(this, renderAll);
+      runSave(this, supabase.from("profiles").upsert(profileToDbRow(state.profile, currentUserId)), renderAll);
     });
   }
 
@@ -2079,7 +2259,8 @@
     state.profile = profile;
     state.isDemo=false;
     save();
-    flashSaved(e.target.querySelector('button[type="submit"]'), function(){
+    var btn = e.target.querySelector('button[type="submit"]');
+    runSave(btn, supabase.from("profiles").upsert(profileToDbRow(state.profile, currentUserId)), function(){
       profileOverlay.hidden=true;
       renderAll();
     });
@@ -2102,13 +2283,100 @@
     document.querySelectorAll("[data-view]").forEach(function(v){ v.hidden = v.id !== "view-"+state.ui.tab; });
   }
 
-  load();
-  renderAll();
-
-  if (window.claude && window.claude.use){
-    claude.use("sample").then(function(s){ sampleFn = s; renderChat(); renderInsights(); }).catch(function(){ sampleFn=null; renderChat(); renderInsights(); });
-  } else {
-    sampleFn = null; renderChat(); renderInsights();
+  /* ================= AUTENTICAÇÃO ================= */
+  function showAuthScreen(show){
+    document.getElementById("authScreen").hidden = !show;
+    document.getElementById("appTopbar").hidden = show;
+    document.getElementById("appShell").hidden = show;
   }
+  function setAuthError(msg){
+    var el = document.getElementById("authError");
+    if (msg){ el.textContent = msg; el.hidden = false; } else { el.hidden = true; el.textContent = ""; }
+  }
+  function mapAuthError(err){
+    var msg = (err && err.message) || "";
+    if (/already registered|already exists|user_already_exists/i.test(msg)) return "Este e-mail já está cadastrado. Tente entrar.";
+    if (/invalid login credentials/i.test(msg)) return "E-mail ou senha incorretos.";
+    if (/email not confirmed/i.test(msg)) return "Confirme seu e-mail antes de entrar (verifique sua caixa de entrada).";
+    if (/password should be at least|password.*characters/i.test(msg)) return "A senha precisa ter pelo menos 6 caracteres.";
+    if (/rate limit/i.test(msg)) return "Muitas tentativas — aguarde um instante e tente de novo.";
+    return msg || "Não foi possível completar a ação. Tente novamente.";
+  }
+
+  var authMode = "signin";
+  document.getElementById("authSwitchBtn").addEventListener("click", function(){
+    authMode = authMode==="signin" ? "signup" : "signin";
+    document.getElementById("authTitle").textContent = authMode==="signin" ? "Entrar" : "Criar conta";
+    document.getElementById("authSub").textContent = authMode==="signin"
+      ? "Acesse sua conta para registrar sua alimentação e treinos."
+      : "Crie sua conta para começar a usar o NutriiBase.";
+    document.getElementById("authSubmit").textContent = authMode==="signin" ? "Entrar" : "Criar conta";
+    document.getElementById("authSwitchText").textContent = authMode==="signin" ? "Ainda não tem conta?" : "Já tem conta?";
+    this.textContent = authMode==="signin" ? "Criar conta" : "Entrar";
+    setAuthError(null);
+  });
+  document.getElementById("authForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    setAuthError(null);
+    var email = document.getElementById("authEmail").value.trim();
+    var password = document.getElementById("authPassword").value;
+    var btn = document.getElementById("authSubmit");
+    var original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = authMode==="signin" ? "Entrando…" : "Criando conta…";
+    var action = authMode==="signin"
+      ? supabase.auth.signInWithPassword({email:email, password:password})
+      : supabase.auth.signUp({email:email, password:password});
+    action.then(function(res){
+      btn.disabled=false; btn.textContent = original;
+      if (res.error){ setAuthError(mapAuthError(res.error)); return; }
+      if (authMode==="signup" && res.data && res.data.user && !res.data.session){
+        document.getElementById("authSub").textContent = "Conta criada! Verifique seu e-mail para confirmar antes de entrar.";
+      }
+      // Se já existe sessão (login, ou signup sem confirmação de e-mail exigida),
+      // onAuthStateChange cuida do resto.
+    }).catch(function(err){
+      btn.disabled=false; btn.textContent = original;
+      setAuthError(mapAuthError(err));
+    });
+  });
+  document.getElementById("btnLogout").addEventListener("click", function(){
+    supabase.auth.signOut();
+  });
+
+  function bootstrapAI(){
+    // Chat IA / Insights usam claude.use("sample") — só funciona dentro de um
+    // Artifact do Claude. No GitHub Pages ficam com o fallback "indisponível"
+    // já existente (a IA de "Descrever refeição"/"Perguntar à IA" NÃO depende
+    // disso — usa a Edge Function describe-meal via Supabase).
+    if (window.claude && window.claude.use){
+      claude.use("sample").then(function(s){ sampleFn = s; renderChat(); renderInsights(); }).catch(function(){ sampleFn=null; renderChat(); renderInsights(); });
+    } else {
+      sampleFn = null; renderChat(); renderInsights();
+    }
+  }
+
+  var authInitDone = false;
+  supabase.auth.onAuthStateChange(function(event, session){
+    if (session && session.user){
+      if (currentUserId === session.user.id && authInitDone) return; // ignora refresh de token
+      currentUserId = session.user.id;
+      showAuthScreen(false);
+      authInitDone = false;
+      initUserData(session.user).then(function(){
+        authInitDone = true;
+        renderAll();
+        bootstrapAI();
+      }).catch(function(){
+        showToast("Não foi possível carregar seus dados. Tente recarregar a página.");
+      });
+    } else {
+      currentUserId = null;
+      authInitDone = false;
+      showAuthScreen(true);
+    }
+  });
 })();
 </script>
+</body>
+</html>
