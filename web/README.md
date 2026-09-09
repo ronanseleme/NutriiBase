@@ -70,11 +70,13 @@ Deploy da função: `supabase functions deploy chat-assistant` (a secret
 
 ### Marca e design system
 
-A logo (`web/src/components/Logo.tsx`) é a marca real do NutriiBase — anel
-azul incompleto, folha verde com nervura, brilho laranja de 4 pontas — em
-três variantes (`full`, `mark`, `wordmark`), recriada em SVG a partir das
-imagens fornecidas (não há arquivo de imagem original no repositório, só o
-SVG recriado). O favicon usa a variante `mark`.
+A logo é a marca real do NutriiBase — anel azul incompleto, folha verde com
+nervura, brilho laranja de 4 pontas — fornecida pelo usuário como PNG e
+salva em `web/public/brand/` (`logo-full.png`, `logo-mark.png`,
+`logo-wordmark.png`; recortadas do espaço transparente e redimensionadas).
+`web/src/components/Logo.tsx` expõe as três variantes (`full`, `mark`,
+`wordmark`) como `<img>` apontando pra esses arquivos. O favicon
+(`favicon-64.png`/`favicon-180.png`, mesma pasta) usa a variante `mark`.
 
 Tokens de cor em `web/src/index.css` (`--blue`, `--green`, `--orange`,
 `--teal`, `--coral` + gradientes `--brand-gradient`/`--accent-gradient`/
