@@ -27,9 +27,13 @@ só no lado do servidor (Supabase Edge Function `describe-meal`).
 ## Status
 
 - [x] Fase 1 — Auth (login/cadastro, gating, logout)
-- [ ] Fase 2 — Painel
+- [x] Fase 2 — Painel (perfil, balanço do dia, macros, peso/gordura do dia)
 - [ ] Fase 3 — Alimentação
 - [ ] Fase 4 — Treino
 - [ ] Fase 5 — Metas
 - [ ] Fase 6 — Chat IA / Insights
 - [ ] Deploy: build estático + GitHub Actions para GitHub Pages
+
+Nota: a Fase 2 ainda não tem navegação de data (o Painel mostra sempre
+o dia de hoje) — isso entra numa próxima passada, junto com Alimentação
+e Treino, que também dependem de navegar entre dias.
