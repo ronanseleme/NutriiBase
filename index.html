@@ -850,12 +850,7 @@
           '<button type="button" class="btn btn-small" id="pbEditProfile">Editar</button>'+
         '</div>'+
       '</div>'+
-      '<div class="card">'+
-        '<div class="datebar">'+
-          '<div class="nav"><button type="button" id="datePrev" aria-label="Dia anterior">‹</button><span class="label">'+formatDateLabel(state.currentDate)+'</span><button type="button" id="dateNext" aria-label="Próximo dia">›</button></div>'+
-          goalPill+
-        '</div>'+
-      '</div>'+
+      dateBarHtml(goalPill)+
       safetyHtml+
       '<div class="card"><div class="card-title">Peso e composição corporal</div>'+weightBodyFatKpiHtml(p)+'</div>'+
       '<div class="card">'+
@@ -911,13 +906,12 @@
         '<div class="weight-form"><input type="number" id="bodyFatDayInput" step="0.1" min="0" max="70" inputmode="decimal" value="'+(day.bodyFatPct!=null?day.bodyFatPct:"")+'" placeholder="%"><button type="button" class="btn btn-primary btn-small" id="saveBodyFatDay">Salvar</button></div>'+
       '</div>';
 
+    bindDateBar(document.getElementById("view-dashboard"));
     document.getElementById("pbEditProfile").addEventListener("click", openProfileModal);
     document.getElementById("chartMode").addEventListener("click", function(e){
       var b = e.target.closest("button"); if (!b) return;
       chartMode = b.dataset.val; renderDashboard();
     });
-    document.getElementById("datePrev").addEventListener("click", function(){ changeDate(-1); });
-    document.getElementById("dateNext").addEventListener("click", function(){ changeDate(1); });
     document.getElementById("qaFood").addEventListener("click", function(){ setTab("food"); });
     document.getElementById("qaWorkout").addEventListener("click", function(){ setTab("workout"); });
     document.getElementById("saveWeight").addEventListener("click", function(){
@@ -936,8 +930,6 @@
       state.isDemo=false; save();
       flashSaved(this, renderAll);
     });
-    var nextBtn = document.getElementById("dateNext");
-    if (nextBtn) nextBtn.disabled = state.currentDate >= todayISO();
   }
 
   function macroRow(label, consumed, target, color){
@@ -951,6 +943,16 @@
     var next = toISODate(addDays(parseISODate(state.currentDate), delta));
     if (delta>0 && next>todayISO()) return;
     state.currentDate = next; draft = {}; save(); renderAll();
+  }
+  function dateBarHtml(trailingHtml){
+    return '<div class="card"><div class="datebar">'+
+        '<div class="nav"><button type="button" class="date-prev" aria-label="Dia anterior">‹</button><span class="label">'+formatDateLabel(state.currentDate)+'</span><button type="button" class="date-next" aria-label="Próximo dia">›</button></div>'+
+        (trailingHtml||"")+
+      '</div></div>';
+  }
+  function bindDateBar(container){
+    container.querySelectorAll(".date-prev").forEach(function(b){ b.addEventListener("click", function(){ changeDate(-1); }); });
+    container.querySelectorAll(".date-next").forEach(function(b){ b.addEventListener("click", function(){ changeDate(1); }); b.disabled = state.currentDate >= todayISO(); });
   }
 
   /* ================= FOOD ================= */
@@ -1030,11 +1032,13 @@
     }
 
     document.getElementById("view-food").innerHTML =
+      dateBarHtml()+
       '<div class="card"><div class="card-title">Alimentação · '+formatDateLabel(state.currentDate)+'</div>'+
         '<div class="meal-tabs">'+tabsHtml+'</div>'+
       '</div>'+
       bodyHtml;
 
+    bindDateBar(document.getElementById("view-food"));
     document.querySelectorAll(".meal-chip").forEach(function(b){
       b.addEventListener("click", function(){ state.ui.foodMeal = b.dataset.meal; save(); renderFood(); });
     });
@@ -1399,6 +1403,7 @@
       : '<div class="section-empty">Nenhum treino registrado hoje.</div>';
 
     document.getElementById("view-workout").innerHTML =
+      dateBarHtml()+
       '<div class="card"><div class="card-title">'+(editingWorkoutId?"Editar treino":"Registrar treino")+'</div>'+
         '<div class="field"><label for="wType">Tipo de atividade</label><select id="wType">'+typeOptions+'</select></div>'+
         modeToggle+
@@ -1435,6 +1440,7 @@
         '</div>';
       })();
 
+    bindDateBar(document.getElementById("view-workout"));
     document.getElementById("workoutChartMode").addEventListener("click", function(e){
       var b = e.target.closest("button"); if (!b) return;
       workoutChartMode = b.dataset.val; renderWorkout();
