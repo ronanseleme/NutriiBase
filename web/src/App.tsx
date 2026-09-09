@@ -93,7 +93,7 @@ function App() {
           <Dashboard
             profile={profile}
             log={log}
-            recentMap={recentMap}
+            userId={user.id}
             onEditProfile={() => setShowProfileForm(true)}
             onSaveWeight={saveWeight}
             onSaveBodyFat={saveBodyFat}

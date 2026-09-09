@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { ACTIVITY, GOALS } from '../lib/constants'
 import { dayFoodTotals, dayWorkoutKcal } from '../lib/calculations'
-import { computeRecentBars, type DayInsightData } from '../lib/insights'
-import { formatDateLabel } from '../lib/dateUtils'
+import { computeMonthInsights, computeYearMonthlyBars } from '../lib/insights'
+import { monthAbbrev, monthLabel } from '../lib/dateUtils'
+import { useMonthLogs } from '../hooks/useMonthLogs'
+import { useYearLogs } from '../hooks/useYearLogs'
 import { WeightBodyFatKpi } from './WeightBodyFatKpi'
+import { BalanceBarChart, type BalanceBar } from './BalanceBarChart'
 import type { DayLog, Profile } from '../types'
 
 function fmtNum(n: number | null | undefined): string {
@@ -19,13 +22,13 @@ function statusColor(pct: number): string {
 interface Props {
   profile: Profile
   log: DayLog
-  recentMap: Record<string, DayInsightData>
+  userId: string | null
   onEditProfile: () => void
   onSaveWeight: (kg: number) => Promise<{ error: Error | null }>
   onSaveBodyFat: (pct: number) => Promise<{ error: Error | null }>
 }
 
-export function Dashboard({ profile, log, recentMap, onEditProfile, onSaveWeight, onSaveBodyFat }: Props) {
+export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, onSaveBodyFat }: Props) {
   const targets = profile.targets
   const food = dayFoodTotals(log.meals)
   const burn = dayWorkoutKcal(log.workouts)
@@ -101,11 +104,10 @@ export function Dashboard({ profile, log, recentMap, onEditProfile, onSaveWeight
       </Card>
 
       <Card>
-        <CardTitle>Saldo calórico (últimos 14 dias)</CardTitle>
-        <BalanceBars recentMap={recentMap} targetKcal={targets.kcal} />
+        <CardTitle>Saldo calórico</CardTitle>
+        <CalorieBalanceChart userId={userId} profile={profile} />
         <p className="mt-3 text-[0.78rem] text-[var(--text-soft)]">
-          Verde = déficit (abaixo da meta) · Vermelho = superávit (acima da meta). Veja o mês completo em{' '}
-          <b>Chat &amp; Insights</b>.
+          Verde = déficit (abaixo da meta) · Vermelho = superávit (acima da meta).
         </p>
       </Card>
 
@@ -172,24 +174,93 @@ function MacroRow({ label, consumed, target, color }: { label: string; consumed:
   )
 }
 
-function BalanceBars({ recentMap, targetKcal }: { recentMap: Record<string, DayInsightData>; targetKcal: number }) {
-  const bars = computeRecentBars(recentMap, targetKcal, 14)
-  const maxAbs = Math.max(1, ...bars.map((b) => (b.saldo != null ? Math.abs(b.saldo) : 0)))
+type ChartMode = 'daily' | 'monthly'
+
+function CalorieBalanceChart({ userId, profile }: { userId: string | null; profile: Profile }) {
+  const [mode, setMode] = useState<ChartMode>('daily')
+  const now = new Date()
+  const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() + 1 })
+  const year = now.getFullYear()
+
+  const { monthMap } = useMonthLogs(userId, ym.y, ym.m)
+  const { yearMap } = useYearLogs(userId, year)
+
+  const monthInfo = computeMonthInsights(ym.y, ym.m, profile, monthMap)
+  const yearBars = computeYearMonthlyBars(year, yearMap, profile.targets.kcal)
+
+  const labelEvery = Math.max(1, Math.ceil(monthInfo.bars.length / 8))
+  const dailyBars: BalanceBar[] = monthInfo.bars.map((b, i) => ({
+    key: b.day,
+    label: i % labelEvery === 0 || i === monthInfo.bars.length - 1 ? String(b.day) : '',
+    saldo: b.saldo,
+    title: b.saldo != null ? `Dia ${b.day}: ${fmtSigned(b.saldo)} kcal vs. meta` : `Dia ${b.day}: sem dado`,
+  }))
+  const monthlyBars: BalanceBar[] = yearBars.map((b) => ({
+    key: b.month,
+    label: monthAbbrev(b.month),
+    saldo: b.saldo,
+    title:
+      b.saldo != null
+        ? `${monthAbbrev(b.month)}: ${fmtSigned(b.saldo)} kcal vs. meta (${b.trackedDays} dia(s) com registro)`
+        : `${monthAbbrev(b.month)}: sem dado`,
+  }))
+
+  function prevMonth() {
+    setYm((cur) => (cur.m === 1 ? { y: cur.y - 1, m: 12 } : { y: cur.y, m: cur.m - 1 }))
+  }
+  function nextMonth() {
+    setYm((cur) => (cur.m === 12 ? { y: cur.y + 1, m: 1 } : { y: cur.y, m: cur.m + 1 }))
+  }
+
   return (
-    <div className="flex h-[56px] items-end gap-[3px]">
-      {bars.map((b) => {
-        const h = b.saldo != null ? Math.max(3, Math.round((Math.abs(b.saldo) / maxAbs) * 44)) : 2
-        const color = b.saldo == null ? 'var(--line)' : b.saldo > 0 ? 'var(--coral)' : 'var(--teal)'
-        const title =
-          b.saldo != null
-            ? `${formatDateLabel(b.iso)}: ${fmtSigned(b.saldo)} kcal vs. meta`
-            : `${formatDateLabel(b.iso)}: sem dado`
-        return (
-          <div key={b.iso} title={title} className="flex h-full flex-1 flex-col items-center justify-end">
-            <div className="w-full rounded-t-[3px]" style={{ height: h, background: color }} />
+    <div>
+      <div className="nb-segmented mb-3">
+        <button
+          type="button"
+          onClick={() => setMode('daily')}
+          className={`flex-1 py-1.5 text-[0.8rem] font-semibold transition-colors ${mode === 'daily' ? 'bg-[image:var(--blue-gradient)] text-white' : 'bg-[var(--surface)]'}`}
+        >
+          Diária
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('monthly')}
+          className={`flex-1 py-1.5 text-[0.8rem] font-semibold transition-colors ${mode === 'monthly' ? 'bg-[image:var(--blue-gradient)] text-white' : 'bg-[var(--surface)]'}`}
+        >
+          Mensal
+        </button>
+      </div>
+
+      {mode === 'daily' ? (
+        <>
+          <div className="mb-2 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={prevMonth}
+              aria-label="Mês anterior"
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--line-strong)] font-bold"
+            >
+              ‹
+            </button>
+            <span className="text-[0.82rem] font-bold">{monthLabel(ym.y, ym.m)}</span>
+            <button
+              type="button"
+              onClick={nextMonth}
+              disabled={monthInfo.isCurrentMonth}
+              aria-label="Próximo mês"
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--line-strong)] font-bold disabled:opacity-30"
+            >
+              ›
+            </button>
           </div>
-        )
-      })}
+          <BalanceBarChart bars={dailyBars} />
+        </>
+      ) : (
+        <>
+          <div className="mb-2 text-center text-[0.82rem] font-bold">{year}</div>
+          <BalanceBarChart bars={monthlyBars} />
+        </>
+      )}
     </div>
   )
 }

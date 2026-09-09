@@ -40,3 +40,8 @@ export function monthLabel(y: number, m: number): string {
   const s = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date(y, m - 1, 1))
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
+
+export function monthAbbrev(m: number): string {
+  const s = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(new Date(2000, m - 1, 1)).replace('.', '')
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { monthLabel } from '../../lib/dateUtils'
 import { computeInsightTips, computeMonthInsights, computeStreak, type DayInsightData } from '../../lib/insights'
 import { callInsightsAI, mapChatAIErrorCode, ChatAIError } from '../../lib/chatAI'
+import { BalanceBarChart, type BalanceBar } from '../BalanceBarChart'
 import type { Profile } from '../../types'
 
 function fmtNum(n: number): string {
@@ -30,7 +31,13 @@ export function InsightsPanel({ profile, monthMap, recentMap, y, m, onPrevMonth,
 
   const info = computeMonthInsights(y, m, profile, monthMap)
   const t = profile.targets
-  const maxAbs = Math.max(1, ...info.bars.map((b) => (b.saldo != null ? Math.abs(b.saldo) : 0)))
+  const labelEvery = Math.max(1, Math.ceil(info.bars.length / 8))
+  const dailyBars: BalanceBar[] = info.bars.map((b, i) => ({
+    key: b.day,
+    label: i % labelEvery === 0 || i === info.bars.length - 1 ? String(b.day) : '',
+    saldo: b.saldo,
+    title: b.saldo != null ? `Dia ${b.day}: ${fmtSigned(b.saldo)} kcal` : `Dia ${b.day}: sem dado`,
+  }))
 
   let redistribuicao: string
   if (info.diasRestantes > 0) {
@@ -100,19 +107,11 @@ export function InsightsPanel({ profile, monthMap, recentMap, y, m, onPrevMonth,
 
       <div className={cardCls}>
         <div className="mb-3 font-[Space_Grotesk] font-bold">Saldo calórico diário</div>
-        <div className="flex items-end gap-[2px]">
-          {info.bars.map((b) => {
-            const h = b.saldo != null ? Math.max(3, Math.round((Math.abs(b.saldo) / maxAbs) * 40)) : 2
-            const color = b.saldo == null ? 'var(--line)' : b.saldo > 0 ? 'var(--coral)' : 'var(--teal)'
-            const title = b.saldo != null ? `${b.day}: ${fmtSigned(b.saldo)} kcal` : `${b.day}: sem dado`
-            return (
-              <div key={b.day} title={title} className="flex h-[52px] flex-1 flex-col items-center justify-end">
-                <div className="w-3/5 rounded-t-[3px]" style={{ height: h, background: color }} />
-              </div>
-            )
-          })}
-        </div>
-        <p className="mt-3 text-[0.8rem] text-[var(--text-soft)]">{redistribuicao}</p>
+        <BalanceBarChart bars={dailyBars} />
+        <p className="mt-3 text-[0.72rem] text-[var(--text-soft)]">
+          Verde = déficit (abaixo da meta) · Vermelho = superávit (acima da meta).
+        </p>
+        <p className="mt-2 text-[0.8rem] text-[var(--text-soft)]">{redistribuicao}</p>
       </div>
 
       <div className={cardCls}>

@@ -275,3 +275,33 @@ export function computeMonthInsights(
     pesoMeta: profile.targetWeightKg,
   }
 }
+
+export interface YearMonthBar {
+  month: number // 1-12
+  saldo: number | null // soma do saldo dos dias com registro no mês; null = nenhum dia com dado
+  trackedDays: number
+}
+
+/** Saldo calórico agregado por mês (soma dos saldos diários) para o ano inteiro. */
+export function computeYearMonthlyBars(
+  year: number,
+  yearMap: Record<string, DayInsightData>,
+  targetKcal: number,
+): YearMonthBar[] {
+  const bars: YearMonthBar[] = []
+  for (let m = 1; m <= 12; m++) {
+    const dim = new Date(year, m, 0).getDate()
+    let total = 0
+    let tracked = 0
+    for (let d = 1; d <= dim; d++) {
+      const iso = `${year}-${pad(m)}-${pad(d)}`
+      const dayData = yearMap[iso]
+      if (dayData && hasData(dayData)) {
+        total += dayData.kcal - (targetKcal + dayData.workoutKcal)
+        tracked++
+      }
+    }
+    bars.push({ month: m, saldo: tracked > 0 ? total : null, trackedDays: tracked })
+  }
+  return bars
+}
