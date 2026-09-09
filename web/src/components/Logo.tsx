@@ -10,11 +10,12 @@ interface Props {
 const MARK_RATIO = 1563 / 1606 // largura/altura de logo-mark.png
 const FULL_RATIO = 1748 / 379 // largura/altura de logo-full.png
 const WORDMARK_RATIO = 1415 / 217 // largura/altura de logo-wordmark.png
+const BRAND_URL = `${import.meta.env.BASE_URL}brand/`
 
 export function LogoMark({ size = 32, className = '' }: { size?: number; className?: string }) {
   return (
     <img
-      src="/brand/logo-mark.png"
+      src={`${BRAND_URL}logo-mark.png`}
       alt="NutriiBase"
       width={size}
       height={Math.round(size / MARK_RATIO)}
@@ -28,7 +29,7 @@ export function LogoWordmark({ size = 32, className = '' }: { size?: number; cla
   const height = Math.round(size * 0.62)
   return (
     <img
-      src="/brand/logo-wordmark.png"
+      src={`${BRAND_URL}logo-wordmark.png`}
       alt="NutriiBase"
       height={height}
       width={Math.round(height * WORDMARK_RATIO)}
@@ -43,7 +44,7 @@ export function Logo({ size = 32, variant = 'full', className = '' }: Props) {
   if (variant === 'wordmark') return <LogoWordmark size={size} className={className} />
   return (
     <img
-      src="/brand/logo-full.png"
+      src={`${BRAND_URL}logo-full.png`}
       alt="NutriiBase"
       height={size}
       width={Math.round(size * FULL_RATIO)}

@@ -1,9 +1,10 @@
-# NutriiBase — React (em construção)
+# NutriiBase — React (produção)
 
-Reescrita do app em React + TypeScript + Vite + Tailwind CSS, mantendo o
-mesmo projeto Supabase (schema, RLS, Edge Function) do app original
-(`index.html` na raiz do repositório, que continua no ar normalmente
-enquanto esta versão é construída).
+App em React + TypeScript + Vite + Tailwind CSS, publicado no GitHub Pages
+via GitHub Actions a cada push em `main` (ver
+`.github/workflows/deploy-pages.yml` na raiz do repositório). Mantém o
+mesmo projeto Supabase (schema, RLS, Edge Functions) desde a reescrita.
+A versão anterior em HTML/JS puro foi descontinuada.
 
 ## Rodando localmente
 
@@ -42,7 +43,8 @@ só no lado do servidor (Supabase Edge Function `describe-meal`).
       componentes visuais compartilhados (`nb-card`, `nb-btn-*`, `nb-input`,
       `nb-segmented`) aplicados em todas as abas, tela de login e barra
       superior com acabamento mais "digital"
-- [ ] Deploy: build estático + GitHub Actions para GitHub Pages
+- [x] Deploy: build estático + GitHub Actions para GitHub Pages (`main` é
+      agora a fonte de produção; `react-rewrite` foi mesclada em `main`)
 
 Painel, Alimentação e Treino já compartilham a navegação de data (‹ Hoje ›)
 e a barra de abas. Chat IA e Insights foram unificados em uma única aba

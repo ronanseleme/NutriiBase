@@ -27,6 +27,13 @@ O NutriiBase transforma "acho que estou comendo bem" em "sei exatamente quantas 
 
 ## Stack
 
-- **Produção (`main`)**: HTML/CSS/JS puro, hospedado no GitHub Pages.
-- **Em construção (`react-rewrite`)**: React + TypeScript + Vite + Tailwind, preview em [nutrii-base.vercel.app](https://nutrii-base.vercel.app).
-- **Backend**: Supabase (autenticação, banco de dados com Row Level Security, Edge Function para a IA de interpretação de refeições).
+- **Produção (`main`, pasta `web/`)**: React + TypeScript + Vite + Tailwind CSS,
+  build publicado no GitHub Pages via GitHub Actions
+  (`.github/workflows/deploy-pages.yml`) a cada push em `main`. Preview
+  contínuo também disponível em [nutrii-base.vercel.app](https://nutrii-base.vercel.app).
+- **Backend**: Supabase (autenticação, banco de dados com Row Level Security,
+  Edge Functions para a IA de interpretação de refeições e do Chat/Insights).
+
+A versão anterior em HTML/CSS/JS puro (sem framework) foi descontinuada —
+o código do React em `web/` tem paridade completa com ela. Veja
+`web/README.md` para detalhes de desenvolvimento local.
