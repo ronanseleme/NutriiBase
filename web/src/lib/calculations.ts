@@ -134,19 +134,26 @@ export function suggestedMacros(p: Pick<Profile, 'bodyFatPct' | 'weightKg' | 'go
 
 export function mealTotals(items: FoodItem[] | undefined) {
   return (items || []).reduce(
-    (a, it) => ({ kcal: a.kcal + it.kcal, protein: a.protein + it.protein, carbs: a.carbs + it.carbs, fat: a.fat + it.fat }),
-    { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+    (a, it) => ({
+      kcal: a.kcal + it.kcal,
+      protein: a.protein + it.protein,
+      carbs: a.carbs + it.carbs,
+      fat: a.fat + it.fat,
+      grams: a.grams + (it.grams || 0),
+    }),
+    { kcal: 0, protein: 0, carbs: 0, fat: 0, grams: 0 },
   )
 }
 
 export function dayFoodTotals(meals: MealsByKey) {
-  const acc = { kcal: 0, protein: 0, carbs: 0, fat: 0 }
+  const acc = { kcal: 0, protein: 0, carbs: 0, fat: 0, grams: 0 }
   MEALS.forEach((m) => {
     const t = mealTotals(meals[m.key])
     acc.kcal += t.kcal
     acc.protein += t.protein
     acc.carbs += t.carbs
     acc.fat += t.fat
+    acc.grams += t.grams
   })
   return acc
 }

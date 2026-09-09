@@ -185,6 +185,33 @@ export function computeInsightTips(profile: Profile, recentMap: Record<string, D
   return tips.slice(0, 5)
 }
 
+export interface RecentBar {
+  iso: string
+  day: number
+  saldo: number | null
+}
+
+/** Saldo calórico (consumo - meta ajustada pelo exercício) dos últimos `days` dias, hoje incluso. */
+export function computeRecentBars(
+  recentMap: Record<string, DayInsightData>,
+  targetKcal: number,
+  days = 14,
+): RecentBar[] {
+  const bars: RecentBar[] = []
+  for (let i = days - 1; i >= 0; i--) {
+    const d = addDays(new Date(), -i)
+    const iso = toISODate(d)
+    const data = recentMap[iso]
+    const hasDayData = data && (data.kcal > 0 || data.workoutKcal > 0 || data.weight != null)
+    bars.push({
+      iso,
+      day: d.getDate(),
+      saldo: hasDayData ? data.kcal - (targetKcal + data.workoutKcal) : null,
+    })
+  }
+  return bars
+}
+
 export interface MonthBar {
   day: number
   saldo: number | null

@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useMonthLogs } from '../../hooks/useMonthLogs'
-import { useRecentLogs } from '../../hooks/useRecentLogs'
 import { buildChatContext } from '../../lib/chatContext'
 import { ChatPanel } from './ChatPanel'
 import { InsightsPanel } from './InsightsPanel'
+import type { DayInsightData } from '../../lib/insights'
 import type { Profile } from '../../types'
 
 type SubView = 'chat' | 'insights'
@@ -11,14 +11,14 @@ type SubView = 'chat' | 'insights'
 interface Props {
   userId: string | null
   profile: Profile
+  recentMap: Record<string, DayInsightData>
 }
 
-export function AssistantTab({ userId, profile }: Props) {
+export function AssistantTab({ userId, profile, recentMap }: Props) {
   const [subView, setSubView] = useState<SubView>('chat')
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() + 1 })
 
-  const { recentMap } = useRecentLogs(userId)
   const { monthMap } = useMonthLogs(userId, ym.y, ym.m)
 
   const context = useMemo(() => buildChatContext(profile, recentMap), [profile, recentMap])

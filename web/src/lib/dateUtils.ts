@@ -24,8 +24,9 @@ export function todayISO(): string {
 export function formatDateLabel(iso: string): string {
   const t = todayISO()
   const y = toISODate(addDays(new Date(), -1))
-  if (iso === t) return 'Hoje'
-  if (iso === y) return 'Ontem'
+  const dateNum = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'short' }).format(parseISODate(iso))
+  if (iso === t) return `Hoje, ${dateNum}`
+  if (iso === y) return `Ontem, ${dateNum}`
   return new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).format(
     parseISODate(iso),
   )

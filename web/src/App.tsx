@@ -3,6 +3,7 @@ import { useAuth } from './hooks/useAuth'
 import { useProfile } from './hooks/useProfile'
 import { useDayLog } from './hooks/useDayLog'
 import { useMetasExtras } from './hooks/useMetasExtras'
+import { useRecentLogs } from './hooks/useRecentLogs'
 import { AuthScreen } from './components/AuthScreen'
 import { ProfileForm } from './components/ProfileForm'
 import { Dashboard } from './components/Dashboard'
@@ -34,6 +35,7 @@ function App() {
     deleteWorkout,
   } = useDayLog(user?.id ?? null, dateIso)
   const { startWeight, weekWorkoutCount } = useMetasExtras(user?.id ?? null, profile?.weightKg ?? 70)
+  const { recentMap } = useRecentLogs(user?.id ?? null)
   const [showProfileForm, setShowProfileForm] = useState(false)
 
   if (authLoading) {
@@ -91,6 +93,7 @@ function App() {
           <Dashboard
             profile={profile}
             log={log}
+            recentMap={recentMap}
             onEditProfile={() => setShowProfileForm(true)}
             onSaveWeight={saveWeight}
             onSaveBodyFat={saveBodyFat}
@@ -129,7 +132,7 @@ function App() {
           />
         )}
 
-        {tab === 'assistant' && <AssistantTab userId={user.id} profile={profile} />}
+        {tab === 'assistant' && <AssistantTab userId={user.id} profile={profile} recentMap={recentMap} />}
       </div>
 
       {showProfileForm && (

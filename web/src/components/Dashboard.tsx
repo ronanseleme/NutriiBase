@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { ACTIVITY, GOALS } from '../lib/constants'
 import { dayFoodTotals, dayWorkoutKcal } from '../lib/calculations'
+import { computeRecentBars, type DayInsightData } from '../lib/insights'
+import { formatDateLabel } from '../lib/dateUtils'
 import { WeightBodyFatKpi } from './WeightBodyFatKpi'
 import type { DayLog, Profile } from '../types'
 
@@ -17,12 +19,13 @@ function statusColor(pct: number): string {
 interface Props {
   profile: Profile
   log: DayLog
+  recentMap: Record<string, DayInsightData>
   onEditProfile: () => void
   onSaveWeight: (kg: number) => Promise<{ error: Error | null }>
   onSaveBodyFat: (pct: number) => Promise<{ error: Error | null }>
 }
 
-export function Dashboard({ profile, log, onEditProfile, onSaveWeight, onSaveBodyFat }: Props) {
+export function Dashboard({ profile, log, recentMap, onEditProfile, onSaveWeight, onSaveBodyFat }: Props) {
   const targets = profile.targets
   const food = dayFoodTotals(log.meals)
   const burn = dayWorkoutKcal(log.workouts)
@@ -98,6 +101,15 @@ export function Dashboard({ profile, log, onEditProfile, onSaveWeight, onSaveBod
       </Card>
 
       <Card>
+        <CardTitle>Saldo calórico (últimos 14 dias)</CardTitle>
+        <BalanceBars recentMap={recentMap} targetKcal={targets.kcal} />
+        <p className="mt-3 text-[0.78rem] text-[var(--text-soft)]">
+          Verde = déficit (abaixo da meta) · Vermelho = superávit (acima da meta). Veja o mês completo em{' '}
+          <b>Chat &amp; Insights</b>.
+        </p>
+      </Card>
+
+      <Card>
         <CardTitle>Macros do dia</CardTitle>
         <MacroRow label="Proteína" consumed={food.protein} target={targets.protein} color="var(--protein)" />
         <MacroRow label="Carboidratos" consumed={food.carbs} target={targets.carb} color="var(--carb)" />
@@ -156,6 +168,28 @@ function MacroRow({ label, consumed, target, color }: { label: string; consumed:
       <div className="h-2 overflow-hidden rounded-full bg-[var(--line)]">
         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
       </div>
+    </div>
+  )
+}
+
+function BalanceBars({ recentMap, targetKcal }: { recentMap: Record<string, DayInsightData>; targetKcal: number }) {
+  const bars = computeRecentBars(recentMap, targetKcal, 14)
+  const maxAbs = Math.max(1, ...bars.map((b) => (b.saldo != null ? Math.abs(b.saldo) : 0)))
+  return (
+    <div className="flex h-[56px] items-end gap-[3px]">
+      {bars.map((b) => {
+        const h = b.saldo != null ? Math.max(3, Math.round((Math.abs(b.saldo) / maxAbs) * 44)) : 2
+        const color = b.saldo == null ? 'var(--line)' : b.saldo > 0 ? 'var(--coral)' : 'var(--teal)'
+        const title =
+          b.saldo != null
+            ? `${formatDateLabel(b.iso)}: ${fmtSigned(b.saldo)} kcal vs. meta`
+            : `${formatDateLabel(b.iso)}: sem dado`
+        return (
+          <div key={b.iso} title={title} className="flex h-full flex-1 flex-col items-center justify-end">
+            <div className="w-full rounded-t-[3px]" style={{ height: h, background: color }} />
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -33,8 +33,9 @@ export function MealSummary({ meals, targets }: { meals: MealsByKey; targets: Ta
   return (
     <div className="nb-card">
       <div className="nb-card-title">Resumo por refeição</div>
-      <div className="mb-1.5 grid grid-cols-[1fr_repeat(4,44px)] gap-1 border-b border-[var(--line)] pb-1.5 text-[0.62rem] font-bold uppercase tracking-wide text-[var(--text-soft)]">
+      <div className="mb-1.5 grid grid-cols-[1fr_repeat(5,44px)] gap-1 border-b border-[var(--line)] pb-1.5 text-[0.62rem] font-bold uppercase tracking-wide text-[var(--text-soft)]">
         <span />
+        <span className="text-right">Gramas</span>
         <span className="text-right">Kcal</span>
         <span className="text-right" style={{ color: 'var(--protein)' }}>
           Prot
@@ -50,8 +51,9 @@ export function MealSummary({ meals, targets }: { meals: MealsByKey; targets: Ta
         const t = mealTotals(meals[m.key])
         const share = dayTotals.kcal > 0 ? Math.round((t.kcal / dayTotals.kcal) * 100) : 0
         return (
-          <div key={m.key} className="grid grid-cols-[1fr_repeat(4,44px)] items-center gap-1 border-b border-[var(--line)] py-2 text-[0.82rem] last:border-b-0">
+          <div key={m.key} className="grid grid-cols-[1fr_repeat(5,44px)] items-center gap-1 border-b border-[var(--line)] py-2 text-[0.82rem] last:border-b-0">
             <span>{m.label}</span>
+            <span className="text-right font-semibold text-[var(--text-soft)]">{fmtNum(t.grams)}</span>
             <span className="text-right font-semibold">{fmtNum(t.kcal)}</span>
             <span className="text-right font-semibold" style={{ color: 'var(--protein)' }}>
               {fmtNum(t.protein)}
@@ -62,7 +64,7 @@ export function MealSummary({ meals, targets }: { meals: MealsByKey; targets: Ta
             <span className="text-right font-semibold" style={{ color: 'var(--fat)' }}>
               {fmtNum(t.fat)}
             </span>
-            <div className="col-span-5 mt-1 h-[5px] overflow-hidden rounded-full bg-[var(--line)]">
+            <div className="col-span-6 mt-1 h-[5px] overflow-hidden rounded-full bg-[var(--line)]">
               {t.kcal > 0 && (
                 <div
                   className="h-full rounded-full"
@@ -74,8 +76,9 @@ export function MealSummary({ meals, targets }: { meals: MealsByKey; targets: Ta
           </div>
         )
       })}
-      <div className="grid grid-cols-[1fr_repeat(4,44px)] items-center gap-1 border-t-2 border-[var(--line-strong)] pt-2.5 text-[0.85rem] font-extrabold">
+      <div className="grid grid-cols-[1fr_repeat(5,44px)] items-center gap-1 border-t-2 border-[var(--line-strong)] pt-2.5 text-[0.85rem] font-extrabold">
         <span>Total</span>
+        <span className="text-right text-[var(--text-soft)]">{fmtNum(dayTotals.grams)}</span>
         <span className="text-right">{fmtNum(dayTotals.kcal)}</span>
         <span className="text-right" style={{ color: 'var(--protein)' }}>
           {fmtNum(dayTotals.protein)}
