@@ -54,7 +54,9 @@ export function MealAiModal({ mealLabel, access, onAddMany, onClose }: Props) {
       if (!parsed.length) setError('Não consegui identificar alimentos nessa descrição. Tente detalhar mais.')
       setItems(parsed)
     } catch (err) {
-      setError(mapAIErrorCode(err instanceof DescribeMealAIError ? err.code : 'upstream_error'))
+      setError(
+        err instanceof DescribeMealAIError ? mapAIErrorCode(err.code, err.message) : mapAIErrorCode('upstream_error'),
+      )
     } finally {
       setLoading(false)
     }

@@ -40,13 +40,16 @@ export async function callDescribeMealAI(descricao: string): Promise<AiFoodItem[
   return data.items as AiFoodItem[]
 }
 
-export function mapAIErrorCode(code: string): string {
+export function mapAIErrorCode(code: string, serverMessage?: string): string {
+  if (code === 'limit_reached' && serverMessage) return serverMessage
   const map: Record<string, string> = {
     unauthorized: 'Sua sessão expirou — faça login de novo.',
     bad_request: 'Descreva o alimento antes de perguntar à IA.',
     rate_limited: 'Muitas solicitações em pouco tempo — aguarde um instante e tente de novo.',
     invalid_json: 'A IA não retornou um resultado utilizável. Tente descrever de outra forma.',
     refused: 'Não consegui identificar alimentos nessa descrição. Tente detalhar mais.',
+    forbidden_free: 'Recurso exclusivo para assinantes Pro.',
+    limit_reached: 'Seus créditos de IA deste mês acabaram.',
     upstream_error: 'Problema temporário para consultar a IA. Tente novamente.',
   }
   return map[code] || 'Não foi possível obter uma estimativa agora.'

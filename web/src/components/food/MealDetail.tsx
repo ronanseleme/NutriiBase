@@ -111,6 +111,7 @@ export function MealDetail({
           mealLabel={mealLabel}
           editItem={null}
           draftCount={draft.length}
+          access={access}
           onAdd={(item) => onAddToDraft(item)}
           onUpdate={async () => ({ error: null })}
           onClose={() => setShowAdd(false)}
@@ -121,6 +122,7 @@ export function MealDetail({
           mealLabel={mealLabel}
           editItem={editItem}
           draftCount={draft.length}
+          access={access}
           onAdd={() => {}}
           onUpdate={onUpdateSaved}
           onClose={() => setEditItem(null)}

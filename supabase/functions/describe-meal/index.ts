@@ -57,6 +57,33 @@ Deno.serve(async (req) => {
     return errorResponse("unauthorized", "Sessão inválida ou expirada.", 401);
   }
 
+  // Checa papel/créditos ANTES de gastar uma chamada de IA — nunca confia
+  // só no frontend (que já esconde o recurso pra Free, mas isso aqui é o
+  // que realmente impede o uso).
+  const { data: profileRow, error: profileError } = await supabaseClient
+    .from("profiles")
+    .select("role, creditos_ia, data_proxima_renovacao")
+    .eq("id", userData.user.id)
+    .single();
+  if (profileError || !profileRow) {
+    return errorResponse("upstream_error", "Não foi possível verificar seu acesso.", 500);
+  }
+  if (profileRow.role === "free") {
+    return errorResponse("forbidden_free", "Recurso exclusivo para assinantes Pro.", 403);
+  }
+  if (profileRow.role === "pro" && (profileRow.creditos_ia ?? 0) <= 0) {
+    const dias = profileRow.data_proxima_renovacao
+      ? Math.max(0, Math.ceil((new Date(profileRow.data_proxima_renovacao).getTime() - Date.now()) / 86400000))
+      : null;
+    return errorResponse(
+      "limit_reached",
+      dias != null
+        ? `Seus créditos de IA deste mês acabaram. Renovam em ${dias} dia(s).`
+        : "Seus créditos de IA deste mês acabaram.",
+      403,
+    );
+  }
+
   let body: { descricao?: string };
   try {
     body = await req.json();
@@ -139,6 +166,16 @@ Deno.serve(async (req) => {
     carbs: Math.max(0, Math.round(Number(it?.carbs) || 0)),
     fat: Math.max(0, Math.round(Number(it?.fat) || 0)),
   }));
+
+  // Só debita o crédito depois de uma resposta boa da IA — falha da IA
+  // não deve custar crédito ao usuário. Consumo atômico (trava a linha,
+  // confere de novo o saldo) pra nunca deixar creditos_ia negativo.
+  const { data: consumed, error: consumeError } = await supabaseClient.rpc("consumir_credito_ia", {
+    descricao: "Descrever refeição com IA",
+  });
+  if (consumeError || !consumed) {
+    return errorResponse("limit_reached", "Seus créditos de IA deste mês acabaram.", 403);
+  }
 
   return jsonResponse({ items: clean });
 });

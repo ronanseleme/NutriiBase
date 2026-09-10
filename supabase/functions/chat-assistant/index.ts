@@ -82,6 +82,38 @@ Deno.serve(async (req) => {
     return errorResponse("unauthorized", "Sessão inválida ou expirada.", 401);
   }
 
+  // Checa papel/créditos ANTES de gastar uma chamada de IA (cobre tanto o
+  // Chat IA quanto os insights com IA da aba Insights) — nunca confia só
+  // no frontend.
+  const { data: profileRow, error: profileError } = await supabaseClient
+    .from("profiles")
+    .select("role, creditos_ia, data_proxima_renovacao")
+    .eq("id", userData.user.id)
+    .single();
+  if (profileError || !profileRow) {
+    return errorResponse("upstream_error", "Não foi possível verificar seu acesso.", 500);
+  }
+  if (profileRow.role === "free") {
+    return errorResponse("forbidden_free", "Recurso exclusivo para assinantes Pro.", 403);
+  }
+  if (profileRow.role === "pro" && (profileRow.creditos_ia ?? 0) <= 0) {
+    const dias = profileRow.data_proxima_renovacao
+      ? Math.max(0, Math.ceil((new Date(profileRow.data_proxima_renovacao).getTime() - Date.now()) / 86400000))
+      : null;
+    return errorResponse(
+      "limit_reached",
+      dias != null
+        ? `Seus créditos de IA deste mês acabaram. Renovam em ${dias} dia(s).`
+        : "Seus créditos de IA deste mês acabaram.",
+      403,
+    );
+  }
+
+  async function consumeCredit(descricao: string): Promise<boolean> {
+    const { data: consumed, error: consumeError } = await supabaseClient.rpc("consumir_credito_ia", { descricao });
+    return !consumeError && !!consumed;
+  }
+
   let body: { mode?: string; context?: string; messages?: ChatTurn[] };
   try {
     body = await req.json();
@@ -132,6 +164,9 @@ Deno.serve(async (req) => {
     if (!Array.isArray(tips) || tips.length === 0) {
       return errorResponse("refused", "Não consegui gerar recomendações a partir desses dados.", 422);
     }
+    if (!(await consumeCredit("Insights com IA"))) {
+      return errorResponse("limit_reached", "Seus créditos de IA deste mês acabaram.", 403);
+    }
     return jsonResponse({ tips: tips.map((t) => String(t).slice(0, 300)).slice(0, 4) });
   }
 
@@ -181,6 +216,9 @@ Deno.serve(async (req) => {
   const chips = (parsed as { chips?: unknown })?.chips;
   if (typeof reply !== "string" || !reply.trim()) {
     return errorResponse("refused", "Não consegui responder a essa pergunta.", 422);
+  }
+  if (!(await consumeCredit("Chat IA"))) {
+    return errorResponse("limit_reached", "Seus créditos de IA deste mês acabaram.", 403);
   }
   return jsonResponse({
     reply: reply.trim(),

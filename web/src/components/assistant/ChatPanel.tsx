@@ -34,7 +34,8 @@ export function ChatPanel({ context }: Props) {
         return copy
       })
     } catch (err) {
-      const message = mapChatAIErrorCode(err instanceof ChatAIError ? err.code : 'upstream_error')
+      const message =
+        err instanceof ChatAIError ? mapChatAIErrorCode(err.code, err.message) : mapChatAIErrorCode('upstream_error')
       setHistory((h) => {
         const copy = [...h]
         copy[placeholderIndex] = { role: 'assistant', content: message }

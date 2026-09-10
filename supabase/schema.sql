@@ -643,3 +643,49 @@ begin
   end if;
 end;
 $$;
+
+-- ========== papéis de acesso e créditos de IA — Etapa 6 (consumo nas Edge Functions) ==========
+-- Chamada pelas Edge Functions (describe-meal, chat-assistant) logo após
+-- uma resposta bem-sucedida da IA, sempre em nome de quem está logado
+-- (auth.uid() — nunca recebe um user_id por parâmetro, pra não dar
+-- brecha de um usuário decrementar crédito de outro). Admin não consome
+-- (retorna true sem mexer em nada); Free não deveria nem chegar aqui
+-- (a Edge Function já bloqueia antes de chamar a IA), mas por segurança
+-- também retorna false aqui. `for update` trava a linha durante a
+-- função pra duas chamadas simultâneas do mesmo usuário não zerarem os
+-- créditos em dobro (não deixar creditos_ia ficar negativo).
+create or replace function public.consumir_credito_ia(descricao text default 'Uso de IA')
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_role public.user_role_enum;
+  v_creditos int;
+begin
+  perform set_config('app.bypass_profile_protection', 'true', true);
+
+  select role, creditos_ia into v_role, v_creditos
+  from public.profiles
+  where id = auth.uid()
+  for update;
+
+  if not found then
+    return false;
+  end if;
+  if v_role = 'admin' then
+    return true;
+  end if;
+  if v_role <> 'pro' or v_creditos <= 0 then
+    return false;
+  end if;
+
+  update public.profiles set creditos_ia = creditos_ia - 1 where id = auth.uid();
+
+  insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
+  values (auth.uid(), 'consumo', -1, coalesce(nullif(trim(descricao), ''), 'Uso de IA'));
+
+  return true;
+end;
+$$;

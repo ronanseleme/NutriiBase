@@ -49,13 +49,19 @@ export async function callInsightsAI(context: string): Promise<string[]> {
   return data.tips as string[]
 }
 
-export function mapChatAIErrorCode(code: string): string {
+export function mapChatAIErrorCode(code: string, serverMessage?: string): string {
+  // limit_reached vem do servidor com a data de renovação já calculada
+  // (ex: "...Renovam em 12 dia(s)."), então usa a mensagem real em vez de
+  // um texto genérico — os outros códigos mantêm cópia fixa e amigável.
+  if (code === 'limit_reached' && serverMessage) return serverMessage
   const map: Record<string, string> = {
     unauthorized: 'Sua sessão expirou — faça login de novo.',
     bad_request: 'Digite uma mensagem antes de enviar.',
     rate_limited: 'Muitas mensagens em pouco tempo — aguarde um instante e tente de novo.',
     invalid_json: 'Não consegui montar uma resposta agora. Tente novamente.',
     refused: 'Não consegui responder a essa pergunta. Tente reformular.',
+    forbidden_free: 'Recurso exclusivo para assinantes Pro.',
+    limit_reached: 'Seus créditos de IA deste mês acabaram.',
     upstream_error: 'Tive um problema temporário para responder. Tente novamente.',
   }
   return map[code] || 'Não foi possível obter uma resposta agora.'

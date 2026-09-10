@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { FOODS, scaledFood, type FoodDbEntry } from '../../lib/foods'
 import { callDescribeMealAI, mapAIErrorCode, DescribeMealAIError } from '../../lib/describeMealAI'
 import { uid } from '../../lib/uid'
-import type { FoodItem } from '../../types'
+import { CreditsBadge } from '../CreditsBadge'
+import { UpgradeGate } from '../UpgradeGate'
+import type { AiAccess, FoodItem } from '../../types'
 
 type Mode = 'db' | 'ai' | 'manual'
 
@@ -10,6 +12,7 @@ interface Props {
   mealLabel: string
   editItem: FoodItem | null
   draftCount: number
+  access: AiAccess
   onAdd: (item: FoodItem) => void
   onUpdate: (item: FoodItem) => Promise<{ error: Error | null }>
   onClose: () => void
@@ -22,7 +25,7 @@ function normalize(s: string): string {
     .replace(/[̀-ͯ]/g, '')
 }
 
-export function AddFoodModal({ mealLabel, editItem, draftCount, onAdd, onUpdate, onClose }: Props) {
+export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, onUpdate, onClose }: Props) {
   const isEdit = !!editItem
   const dbMatch = editItem?.grams != null ? FOODS.find((f) => f.name === editItem.name) : null
 
@@ -93,7 +96,9 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, onAdd, onUpdate,
         setAiApplied(true)
       }
     } catch (err) {
-      setAiError(mapAIErrorCode(err instanceof DescribeMealAIError ? err.code : 'upstream_error'))
+      setAiError(
+        err instanceof DescribeMealAIError ? mapAIErrorCode(err.code, err.message) : mapAIErrorCode('upstream_error'),
+      )
     } finally {
       setAiLoading(false)
     }
@@ -219,22 +224,29 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, onAdd, onUpdate,
 
         {mode === 'ai' && (
           <div className="mb-3">
-            <textarea
-              placeholder="Descreva o alimento e a porção. Ex: 2 fatias de pão integral com um ovo frito e queijo"
-              value={aiDesc}
-              onChange={(e) => setAiDesc(e.target.value)}
-              className="nb-input mb-2 min-h-14"
-            />
-            <button
-              type="button"
-              onClick={askAI}
-              disabled={aiLoading || !aiDesc.trim()}
-              className="nb-btn nb-btn-blue mb-3 w-full py-2.5"
-            >
-              {aiLoading ? 'Consultando IA…' : 'Perguntar à IA'}
-            </button>
-            {aiError && <div className="mb-3 rounded-[10px] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface))] p-2.5 text-[0.82rem] text-[var(--coral)]">{aiError}</div>}
-            {aiApplied && <ManualFields manual={manual} setManual={setManual} onGramsChange={handleGramsChange} />}
+            {access.role === 'free' ? (
+              <UpgradeGate description="Assinantes Pro podem descrever o alimento em texto livre e deixar a IA calcular kcal e macros automaticamente." />
+            ) : (
+              <>
+                <CreditsBadge access={access} />
+                <textarea
+                  placeholder="Descreva o alimento e a porção. Ex: 2 fatias de pão integral com um ovo frito e queijo"
+                  value={aiDesc}
+                  onChange={(e) => setAiDesc(e.target.value)}
+                  className="nb-input mb-2 min-h-14"
+                />
+                <button
+                  type="button"
+                  onClick={askAI}
+                  disabled={aiLoading || !aiDesc.trim()}
+                  className="nb-btn nb-btn-blue mb-3 w-full py-2.5"
+                >
+                  {aiLoading ? 'Consultando IA…' : 'Perguntar à IA'}
+                </button>
+                {aiError && <div className="mb-3 rounded-[10px] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface))] p-2.5 text-[0.82rem] text-[var(--coral)]">{aiError}</div>}
+                {aiApplied && <ManualFields manual={manual} setManual={setManual} onGramsChange={handleGramsChange} />}
+              </>
+            )}
           </div>
         )}
 

@@ -3,6 +3,8 @@ import { monthLabel } from '../../lib/dateUtils'
 import { computeInsightTips, computeMonthInsights, computeStreak, type DayInsightData } from '../../lib/insights'
 import { callInsightsAI, mapChatAIErrorCode, ChatAIError } from '../../lib/chatAI'
 import { BalanceBarChart, type BalanceBar } from '../BalanceBarChart'
+import { CreditsBadge } from '../CreditsBadge'
+import { UpgradeGate } from '../UpgradeGate'
 import type { Profile } from '../../types'
 
 function fmtNum(n: number): string {
@@ -69,7 +71,9 @@ export function InsightsPanel({ profile, monthMap, recentMap, y, m, onPrevMonth,
       const result = await callInsightsAI(context)
       setAiTips(result)
     } catch (err) {
-      setAiError(mapChatAIErrorCode(err instanceof ChatAIError ? err.code : 'upstream_error'))
+      setAiError(
+        err instanceof ChatAIError ? mapChatAIErrorCode(err.code, err.message) : mapChatAIErrorCode('upstream_error'),
+      )
     } finally {
       setAiLoading(false)
     }
@@ -164,32 +168,37 @@ export function InsightsPanel({ profile, monthMap, recentMap, y, m, onPrevMonth,
         </div>
       </div>
 
-      <div className={cardCls}>
-        <div className="mb-3 font-[Space_Grotesk] font-bold">Recomendações da IA</div>
-        <button
-          type="button"
-          onClick={generateAiTips}
-          disabled={aiLoading}
-          className="nb-btn nb-btn-blue w-full py-2.5"
-        >
-          {aiLoading ? 'Analisando seu perfil e histórico…' : 'Gerar dicas personalizadas'}
-        </button>
-        {aiError && (
-          <div className="mt-3 rounded-[10px] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface))] p-2.5 text-[0.82rem] text-[var(--coral)]">
-            {aiError}
-          </div>
-        )}
-        {aiTips && aiTips.length > 0 && (
-          <div className="mt-3 flex flex-col gap-2.5">
-            {aiTips.map((tipText, i) => (
-              <div key={i} className="flex gap-2.5">
-                <span className="text-[1.1rem] leading-none">💡</span>
-                <div className="text-[0.84rem]">{tipText}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {profile.role === 'free' ? (
+        <UpgradeGate description="Assinantes Pro têm acesso a recomendações geradas por IA a partir do seu histórico do mês." />
+      ) : (
+        <div className={cardCls}>
+          <div className="mb-1 font-[Space_Grotesk] font-bold">Recomendações da IA</div>
+          <CreditsBadge access={profile} />
+          <button
+            type="button"
+            onClick={generateAiTips}
+            disabled={aiLoading}
+            className="nb-btn nb-btn-blue w-full py-2.5"
+          >
+            {aiLoading ? 'Analisando seu perfil e histórico…' : 'Gerar dicas personalizadas'}
+          </button>
+          {aiError && (
+            <div className="mt-3 rounded-[10px] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface))] p-2.5 text-[0.82rem] text-[var(--coral)]">
+              {aiError}
+            </div>
+          )}
+          {aiTips && aiTips.length > 0 && (
+            <div className="mt-3 flex flex-col gap-2.5">
+              {aiTips.map((tipText, i) => (
+                <div key={i} className="flex gap-2.5">
+                  <span className="text-[1.1rem] leading-none">💡</span>
+                  <div className="text-[0.84rem]">{tipText}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
