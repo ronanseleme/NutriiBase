@@ -323,3 +323,118 @@ as $$
     select 1 from public.profiles p where p.id = uid and p.role = 'admin'
   );
 $$;
+
+-- ========== papéis de acesso e créditos de IA — Etapa 2 (promoção/renovação) ==========
+-- promote_user_to_pro / demote_user_to_free são as únicas formas suportadas
+-- de mudar o role de alguém (chamadas via RPC pela tela de Administração,
+-- Etapa 5). Cada uma checa is_admin(auth.uid()) por conta própria — não
+-- dependem só da policy de RLS (que ainda nem existe até a Etapa 3) —
+-- então já podem ser chamadas com segurança assim que a Etapa 5 existir.
+
+create or replace function public.promote_user_to_pro(target_user uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_creditos_mensais int;
+begin
+  if not public.is_admin(auth.uid()) then
+    raise exception 'Apenas administradores podem promover usuários.';
+  end if;
+
+  update public.profiles
+  set role = 'pro',
+      data_inicio_pro = now(),
+      data_proxima_renovacao = now() + interval '30 days',
+      creditos_ia = creditos_mensais
+  where id = target_user
+  returning creditos_mensais into v_creditos_mensais;
+
+  if not found then
+    raise exception 'Usuário não encontrado.';
+  end if;
+
+  insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
+  values (target_user, 'ajuste_admin', v_creditos_mensais, 'Promoção para Pro — carga inicial de créditos');
+end;
+$$;
+
+create or replace function public.demote_user_to_free(target_user uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_creditos_antigos int;
+begin
+  if not public.is_admin(auth.uid()) then
+    raise exception 'Apenas administradores podem rebaixar usuários.';
+  end if;
+
+  select creditos_ia into v_creditos_antigos from public.profiles where id = target_user;
+  if not found then
+    raise exception 'Usuário não encontrado.';
+  end if;
+
+  update public.profiles
+  set role = 'free',
+      creditos_ia = 0,
+      data_inicio_pro = null,
+      data_proxima_renovacao = null
+  where id = target_user;
+
+  -- creditos_mensais é mantido de propósito: se o usuário virar Pro de
+  -- novo depois, volta com o mesmo limite configurado antes.
+  if v_creditos_antigos <> 0 then
+    insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
+    values (target_user, 'ajuste_admin', -v_creditos_antigos, 'Rebaixamento para Free — créditos zerados');
+  end if;
+end;
+$$;
+
+-- Roda diariamente (via pg_cron, agendado mais abaixo) e renova todo Pro
+-- cujo ciclo de 30 dias já venceu. Se o cron ficar fora do ar por um
+-- tempo, um usuário muito atrasado só avança um ciclo de 30 dias por
+-- execução — mas como isso roda todo dia, ele se recupera sozinho em
+-- poucos dias sem precisar de intervenção manual.
+create or replace function public.renovar_creditos_pro()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  with renovados as (
+    update public.profiles
+    set creditos_ia = creditos_mensais,
+        data_proxima_renovacao = data_proxima_renovacao + interval '30 days'
+    where role = 'pro' and data_proxima_renovacao <= now()
+    returning id, creditos_mensais
+  )
+  insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
+  select id, 'renovacao_mensal', creditos_mensais, 'Renovação mensal de créditos Pro'
+  from renovados;
+end;
+$$;
+
+-- Ativa a extensão pg_cron (em alguns projetos Supabase precisa ser
+-- ligada manualmente antes em Database > Extensions, se este create
+-- extension falhar por falta de permissão).
+create extension if not exists pg_cron;
+
+-- Idempotente: remove o agendamento antigo (se existir) antes de recriar,
+-- pra este arquivo poder ser rodado de novo sem duplicar o job.
+do $$
+begin
+  perform cron.unschedule(jobid) from cron.job where jobname = 'renovar-creditos-pro-diario';
+exception when others then null;
+end $$;
+
+select cron.schedule(
+  'renovar-creditos-pro-diario',
+  '0 3 * * *',
+  $$select public.renovar_creditos_pro();$$
+);
