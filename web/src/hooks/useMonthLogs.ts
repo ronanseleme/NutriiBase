@@ -37,5 +37,5 @@ export function useMonthLogs(userId: string | null, y: number, m: number) {
     reload()
   }, [reload])
 
-  return { monthMap, loading }
+  return { monthMap, loading, reload }
 }

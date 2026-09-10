@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ACTIVITY, GOALS, PACES } from '../lib/constants'
 import { dayFoodTotals, dayWorkoutKcal } from '../lib/calculations'
-import { computeMonthInsights, computeYearMonthlyBars } from '../lib/insights'
+import { computeMonthInsights, computeMonthToDate, computeYearMonthlyBars } from '../lib/insights'
 import { monthAbbrev, monthLabel, parseISODate } from '../lib/dateUtils'
 import { useMonthLogs } from '../hooks/useMonthLogs'
 import { useYearLogs } from '../hooks/useYearLogs'
 import { WeightBodyFatKpi } from './WeightBodyFatKpi'
 import { BalanceBarChart, type BalanceBar } from './BalanceBarChart'
 import { RoleBadge } from './RoleBadge'
+import type { ViewMode } from './ViewModeToggle'
 import type { DayLog, Profile } from '../types'
 
 function fmtNum(n: number | null | undefined): string {
@@ -20,16 +21,38 @@ interface Props {
   profile: Profile
   log: DayLog
   userId: string | null
+  dateIso: string
+  viewMode: ViewMode
   onEditProfile: () => void
   onSaveWeight: (kg: number) => Promise<{ error: Error | null }>
   onSaveBodyFat: (pct: number) => Promise<{ error: Error | null }>
 }
 
-export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, onSaveBodyFat }: Props) {
+export function Dashboard({ profile, log, userId, dateIso, viewMode, onEditProfile, onSaveWeight, onSaveBodyFat }: Props) {
   const targets = profile.targets
-  const food = dayFoodTotals(log.meals)
-  const burn = dayWorkoutKcal(log.workouts)
-  const metaAjustada = targets.kcal + burn
+  const selected = parseISODate(dateIso)
+  const selY = selected.getFullYear()
+  const selM = selected.getMonth() + 1
+  const selDay = selected.getDate()
+
+  const { monthMap: mtdMonthMap, reload: reloadMtdMonth } = useMonthLogs(userId, selY, selM)
+  useEffect(() => {
+    reloadMtdMonth()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [log])
+  const mtd = computeMonthToDate(selY, selM, selDay, mtdMonthMap)
+
+  const isMonthly = viewMode === 'monthly'
+  const food = isMonthly
+    ? { kcal: mtd.kcal, protein: mtd.protein, carbs: mtd.carbs, fat: mtd.fat, grams: mtd.grams }
+    : dayFoodTotals(log.meals)
+  const burn = isMonthly ? mtd.workoutKcal : dayWorkoutKcal(log.workouts)
+  const scaledTmb = isMonthly ? targets.tmb * selDay : targets.tmb
+  const scaledKcalTarget = isMonthly ? targets.kcal * selDay : targets.kcal
+  const scaledProteinTarget = isMonthly ? targets.protein * selDay : targets.protein
+  const scaledCarbTarget = isMonthly ? targets.carb * selDay : targets.carb
+  const scaledFatTarget = isMonthly ? targets.fat * selDay : targets.fat
+  const metaAjustada = scaledKcalTarget + burn
   const restante = metaAjustada - food.kcal
   const pct = metaAjustada > 0 ? Math.round((food.kcal / metaAjustada) * 100) : 0
 
@@ -113,20 +136,20 @@ export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, o
       </Card>
 
       <Card>
-        <CardTitle>Balanço do dia</CardTitle>
+        <CardTitle>{isMonthly ? 'Balanço do mês' : 'Balanço do dia'}</CardTitle>
         <div className="grid grid-cols-4 gap-1">
           <StatRing
             label="Meta"
-            value={fmtNum(targets.kcal)}
+            value={fmtNum(scaledKcalTarget)}
             sublabel="kcal"
-            fillPct={metaAjustada > 0 ? targets.kcal / metaAjustada : 0}
+            fillPct={metaAjustada > 0 ? scaledKcalTarget / metaAjustada : 0}
             color="var(--blue)"
           />
           <StatRing
             label="Gasto total"
-            value={fmtNum(targets.tmb + burn)}
+            value={fmtNum(scaledTmb + burn)}
             sublabel="kcal"
-            fillPct={metaAjustada > 0 ? (targets.tmb + burn) / metaAjustada : 0}
+            fillPct={metaAjustada > 0 ? (scaledTmb + burn) / metaAjustada : 0}
             color="var(--teal)"
           />
           <StatRing label="Consumo" value={fmtNum(food.kcal)} sublabel="kcal" fillPct={pct / 100} color="var(--orange)" />
@@ -140,7 +163,13 @@ export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, o
         </div>
         <p className="mt-3 text-center text-[0.78rem] text-[var(--text-soft)]">
           {pct}% da meta ajustada de <b>{fmtNum(metaAjustada)} kcal</b>
+          {isMonthly && ` · acumulado de 1 a ${selDay} de ${monthLabel(selY, selM)}`}
         </p>
+        {isMonthly && (
+          <p className="mt-1 text-center text-[0.78rem] text-[var(--text-soft)]">
+            Peso mais recente no período: <b>{fmtNum(mtd.lastWeight ?? profile.weightKg)} kg</b>
+          </p>
+        )}
       </Card>
 
       <Card>
@@ -152,11 +181,11 @@ export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, o
       </Card>
 
       <Card>
-        <CardTitle>Macros do dia</CardTitle>
+        <CardTitle>{isMonthly ? 'Macros do mês' : 'Macros do dia'}</CardTitle>
         <div className="grid grid-cols-4 gap-1">
-          <MacroRing label="Proteínas" consumed={food.protein} target={targets.protein} color="var(--protein)" />
-          <MacroRing label="Carboidratos" consumed={food.carbs} target={targets.carb} color="var(--carb)" />
-          <MacroRing label="Gordura" consumed={food.fat} target={targets.fat} color="var(--fat)" />
+          <MacroRing label="Proteínas" consumed={food.protein} target={scaledProteinTarget} color="var(--protein)" />
+          <MacroRing label="Carboidratos" consumed={food.carbs} target={scaledCarbTarget} color="var(--carb)" />
+          <MacroRing label="Gordura" consumed={food.fat} target={scaledFatTarget} color="var(--fat)" />
           <MacroRing label="Gramas" consumed={food.grams} target={null} color="var(--orange-light)" />
         </div>
       </Card>

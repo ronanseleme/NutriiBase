@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MEALS } from '../../lib/constants'
 import { dayFoodTotals, mealTotals } from '../../lib/calculations'
+import { computeMonthToDate } from '../../lib/insights'
+import { monthLabel, parseISODate } from '../../lib/dateUtils'
+import { useMonthLogs } from '../../hooks/useMonthLogs'
 import { MealSummary } from './MealSummary'
 import { MealDetail } from './MealDetail'
+import type { ViewMode } from '../ViewModeToggle'
 import type { AiAccess, DayLog, FoodItem, MealKey, Targets } from '../../types'
 
 function fmtNum(n: number): string {
@@ -14,6 +18,9 @@ interface Props {
   draft: Record<MealKey, FoodItem[]>
   targets: Targets
   access: AiAccess
+  userId: string | null
+  dateIso: string
+  viewMode: ViewMode
   onAddToDraft: (mealKey: MealKey, item: FoodItem) => void
   onAddManyToDraft: (mealKey: MealKey, items: FoodItem[]) => void
   onRemoveDraft: (mealKey: MealKey, itemId: string) => void
@@ -27,6 +34,9 @@ export function FoodTab({
   draft,
   targets,
   access,
+  userId,
+  dateIso,
+  viewMode,
   onAddToDraft,
   onAddManyToDraft,
   onRemoveDraft,
@@ -36,6 +46,45 @@ export function FoodTab({
 }: Props) {
   const [active, setActive] = useState<MealKey | 'geral'>('geral')
   const dayTotals = dayFoodTotals(log.meals)
+
+  const selected = parseISODate(dateIso)
+  const selY = selected.getFullYear()
+  const selM = selected.getMonth() + 1
+  const selDay = selected.getDate()
+  const { monthMap, reload: reloadMonth } = useMonthLogs(userId, selY, selM)
+  useEffect(() => {
+    reloadMonth()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [log])
+
+  if (viewMode === 'monthly') {
+    const mtd = computeMonthToDate(selY, selM, selDay, monthMap)
+    return (
+      <div className="nb-card">
+        <div className="nb-card-title">Resumo do mês</div>
+        <p className="mb-3 text-[0.8rem] text-[var(--text-soft)]">
+          Acumulado de 1 a {selDay} de {monthLabel(selY, selM)}
+        </p>
+        <div className="grid grid-cols-[1fr_repeat(5,44px)] items-center gap-1 border-t-2 border-[var(--line-strong)] pt-2.5 text-[0.85rem] font-extrabold">
+          <span>Total</span>
+          <span className="text-right text-[var(--text-soft)]">{fmtNum(mtd.grams)}</span>
+          <span className="text-right">{fmtNum(mtd.kcal)}</span>
+          <span className="text-right" style={{ color: 'var(--protein)' }}>
+            {fmtNum(mtd.protein)}
+          </span>
+          <span className="text-right" style={{ color: 'var(--carb)' }}>
+            {fmtNum(mtd.carbs)}
+          </span>
+          <span className="text-right" style={{ color: 'var(--fat)' }}>
+            {fmtNum(mtd.fat)}
+          </span>
+        </div>
+        <p className="mt-4 text-[0.8rem] text-[var(--text-soft)]">
+          Mude para <b>Diária</b> para ver, adicionar ou editar refeições de um dia específico.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4">

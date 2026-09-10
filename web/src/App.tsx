@@ -17,6 +17,7 @@ import { AssistantTab } from './components/assistant/AssistantTab'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AdminTab } from './components/admin/AdminTab'
 import { RoleBadge } from './components/RoleBadge'
+import { ViewModeToggle, type ViewMode } from './components/ViewModeToggle'
 import { todayISO } from './lib/dateUtils'
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
   const { profile, loading: profileLoading, isNew, saveProfile } = useProfile(user?.id ?? null)
   const [dateIso, setDateIso] = useState(todayISO())
   const [tab, setTab] = useState<TabKey>('dashboard')
+  const [viewMode, setViewMode] = useState<ViewMode>('daily')
   const {
     log,
     saveWeight,
@@ -95,7 +97,12 @@ function App() {
         )}
 
         {(tab === 'dashboard' || tab === 'food' || tab === 'workout') && (
-          <DateNav dateIso={dateIso} onChange={setDateIso} />
+          <>
+            <DateNav dateIso={dateIso} onChange={setDateIso} />
+            <div className="mb-4 -mt-2">
+              <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+            </div>
+          </>
         )}
 
         {tab === 'dashboard' && (
@@ -103,6 +110,8 @@ function App() {
             profile={profile}
             log={log}
             userId={user.id}
+            dateIso={dateIso}
+            viewMode={viewMode}
             onEditProfile={() => setShowProfileForm(true)}
             onSaveWeight={saveWeight}
             onSaveBodyFat={saveBodyFat}
@@ -115,6 +124,9 @@ function App() {
             draft={draft}
             targets={profile.targets}
             access={profile}
+            userId={user.id}
+            dateIso={dateIso}
+            viewMode={viewMode}
             onAddToDraft={addToDraft}
             onAddManyToDraft={(mealKey, items) => items.forEach((it) => addToDraft(mealKey, it))}
             onRemoveDraft={removeDraftItem}
@@ -128,6 +140,9 @@ function App() {
           <WorkoutTab
             log={log}
             weightKg={profile.weightKg}
+            userId={user.id}
+            dateIso={dateIso}
+            viewMode={viewMode}
             onSaveWorkout={saveWorkout}
             onDeleteWorkout={deleteWorkout}
           />

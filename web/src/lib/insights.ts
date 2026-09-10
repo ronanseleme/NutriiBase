@@ -7,7 +7,9 @@ export interface DayInsightData {
   protein: number
   carbs: number
   fat: number
+  grams: number
   workoutKcal: number
+  workoutCount: number
   weight: number | null
 }
 
@@ -18,7 +20,7 @@ export function buildDayMap(
 ): Record<string, DayInsightData> {
   const map: Record<string, DayInsightData> = {}
   function ensure(iso: string): DayInsightData {
-    if (!map[iso]) map[iso] = { kcal: 0, protein: 0, carbs: 0, fat: 0, workoutKcal: 0, weight: null }
+    if (!map[iso]) map[iso] = { kcal: 0, protein: 0, carbs: 0, fat: 0, grams: 0, workoutKcal: 0, workoutCount: 0, weight: null }
     return map[iso]
   }
   refeicoes.forEach((r) => {
@@ -27,9 +29,12 @@ export function buildDayMap(
     d.protein += r.proteina_g
     d.carbs += r.carboidrato_g
     d.fat += r.gordura_g
+    d.grams += r.porcao || 0
   })
   treinos.forEach((w) => {
-    ensure(w.data).workoutKcal += w.kcal_estimado
+    const d = ensure(w.data)
+    d.workoutKcal += w.kcal_estimado
+    d.workoutCount += 1
   })
   pesos.forEach((p) => {
     if (p.peso_kg != null) ensure(p.data).weight = p.peso_kg
@@ -304,4 +309,49 @@ export function computeYearMonthlyBars(
     bars.push({ month: m, saldo: tracked > 0 ? total : null, trackedDays: tracked })
   }
   return bars
+}
+
+export interface MonthToDateTotals {
+  kcal: number
+  protein: number
+  carbs: number
+  fat: number
+  grams: number
+  workoutKcal: number
+  workoutCount: number
+  diasElapsed: number
+  lastWeight: number | null
+}
+
+/** Acumulado do dia 1 do mês até `day` (inclusive) — usado pela visão Mensal. */
+export function computeMonthToDate(
+  y: number,
+  m: number,
+  day: number,
+  monthMap: Record<string, DayInsightData>,
+): MonthToDateTotals {
+  const totals: MonthToDateTotals = {
+    kcal: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    grams: 0,
+    workoutKcal: 0,
+    workoutCount: 0,
+    diasElapsed: day,
+    lastWeight: null,
+  }
+  for (let d = 1; d <= day; d++) {
+    const dd = monthMap[`${y}-${pad(m)}-${pad(d)}`]
+    if (!dd) continue
+    totals.kcal += dd.kcal
+    totals.protein += dd.protein
+    totals.carbs += dd.carbs
+    totals.fat += dd.fat
+    totals.grams += dd.grams
+    totals.workoutKcal += dd.workoutKcal
+    totals.workoutCount += dd.workoutCount
+    if (dd.weight != null) totals.lastWeight = dd.weight
+  }
+  return totals
 }

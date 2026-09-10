@@ -1,6 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { WORKOUT_TYPES, computeWorkoutKcal, defaultWorkoutForm, workoutToForm, type WorkoutForm } from '../../lib/workout'
 import { uid } from '../../lib/uid'
+import { computeMonthToDate } from '../../lib/insights'
+import { monthLabel, parseISODate } from '../../lib/dateUtils'
+import { useMonthLogs } from '../../hooks/useMonthLogs'
+import type { ViewMode } from '../ViewModeToggle'
 import type { DayLog, Workout, WorkoutIntensity } from '../../types'
 
 function fmtNum(n: number): string {
@@ -10,13 +14,16 @@ function fmtNum(n: number): string {
 interface Props {
   log: DayLog
   weightKg: number
+  userId: string | null
+  dateIso: string
+  viewMode: ViewMode
   onSaveWorkout: (workout: Workout, isEdit: boolean) => Promise<{ error: Error | null }>
   onDeleteWorkout: (workoutId: string) => Promise<{ error: Error | null }>
 }
 
 const INTENSITIES: WorkoutIntensity[] = ['leve', 'moderada', 'intensa']
 
-export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Props) {
+export function WorkoutTab({ log, weightKg, userId, dateIso, viewMode, onSaveWorkout, onDeleteWorkout }: Props) {
   const [form, setForm] = useState<WorkoutForm>(defaultWorkoutForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -25,6 +32,16 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
   const isRun = form.type === 'corrida'
   const kcalEstimate = computeWorkoutKcal(form, weightKg)
   const dayTotal = log.workouts.reduce((s, w) => s + w.kcal, 0)
+
+  const selected = parseISODate(dateIso)
+  const selY = selected.getFullYear()
+  const selM = selected.getMonth() + 1
+  const selDay = selected.getDate()
+  const { monthMap, reload: reloadMonth } = useMonthLogs(userId, selY, selM)
+  useEffect(() => {
+    reloadMonth()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [log])
 
   function startEdit(w: Workout) {
     setEditingId(w.id)
@@ -58,6 +75,31 @@ export function WorkoutTab({ log, weightKg, onSaveWorkout, onDeleteWorkout }: Pr
       return
     }
     cancelEdit()
+  }
+
+  if (viewMode === 'monthly') {
+    const mtd = computeMonthToDate(selY, selM, selDay, monthMap)
+    return (
+      <div className="nb-card">
+        <div className="mb-1 font-[Space_Grotesk] font-bold">Treinos do mês</div>
+        <p className="mb-3 text-[0.8rem] text-[var(--text-soft)]">
+          Acumulado de 1 a {selDay} de {monthLabel(selY, selM)}
+        </p>
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="rounded-[12px] bg-[var(--bg)] p-3">
+            <div className="text-[1.3rem] font-extrabold">{fmtNum(mtd.workoutKcal)}</div>
+            <div className="text-[0.68rem] text-[var(--text-soft)]">kcal gastas</div>
+          </div>
+          <div className="rounded-[12px] bg-[var(--bg)] p-3">
+            <div className="text-[1.3rem] font-extrabold">{mtd.workoutCount}</div>
+            <div className="text-[0.68rem] text-[var(--text-soft)]">treino(s) registrado(s)</div>
+          </div>
+        </div>
+        <p className="mt-4 text-[0.8rem] text-[var(--text-soft)]">
+          Mude para <b>Diária</b> para registrar, ver ou editar treinos de um dia específico.
+        </p>
+      </div>
+    )
   }
 
   return (
