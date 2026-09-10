@@ -6,6 +6,7 @@ import { useMetasExtras } from './hooks/useMetasExtras'
 import { useRecentLogs } from './hooks/useRecentLogs'
 import { AuthScreen } from './components/AuthScreen'
 import { ProfileForm } from './components/ProfileForm'
+import { ProfileScreen } from './components/ProfileScreen'
 import { Dashboard } from './components/Dashboard'
 import { Logo } from './components/Logo'
 import { DateNav } from './components/DateNav'
@@ -19,6 +20,7 @@ import { AdminTab } from './components/admin/AdminTab'
 import { RoleBadge } from './components/RoleBadge'
 import { ViewModeToggle, type ViewMode } from './components/ViewModeToggle'
 import { todayISO } from './lib/dateUtils'
+import { getInitials } from './lib/initials'
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth()
@@ -67,10 +69,20 @@ function App() {
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <Logo size={28} />
           <div className="flex min-w-0 items-center gap-2">
-            <span className="min-w-0 truncate text-xs font-semibold text-[var(--text-soft)]" title={user.email ?? undefined}>
-              {profile.name || user.email}
-            </span>
-            <RoleBadge role={profile.role} />
+            <button
+              type="button"
+              onClick={() => setTab('profile')}
+              title="Ver perfil"
+              className="flex min-w-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-[var(--bg)]"
+            >
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--blue)] text-[0.62rem] font-bold text-white">
+                {getInitials(profile.name)}
+              </span>
+              <span className="min-w-0 truncate text-xs font-semibold text-[var(--text-soft)]" title={user.email ?? undefined}>
+                {profile.name || user.email}
+              </span>
+              <RoleBadge role={profile.role} />
+            </button>
             <button
               type="button"
               onClick={() => signOut()}
@@ -112,10 +124,13 @@ function App() {
             userId={user.id}
             dateIso={dateIso}
             viewMode={viewMode}
-            onEditProfile={() => setShowProfileForm(true)}
             onSaveWeight={saveWeight}
             onSaveBodyFat={saveBodyFat}
           />
+        )}
+
+        {tab === 'profile' && (
+          <ProfileScreen profile={profile} onEditProfile={() => setShowProfileForm(true)} />
         )}
 
         {tab === 'food' && (

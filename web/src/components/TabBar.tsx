@@ -1,4 +1,4 @@
-export type TabKey = 'dashboard' | 'food' | 'workout' | 'goals' | 'assistant' | 'admin'
+export type TabKey = 'dashboard' | 'food' | 'workout' | 'goals' | 'assistant' | 'admin' | 'profile'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'dashboard', label: 'Painel' },
@@ -18,7 +18,7 @@ interface Props {
 export function TabBar({ active, onChange, showAdmin }: Props) {
   const tabs = showAdmin ? TABS : TABS.filter((t) => t.key !== 'admin')
   return (
-    <nav className="flex gap-1 overflow-x-auto px-4 pb-2" aria-label="Navegação principal">
+    <nav className="mx-auto flex max-w-md gap-1 overflow-x-auto px-4 pb-2" aria-label="Navegação principal">
       {tabs.map((t) => (
         <button
           key={t.key}
