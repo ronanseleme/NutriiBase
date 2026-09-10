@@ -51,3 +51,7 @@ export function monthAbbrev(m: number): string {
   const s = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(new Date(2000, m - 1, 1)).replace('.', '')
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
+
+export function formatShortDate(iso: string): string {
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(parseISODate(iso))
+}

@@ -20,13 +20,16 @@ const MONTH_NAMES = [
 interface Props {
   dateIso: string
   onSelect: (iso: string) => void
+  onSelectRange: (start: string, end: string) => void
   onClose: () => void
 }
 
-export function CalendarModal({ dateIso, onSelect, onClose }: Props) {
+export function CalendarModal({ dateIso, onSelect, onSelectRange, onClose }: Props) {
   const selected = parseISODate(dateIso)
   const [viewY, setViewY] = useState(selected.getFullYear())
   const [viewM, setViewM] = useState(selected.getMonth() + 1)
+  const [dragStartIso, setDragStartIso] = useState<string | null>(null)
+  const [dragCurrentIso, setDragCurrentIso] = useState<string | null>(null)
 
   const today = parseISODate(todayISO())
   const todayY = today.getFullYear()
@@ -35,6 +38,11 @@ export function CalendarModal({ dateIso, onSelect, onClose }: Props) {
 
   const isFutureMonth = viewY > todayY || (viewY === todayY && viewM > todayM)
   const isPastYearFloor = viewY <= todayY - 4
+
+  function isDisabledIso(iso: string): boolean {
+    const [yy, mm, dd] = iso.split('-').map(Number)
+    return yy === todayY && mm === todayM && dd > todayD
+  }
 
   function prevMonth() {
     if (viewM === 1) {
@@ -62,6 +70,36 @@ export function CalendarModal({ dateIso, onSelect, onClose }: Props) {
     setViewY((yy) => yy + 1)
   }
 
+  function handlePointerDown(e: React.PointerEvent<HTMLButtonElement>, iso: string) {
+    if (isDisabledIso(iso)) return
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setDragStartIso(iso)
+    setDragCurrentIso(iso)
+  }
+  function handlePointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    if (!dragStartIso) return
+    const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+    const iso = el?.closest('[data-day-iso]')?.getAttribute('data-day-iso')
+    if (iso && !isDisabledIso(iso)) setDragCurrentIso(iso)
+  }
+  function finishDrag() {
+    if (!dragStartIso || !dragCurrentIso) return
+    if (dragStartIso === dragCurrentIso) {
+      onSelect(dragStartIso)
+    } else {
+      const [s, e] = dragStartIso <= dragCurrentIso ? [dragStartIso, dragCurrentIso] : [dragCurrentIso, dragStartIso]
+      onSelectRange(s, e)
+    }
+    setDragStartIso(null)
+    setDragCurrentIso(null)
+  }
+
+  function inDrag(iso: string): boolean {
+    if (!dragStartIso || !dragCurrentIso) return false
+    const [s, e] = dragStartIso <= dragCurrentIso ? [dragStartIso, dragCurrentIso] : [dragCurrentIso, dragStartIso]
+    return iso >= s && iso <= e
+  }
+
   const dim = daysInMonth(viewY, viewM)
   const firstWeekday = new Date(viewY, viewM - 1, 1).getDay()
   const cells: (number | null)[] = [...Array(firstWeekday).fill(null), ...Array.from({ length: dim }, (_, i) => i + 1)]
@@ -69,7 +107,10 @@ export function CalendarModal({ dateIso, onSelect, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]">
       <div className="nb-modal w-full max-w-sm">
-        <h2 className="mb-4 text-center text-[1.05rem] font-bold">Selecionar data</h2>
+        <h2 className="mb-1 text-center text-[1.05rem] font-bold">Selecionar data</h2>
+        <p className="mb-3 text-center text-[0.76rem] text-[var(--text-soft)]">
+          Toque um dia, ou arraste para selecionar um período
+        </p>
 
         <div className="mb-2 flex items-center justify-center gap-3">
           <button
@@ -119,20 +160,25 @@ export function CalendarModal({ dateIso, onSelect, onClose }: Props) {
             <span key={w}>{w}</span>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1" onPointerUp={finishDrag} onPointerCancel={finishDrag}>
           {cells.map((day, i) => {
             if (day == null) return <span key={`blank-${i}`} />
             const iso = `${viewY}-${pad(viewM)}-${pad(day)}`
-            const disabled = viewY === todayY && viewM === todayM && day > todayD
-            const isSelected = iso === dateIso
+            const disabled = isDisabledIso(iso)
+            const isSelected = iso === dateIso || inDrag(iso)
             const isToday = viewY === todayY && viewM === todayM && day === todayD
             return (
               <button
                 key={iso}
                 type="button"
+                data-day-iso={iso}
                 disabled={disabled}
-                onClick={() => onSelect(iso)}
-                className={`flex h-9 items-center justify-center rounded-full text-[0.82rem] font-bold transition-all disabled:opacity-30 ${
+                onPointerDown={(e) => handlePointerDown(e, iso)}
+                onPointerMove={handlePointerMove}
+                onClick={(e) => {
+                  if (e.detail === 0) onSelect(iso)
+                }}
+                className={`flex h-9 touch-none items-center justify-center rounded-full text-[0.82rem] font-bold transition-all disabled:opacity-30 ${
                   isSelected
                     ? 'bg-[image:var(--blue-gradient)] text-white shadow-[0_6px_14px_-6px_rgba(47,111,237,.5)]'
                     : isToday

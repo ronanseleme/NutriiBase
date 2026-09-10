@@ -311,7 +311,7 @@ export function computeYearMonthlyBars(
   return bars
 }
 
-export interface MonthToDateTotals {
+export interface RangeTotals {
   kcal: number
   protein: number
   carbs: number
@@ -319,18 +319,22 @@ export interface MonthToDateTotals {
   grams: number
   workoutKcal: number
   workoutCount: number
-  diasElapsed: number
+  days: number
   lastWeight: number | null
 }
 
-/** Acumulado do dia 1 do mês até `day` (inclusive) — usado pela visão Mensal. */
-export function computeMonthToDate(
-  y: number,
-  m: number,
-  day: number,
-  monthMap: Record<string, DayInsightData>,
-): MonthToDateTotals {
-  const totals: MonthToDateTotals = {
+/**
+ * Acumulado de `startIso` até `endIso` (inclusive, pode atravessar meses).
+ * Usado pela visão "Mensal"/Período — por padrão o período é do dia 1 do
+ * mês até a data selecionada, mas o usuário pode arrastar um intervalo
+ * específico no calendário, que passa a ser o período usado aqui.
+ */
+export function computeRangeTotals(
+  startIso: string,
+  endIso: string,
+  dayMap: Record<string, DayInsightData>,
+): RangeTotals {
+  const totals: RangeTotals = {
     kcal: 0,
     protein: 0,
     carbs: 0,
@@ -338,20 +342,24 @@ export function computeMonthToDate(
     grams: 0,
     workoutKcal: 0,
     workoutCount: 0,
-    diasElapsed: day,
+    days: 0,
     lastWeight: null,
   }
-  for (let d = 1; d <= day; d++) {
-    const dd = monthMap[`${y}-${pad(m)}-${pad(d)}`]
-    if (!dd) continue
-    totals.kcal += dd.kcal
-    totals.protein += dd.protein
-    totals.carbs += dd.carbs
-    totals.fat += dd.fat
-    totals.grams += dd.grams
-    totals.workoutKcal += dd.workoutKcal
-    totals.workoutCount += dd.workoutCount
-    if (dd.weight != null) totals.lastWeight = dd.weight
+  let cursor = parseISODate(startIso)
+  while (toISODate(cursor) <= endIso) {
+    totals.days += 1
+    const dd = dayMap[toISODate(cursor)]
+    if (dd) {
+      totals.kcal += dd.kcal
+      totals.protein += dd.protein
+      totals.carbs += dd.carbs
+      totals.fat += dd.fat
+      totals.grams += dd.grams
+      totals.workoutKcal += dd.workoutKcal
+      totals.workoutCount += dd.workoutCount
+      if (dd.weight != null) totals.lastWeight = dd.weight
+    }
+    cursor = addDays(cursor, 1)
   }
   return totals
 }

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { WORKOUT_TYPES, computeWorkoutKcal, defaultWorkoutForm, workoutToForm, type WorkoutForm } from '../../lib/workout'
 import { uid } from '../../lib/uid'
-import { computeMonthToDate } from '../../lib/insights'
-import { monthLabel, parseISODate } from '../../lib/dateUtils'
-import { useMonthLogs } from '../../hooks/useMonthLogs'
+import { computeRangeTotals } from '../../lib/insights'
+import { formatShortDate, monthLabel, pad, parseISODate } from '../../lib/dateUtils'
+import { useRangeLogs } from '../../hooks/useRangeLogs'
 import type { ViewMode } from '../ViewModeToggle'
-import type { DayLog, Workout, WorkoutIntensity } from '../../types'
+import type { DateRange, DayLog, Workout, WorkoutIntensity } from '../../types'
 
 function fmtNum(n: number): string {
   return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -17,13 +17,14 @@ interface Props {
   userId: string | null
   dateIso: string
   viewMode: ViewMode
+  customRange: DateRange | null
   onSaveWorkout: (workout: Workout, isEdit: boolean) => Promise<{ error: Error | null }>
   onDeleteWorkout: (workoutId: string) => Promise<{ error: Error | null }>
 }
 
 const INTENSITIES: WorkoutIntensity[] = ['leve', 'moderada', 'intensa']
 
-export function WorkoutTab({ log, weightKg, userId, dateIso, viewMode, onSaveWorkout, onDeleteWorkout }: Props) {
+export function WorkoutTab({ log, weightKg, userId, dateIso, viewMode, customRange, onSaveWorkout, onDeleteWorkout }: Props) {
   const [form, setForm] = useState<WorkoutForm>(defaultWorkoutForm())
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -36,10 +37,11 @@ export function WorkoutTab({ log, weightKg, userId, dateIso, viewMode, onSaveWor
   const selected = parseISODate(dateIso)
   const selY = selected.getFullYear()
   const selM = selected.getMonth() + 1
-  const selDay = selected.getDate()
-  const { monthMap, reload: reloadMonth } = useMonthLogs(userId, selY, selM)
+  const rangeStart = customRange?.start ?? `${selY}-${pad(selM)}-01`
+  const rangeEnd = customRange?.end ?? dateIso
+  const { rangeMap, reload: reloadRange } = useRangeLogs(userId, rangeStart, rangeEnd)
   useEffect(() => {
-    reloadMonth()
+    reloadRange()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [log])
 
@@ -78,13 +80,14 @@ export function WorkoutTab({ log, weightKg, userId, dateIso, viewMode, onSaveWor
   }
 
   if (viewMode === 'monthly') {
-    const mtd = computeMonthToDate(selY, selM, selDay, monthMap)
+    const mtd = computeRangeTotals(rangeStart, rangeEnd, rangeMap)
+    const periodLabel = customRange
+      ? `${formatShortDate(rangeStart)} até ${formatShortDate(rangeEnd)}`
+      : `1 a ${selected.getDate()} de ${monthLabel(selY, selM)}`
     return (
       <div className="nb-card">
         <div className="mb-1 font-[Space_Grotesk] font-bold">Treinos do mês</div>
-        <p className="mb-3 text-[0.8rem] text-[var(--text-soft)]">
-          Acumulado de 1 a {selDay} de {monthLabel(selY, selM)}
-        </p>
+        <p className="mb-3 text-[0.8rem] text-[var(--text-soft)]">Acumulado de {periodLabel}</p>
         <div className="grid grid-cols-2 gap-2 text-center">
           <div className="rounded-[12px] bg-[var(--bg)] p-3">
             <div className="text-[1.3rem] font-extrabold">{fmtNum(mtd.workoutKcal)}</div>

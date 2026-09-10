@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { dayFoodTotals, dayWorkoutKcal } from '../lib/calculations'
-import { computeMonthInsights, computeMonthToDate, computeYearMonthlyBars } from '../lib/insights'
-import { monthAbbrev, monthLabel, parseISODate } from '../lib/dateUtils'
+import { computeMonthInsights, computeRangeTotals, computeYearMonthlyBars } from '../lib/insights'
+import { formatShortDate, monthAbbrev, monthLabel, pad, parseISODate } from '../lib/dateUtils'
 import { useMonthLogs } from '../hooks/useMonthLogs'
+import { useRangeLogs } from '../hooks/useRangeLogs'
 import { useYearLogs } from '../hooks/useYearLogs'
 import { WeightBodyFatKpi } from './WeightBodyFatKpi'
 import { BalanceBarChart, type BalanceBar } from './BalanceBarChart'
 import type { ViewMode } from './ViewModeToggle'
-import type { DayLog, Profile } from '../types'
+import type { DateRange, DayLog, Profile } from '../types'
 
 function fmtNum(n: number | null | undefined): string {
   return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -21,37 +22,43 @@ interface Props {
   userId: string | null
   dateIso: string
   viewMode: ViewMode
+  customRange: DateRange | null
   onSaveWeight: (kg: number) => Promise<{ error: Error | null }>
   onSaveBodyFat: (pct: number) => Promise<{ error: Error | null }>
 }
 
-export function Dashboard({ profile, log, userId, dateIso, viewMode, onSaveWeight, onSaveBodyFat }: Props) {
+export function Dashboard({ profile, log, userId, dateIso, viewMode, customRange, onSaveWeight, onSaveBodyFat }: Props) {
   const targets = profile.targets
   const selected = parseISODate(dateIso)
   const selY = selected.getFullYear()
   const selM = selected.getMonth() + 1
-  const selDay = selected.getDate()
 
-  const { monthMap: mtdMonthMap, reload: reloadMtdMonth } = useMonthLogs(userId, selY, selM)
+  const rangeStart = customRange?.start ?? `${selY}-${pad(selM)}-01`
+  const rangeEnd = customRange?.end ?? dateIso
+
+  const { rangeMap, reload: reloadRange } = useRangeLogs(userId, rangeStart, rangeEnd)
   useEffect(() => {
-    reloadMtdMonth()
+    reloadRange()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [log])
-  const mtd = computeMonthToDate(selY, selM, selDay, mtdMonthMap)
+  const mtd = computeRangeTotals(rangeStart, rangeEnd, rangeMap)
 
   const isMonthly = viewMode === 'monthly'
   const food = isMonthly
     ? { kcal: mtd.kcal, protein: mtd.protein, carbs: mtd.carbs, fat: mtd.fat, grams: mtd.grams }
     : dayFoodTotals(log.meals)
   const burn = isMonthly ? mtd.workoutKcal : dayWorkoutKcal(log.workouts)
-  const scaledTmb = isMonthly ? targets.tmb * selDay : targets.tmb
-  const scaledKcalTarget = isMonthly ? targets.kcal * selDay : targets.kcal
-  const scaledProteinTarget = isMonthly ? targets.protein * selDay : targets.protein
-  const scaledCarbTarget = isMonthly ? targets.carb * selDay : targets.carb
-  const scaledFatTarget = isMonthly ? targets.fat * selDay : targets.fat
+  const scaledTmb = isMonthly ? targets.tmb * mtd.days : targets.tmb
+  const scaledKcalTarget = isMonthly ? targets.kcal * mtd.days : targets.kcal
+  const scaledProteinTarget = isMonthly ? targets.protein * mtd.days : targets.protein
+  const scaledCarbTarget = isMonthly ? targets.carb * mtd.days : targets.carb
+  const scaledFatTarget = isMonthly ? targets.fat * mtd.days : targets.fat
   const metaAjustada = scaledKcalTarget + burn
   const restante = metaAjustada - food.kcal
   const pct = metaAjustada > 0 ? Math.round((food.kcal / metaAjustada) * 100) : 0
+  const periodLabel = customRange
+    ? `${formatShortDate(rangeStart)} até ${formatShortDate(rangeEnd)}`
+    : `1 a ${selected.getDate()} de ${monthLabel(selY, selM)}`
 
   const firstName = (profile.name || '').trim().split(/\s+/)[0]
   const greeting =
@@ -93,7 +100,7 @@ export function Dashboard({ profile, log, userId, dateIso, viewMode, onSaveWeigh
         </div>
         <p className="mt-3 text-center text-[0.78rem] text-[var(--text-soft)]">
           {pct}% da meta ajustada de <b>{fmtNum(metaAjustada)} kcal</b>
-          {isMonthly && ` · acumulado de 1 a ${selDay} de ${monthLabel(selY, selM)}`}
+          {isMonthly && ` · acumulado de ${periodLabel}`}
         </p>
         {isMonthly && (
           <p className="mt-1 text-center text-[0.78rem] text-[var(--text-soft)]">

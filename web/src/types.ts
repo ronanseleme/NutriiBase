@@ -110,3 +110,10 @@ export interface DayLog {
   meals: MealsByKey
   workouts: Workout[]
 }
+
+// Período customizado (arrastado no calendário) usado pela visão Mensal
+// no lugar do padrão "dia 1 do mês até a data selecionada".
+export interface DateRange {
+  start: string
+  end: string
+}

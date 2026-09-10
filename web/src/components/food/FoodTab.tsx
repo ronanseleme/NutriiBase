@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { MEALS } from '../../lib/constants'
 import { dayFoodTotals, mealTotals } from '../../lib/calculations'
-import { computeMonthToDate } from '../../lib/insights'
-import { monthLabel, parseISODate } from '../../lib/dateUtils'
-import { useMonthLogs } from '../../hooks/useMonthLogs'
+import { computeRangeTotals } from '../../lib/insights'
+import { formatShortDate, monthLabel, pad, parseISODate } from '../../lib/dateUtils'
+import { useRangeLogs } from '../../hooks/useRangeLogs'
 import { MealSummary } from './MealSummary'
 import { MealDetail } from './MealDetail'
 import type { ViewMode } from '../ViewModeToggle'
-import type { AiAccess, DayLog, FoodItem, MealKey, Targets } from '../../types'
+import type { AiAccess, DateRange, DayLog, FoodItem, MealKey, Targets } from '../../types'
 
 function fmtNum(n: number): string {
   return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -21,6 +21,7 @@ interface Props {
   userId: string | null
   dateIso: string
   viewMode: ViewMode
+  customRange: DateRange | null
   onAddToDraft: (mealKey: MealKey, item: FoodItem) => void
   onAddManyToDraft: (mealKey: MealKey, items: FoodItem[]) => void
   onRemoveDraft: (mealKey: MealKey, itemId: string) => void
@@ -37,6 +38,7 @@ export function FoodTab({
   userId,
   dateIso,
   viewMode,
+  customRange,
   onAddToDraft,
   onAddManyToDraft,
   onRemoveDraft,
@@ -50,21 +52,23 @@ export function FoodTab({
   const selected = parseISODate(dateIso)
   const selY = selected.getFullYear()
   const selM = selected.getMonth() + 1
-  const selDay = selected.getDate()
-  const { monthMap, reload: reloadMonth } = useMonthLogs(userId, selY, selM)
+  const rangeStart = customRange?.start ?? `${selY}-${pad(selM)}-01`
+  const rangeEnd = customRange?.end ?? dateIso
+  const { rangeMap, reload: reloadRange } = useRangeLogs(userId, rangeStart, rangeEnd)
   useEffect(() => {
-    reloadMonth()
+    reloadRange()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [log])
 
   if (viewMode === 'monthly') {
-    const mtd = computeMonthToDate(selY, selM, selDay, monthMap)
+    const mtd = computeRangeTotals(rangeStart, rangeEnd, rangeMap)
+    const periodLabel = customRange
+      ? `${formatShortDate(rangeStart)} até ${formatShortDate(rangeEnd)}`
+      : `1 a ${selected.getDate()} de ${monthLabel(selY, selM)}`
     return (
       <div className="nb-card">
         <div className="nb-card-title">Resumo do mês</div>
-        <p className="mb-3 text-[0.8rem] text-[var(--text-soft)]">
-          Acumulado de 1 a {selDay} de {monthLabel(selY, selM)}
-        </p>
+        <p className="mb-3 text-[0.8rem] text-[var(--text-soft)]">Acumulado de {periodLabel}</p>
         <div className="grid grid-cols-[1fr_repeat(5,44px)] items-center gap-1 border-t-2 border-[var(--line-strong)] pt-2.5 text-[0.85rem] font-extrabold">
           <span>Total</span>
           <span className="text-right text-[var(--text-soft)]">{fmtNum(mtd.grams)}</span>

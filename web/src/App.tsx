@@ -21,6 +21,7 @@ import { RoleBadge } from './components/RoleBadge'
 import { ViewModeToggle, type ViewMode } from './components/ViewModeToggle'
 import { todayISO } from './lib/dateUtils'
 import { getInitials } from './lib/initials'
+import type { DateRange } from './types'
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth()
@@ -28,6 +29,17 @@ function App() {
   const [dateIso, setDateIso] = useState(todayISO())
   const [tab, setTab] = useState<TabKey>('dashboard')
   const [viewMode, setViewMode] = useState<ViewMode>('daily')
+  const [customRange, setCustomRange] = useState<DateRange | null>(null)
+
+  function handleDateChange(iso: string) {
+    setCustomRange(null)
+    setDateIso(iso)
+  }
+  function handleSelectRange(start: string, end: string) {
+    setCustomRange({ start, end })
+    setDateIso(end)
+    setViewMode('monthly')
+  }
   const {
     log,
     saveWeight,
@@ -110,7 +122,13 @@ function App() {
 
         {(tab === 'dashboard' || tab === 'food' || tab === 'workout') && (
           <>
-            <DateNav dateIso={dateIso} onChange={setDateIso} />
+            <DateNav
+              dateIso={dateIso}
+              onChange={handleDateChange}
+              customRange={customRange}
+              onSelectRange={handleSelectRange}
+              onClearRange={() => setCustomRange(null)}
+            />
             <div className="mb-4 -mt-2">
               <ViewModeToggle mode={viewMode} onChange={setViewMode} />
             </div>
@@ -124,6 +142,7 @@ function App() {
             userId={user.id}
             dateIso={dateIso}
             viewMode={viewMode}
+            customRange={customRange}
             onSaveWeight={saveWeight}
             onSaveBodyFat={saveBodyFat}
           />
@@ -142,6 +161,7 @@ function App() {
             userId={user.id}
             dateIso={dateIso}
             viewMode={viewMode}
+            customRange={customRange}
             onAddToDraft={addToDraft}
             onAddManyToDraft={(mealKey, items) => items.forEach((it) => addToDraft(mealKey, it))}
             onRemoveDraft={removeDraftItem}
@@ -158,6 +178,7 @@ function App() {
             userId={user.id}
             dateIso={dateIso}
             viewMode={viewMode}
+            customRange={customRange}
             onSaveWorkout={saveWorkout}
             onDeleteWorkout={deleteWorkout}
           />

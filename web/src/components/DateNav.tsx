@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { addDays, formatDateLabel, parseISODate, todayISO, toISODate } from '../lib/dateUtils'
+import { addDays, formatDateLabel, formatShortDate, parseISODate, todayISO, toISODate } from '../lib/dateUtils'
 import { CalendarModal } from './CalendarModal'
+import type { DateRange } from '../types'
 
 const WEEKDAY_ABBR = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
 interface Props {
   dateIso: string
   onChange: (iso: string) => void
+  customRange: DateRange | null
+  onSelectRange: (start: string, end: string) => void
+  onClearRange: () => void
 }
 
-export function DateNav({ dateIso, onChange }: Props) {
+export function DateNav({ dateIso, onChange, customRange, onSelectRange, onClearRange }: Props) {
   const [showCalendar, setShowCalendar] = useState(false)
   const selected = parseISODate(dateIso)
   const todayIso = todayISO()
@@ -38,6 +42,22 @@ export function DateNav({ dateIso, onChange }: Props) {
       </button>
 
       <p className="mb-2 text-center text-[0.8rem] text-[var(--text-soft)]">{formatDateLabel(dateIso)}</p>
+
+      {customRange && (
+        <div className="mb-3 flex items-center justify-center gap-2 rounded-full bg-[color-mix(in_srgb,var(--blue)_10%,var(--surface))] px-3 py-1.5 text-[0.78rem] font-semibold text-[var(--blue)]">
+          <span>
+            Período: {formatShortDate(customRange.start)} – {formatShortDate(customRange.end)}
+          </span>
+          <button
+            type="button"
+            onClick={onClearRange}
+            aria-label="Limpar período"
+            className="flex h-5 w-5 items-center justify-center rounded-full text-[var(--blue)] hover:bg-[color-mix(in_srgb,var(--blue)_20%,transparent)]"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center gap-1">
         <button
@@ -93,6 +113,10 @@ export function DateNav({ dateIso, onChange }: Props) {
           dateIso={dateIso}
           onSelect={(iso) => {
             onChange(iso)
+            setShowCalendar(false)
+          }}
+          onSelectRange={(start, end) => {
+            onSelectRange(start, end)
             setShowCalendar(false)
           }}
           onClose={() => setShowCalendar(false)}
