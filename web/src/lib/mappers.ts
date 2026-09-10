@@ -45,8 +45,17 @@ export interface ProfileRow {
   meta_proteina_g: number | null
   meta_carbo_g: number | null
   meta_gordura_g: number | null
+  role: string | null
+  creditos_ia: number | null
+  creditos_mensais: number | null
+  data_proxima_renovacao: string | null
 }
 
+// Propositalmente NÃO inclui role/creditos_ia/creditos_mensais/
+// data_proxima_renovacao: essas colunas são somente leitura para o
+// próprio usuário (o trigger protect_profile_privileged_columns no banco
+// barra qualquer tentativa de alteração fora de admin/service_role/cron)
+// — nem tenta mandar esses campos no upsert de perfil.
 export function profileToDbRow(p: Profile, userId: string) {
   const restrText = p.restrictions
     ? [...(p.restrictions.tags || []), ...(p.restrictions.note ? [p.restrictions.note] : [])].join(', ')
@@ -92,6 +101,10 @@ export function dbProfileToLocal(row: ProfileRow): Omit<Profile, 'targets'> {
     weeklyWorkoutGoal: row.meta_treinos_semanais ?? null,
     restrictions: { tags: [], note: row.restricoes_alimentares || '' },
     macroOverride: null,
+    role: (row.role as Profile['role']) || 'free',
+    creditosIa: row.creditos_ia ?? 0,
+    creditosMensais: row.creditos_mensais ?? 50,
+    dataProximaRenovacao: row.data_proxima_renovacao,
   }
 }
 

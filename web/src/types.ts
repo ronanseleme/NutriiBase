@@ -1,3 +1,4 @@
+export type AccessRole = 'admin' | 'pro' | 'free'
 export type Sex = 'F' | 'M'
 export type ActivityKey = 'leve' | 'moderado' | 'intenso'
 export type GoalKey = 'emagrecimento' | 'manutencao' | 'ganho'
@@ -62,6 +63,20 @@ export interface Profile {
   restrictions: Restrictions
   macroOverride: MacroOverride | null
   targets: Targets
+  role: AccessRole
+  creditosIa: number
+  creditosMensais: number
+  dataProximaRenovacao: string | null
+}
+
+// Subconjunto de Profile usado só para as regras de acesso a IA (Chat e
+// Descrever refeição com IA) — evita passar o Profile inteiro por props
+// que só precisam saber o papel/créditos do usuário.
+export interface AiAccess {
+  role: AccessRole
+  creditosIa: number
+  creditosMensais: number
+  dataProximaRenovacao: string | null
 }
 
 export interface FoodItem {

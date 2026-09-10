@@ -41,6 +41,12 @@ export function monthLabel(y: number, m: number): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+export function daysUntil(iso: string): number {
+  const target = new Date(iso).getTime()
+  const now = Date.now()
+  return Math.max(0, Math.ceil((target - now) / (1000 * 60 * 60 * 24)))
+}
+
 export function monthAbbrev(m: number): string {
   const s = new Intl.DateTimeFormat('pt-BR', { month: 'short' }).format(new Date(2000, m - 1, 1)).replace('.', '')
   return s.charAt(0).toUpperCase() + s.slice(1)

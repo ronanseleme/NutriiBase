@@ -2,13 +2,15 @@ import { useState } from 'react'
 import { ItemRow } from './ItemRow'
 import { AddFoodModal } from './AddFoodModal'
 import { MealAiModal } from './MealAiModal'
-import type { FoodItem } from '../../types'
+import { UpgradeGate } from '../UpgradeGate'
+import type { AiAccess, FoodItem } from '../../types'
 
 interface Props {
   mealLabel: string
   saved: FoodItem[]
   draft: FoodItem[]
   targetKcal: number
+  access: AiAccess
   onAddToDraft: (item: FoodItem) => void
   onAddManyToDraft: (items: FoodItem[]) => void
   onRemoveDraft: (itemId: string) => void
@@ -22,6 +24,7 @@ export function MealDetail({
   saved,
   draft,
   targetKcal,
+  access,
   onAddToDraft,
   onAddManyToDraft,
   onRemoveDraft,
@@ -31,6 +34,7 @@ export function MealDetail({
 }: Props) {
   const [showAdd, setShowAdd] = useState(false)
   const [showAi, setShowAi] = useState(false)
+  const [showAiUpgrade, setShowAiUpgrade] = useState(false)
   const [editItem, setEditItem] = useState<FoodItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,7 +54,7 @@ export function MealDetail({
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => setShowAi(true)}
+            onClick={() => (access.role === 'free' ? setShowAiUpgrade(true) : setShowAi(true))}
             className="rounded-full px-3 py-1.5 text-[0.78rem] font-bold text-[var(--blue)]"
             style={{ background: 'color-mix(in srgb, var(--blue) 12%, var(--surface))' }}
           >
@@ -123,7 +127,21 @@ export function MealDetail({
         />
       )}
       {showAi && (
-        <MealAiModal mealLabel={mealLabel} onAddMany={onAddManyToDraft} onClose={() => setShowAi(false)} />
+        <MealAiModal mealLabel={mealLabel} access={access} onAddMany={onAddManyToDraft} onClose={() => setShowAi(false)} />
+      )}
+      {showAiUpgrade && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]">
+          <div className="w-full max-w-md">
+            <UpgradeGate description="Assinantes Pro podem descrever a refeição em texto livre e deixar a IA calcular kcal e macros automaticamente." />
+            <button
+              type="button"
+              onClick={() => setShowAiUpgrade(false)}
+              className="nb-btn nb-btn-secondary mt-2.5 w-full py-2"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

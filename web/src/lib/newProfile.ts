@@ -19,6 +19,10 @@ export function newProfile(userId: string | null): Profile {
     weeklyWorkoutGoal: null,
     restrictions: { tags: [], note: '' },
     macroOverride: null,
+    role: 'free',
+    creditosIa: 0,
+    creditosMensais: 50,
+    dataProximaRenovacao: null,
   }
   return { ...base, targets: computeTargets(base) }
 }

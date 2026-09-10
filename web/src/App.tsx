@@ -14,6 +14,8 @@ import { FoodTab } from './components/food/FoodTab'
 import { WorkoutTab } from './components/workout/WorkoutTab'
 import { MetasTab } from './components/metas/MetasTab'
 import { AssistantTab } from './components/assistant/AssistantTab'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { AdminTab } from './components/admin/AdminTab'
 import { todayISO } from './lib/dateUtils'
 
 function App() {
@@ -74,7 +76,7 @@ function App() {
             </button>
           </div>
         </div>
-        <TabBar active={tab} onChange={setTab} />
+        <TabBar active={tab} onChange={setTab} showAdmin={profile.role === 'admin'} />
         <div className="h-[3px] bg-[image:var(--brand-gradient)] opacity-80" />
       </div>
 
@@ -110,6 +112,7 @@ function App() {
             log={log}
             draft={draft}
             targets={profile.targets}
+            access={profile}
             onAddToDraft={addToDraft}
             onAddManyToDraft={(mealKey, items) => items.forEach((it) => addToDraft(mealKey, it))}
             onRemoveDraft={removeDraftItem}
@@ -138,6 +141,16 @@ function App() {
         )}
 
         {tab === 'assistant' && <AssistantTab userId={user.id} profile={profile} recentMap={recentMap} />}
+
+        {tab === 'admin' && (
+          <ProtectedRoute
+            role={profile.role}
+            allowedRoles={['admin']}
+            fallback={<div className="nb-card text-[0.86rem] text-[var(--text-soft)]">Acesso restrito.</div>}
+          >
+            <AdminTab />
+          </ProtectedRoute>
+        )}
       </div>
 
       {showProfileForm && (

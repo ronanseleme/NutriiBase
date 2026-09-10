@@ -3,7 +3,7 @@ import { MEALS } from '../../lib/constants'
 import { dayFoodTotals, mealTotals } from '../../lib/calculations'
 import { MealSummary } from './MealSummary'
 import { MealDetail } from './MealDetail'
-import type { DayLog, FoodItem, MealKey, Targets } from '../../types'
+import type { AiAccess, DayLog, FoodItem, MealKey, Targets } from '../../types'
 
 function fmtNum(n: number): string {
   return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
@@ -13,6 +13,7 @@ interface Props {
   log: DayLog
   draft: Record<MealKey, FoodItem[]>
   targets: Targets
+  access: AiAccess
   onAddToDraft: (mealKey: MealKey, item: FoodItem) => void
   onAddManyToDraft: (mealKey: MealKey, items: FoodItem[]) => void
   onRemoveDraft: (mealKey: MealKey, itemId: string) => void
@@ -25,6 +26,7 @@ export function FoodTab({
   log,
   draft,
   targets,
+  access,
   onAddToDraft,
   onAddManyToDraft,
   onRemoveDraft,
@@ -60,6 +62,7 @@ export function FoodTab({
           saved={log.meals[active]}
           draft={draft[active]}
           targetKcal={targets.kcal}
+          access={access}
           onAddToDraft={(item) => onAddToDraft(active, item)}
           onAddManyToDraft={(items) => onAddManyToDraft(active, items)}
           onRemoveDraft={(itemId) => onRemoveDraft(active, itemId)}

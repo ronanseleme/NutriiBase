@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { callDescribeMealAI, mapAIErrorCode, DescribeMealAIError, type AiFoodItem } from '../../lib/describeMealAI'
 import { uid } from '../../lib/uid'
-import type { FoodItem } from '../../types'
+import { CreditsBadge } from '../CreditsBadge'
+import type { AiAccess, FoodItem } from '../../types'
 
 interface ParsedItem {
   name: string
@@ -30,11 +31,12 @@ function toParsed(items: AiFoodItem[]): ParsedItem[] {
 
 interface Props {
   mealLabel: string
+  access: AiAccess
   onAddMany: (items: FoodItem[]) => void
   onClose: () => void
 }
 
-export function MealAiModal({ mealLabel, onAddMany, onClose }: Props) {
+export function MealAiModal({ mealLabel, access, onAddMany, onClose }: Props) {
   const [desc, setDesc] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -105,7 +107,8 @@ export function MealAiModal({ mealLabel, onAddMany, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]">
       <div className="nb-modal max-h-[88vh] w-full max-w-md overflow-auto">
         <h2 className="mb-1 text-[1.2rem] font-bold">Descrever refeição com IA</h2>
-        <p className="mb-4 text-[0.84rem] text-[var(--text-soft)]">Descrevendo para: {mealLabel}</p>
+        <p className="mb-2 text-[0.84rem] text-[var(--text-soft)]">Descrevendo para: {mealLabel}</p>
+        <CreditsBadge access={access} />
 
         <textarea
           placeholder="Descreva tudo que você comeu nesta refeição. Ex: 2 ovos mexidos, uma fatia de pão integral, café com leite e uma banana"

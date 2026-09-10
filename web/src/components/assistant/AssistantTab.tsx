@@ -3,6 +3,8 @@ import { useMonthLogs } from '../../hooks/useMonthLogs'
 import { buildChatContext } from '../../lib/chatContext'
 import { ChatPanel } from './ChatPanel'
 import { InsightsPanel } from './InsightsPanel'
+import { CreditsBadge } from '../CreditsBadge'
+import { UpgradeGate } from '../UpgradeGate'
 import type { DayInsightData } from '../../lib/insights'
 import type { Profile } from '../../types'
 
@@ -54,7 +56,14 @@ export function AssistantTab({ userId, profile, recentMap }: Props) {
       </div>
 
       {subView === 'chat' ? (
-        <ChatPanel context={context} />
+        profile.role === 'free' ? (
+          <UpgradeGate description="Assinantes Pro têm acesso ao Chat IA para tirar dúvidas sobre alimentação, treino e metas com base no seu histórico." />
+        ) : (
+          <>
+            <CreditsBadge access={profile} />
+            <ChatPanel context={context} />
+          </>
+        )
       ) : (
         <InsightsPanel
           profile={profile}
