@@ -7,6 +7,7 @@ import { useMonthLogs } from '../hooks/useMonthLogs'
 import { useYearLogs } from '../hooks/useYearLogs'
 import { WeightBodyFatKpi } from './WeightBodyFatKpi'
 import { BalanceBarChart, type BalanceBar } from './BalanceBarChart'
+import { RoleBadge } from './RoleBadge'
 import type { DayLog, Profile } from '../types'
 
 function fmtNum(n: number | null | undefined): string {
@@ -52,7 +53,12 @@ export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, o
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--blue)] font-bold text-white">
               {initials}
             </div>
-            <div className="min-w-0 truncate font-[Space_Grotesk] font-bold">{profile.name || 'Sem nome'}</div>
+            <div className="min-w-0">
+              <div className="truncate font-[Space_Grotesk] font-bold">{profile.name || 'Sem nome'}</div>
+              <div className="mt-1">
+                <RoleBadge role={profile.role} />
+              </div>
+            </div>
           </div>
           <button
             type="button"

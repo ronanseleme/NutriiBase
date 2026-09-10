@@ -16,6 +16,7 @@ import { MetasTab } from './components/metas/MetasTab'
 import { AssistantTab } from './components/assistant/AssistantTab'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AdminTab } from './components/admin/AdminTab'
+import { RoleBadge } from './components/RoleBadge'
 import { todayISO } from './lib/dateUtils'
 
 function App() {
@@ -67,6 +68,7 @@ function App() {
             <span className="min-w-0 truncate text-xs font-semibold text-[var(--text-soft)]" title={user.email ?? undefined}>
               {profile.name || user.email}
             </span>
+            <RoleBadge role={profile.role} />
             <button
               type="button"
               onClick={() => signOut()}

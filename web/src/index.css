@@ -50,6 +50,19 @@ h1, h2, h3 {
   min-height: 100svh;
 }
 
+/* Baseline de hover para TODO botão do app — dá feedback visual mesmo
+   em botões sem classe própria de hover (chips, ícones, setas de
+   navegação). Baixa especificidade de propósito: qualquer hover mais
+   específico definido em @layer components (nb-btn-*, hover:bg-... do
+   Tailwind) continua vencendo normalmente. */
+button:not(:disabled) {
+  cursor: pointer;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+button:not(:disabled):hover {
+  filter: brightness(0.93);
+}
+
 @layer components {
   .nb-card {
     border-radius: 20px;

@@ -546,3 +546,100 @@ select cron.schedule(
   '0 3 * * *',
   $$select public.renovar_creditos_pro();$$
 );
+
+-- ========== papéis de acesso e créditos de IA — Etapa 5 (tela de Administração) ==========
+-- Três funções security definer, todas checando is_admin(auth.uid()) por
+-- conta própria (defesa em profundidade, igual às da Etapa 2) — a tela de
+-- Administração no frontend só chama RPC, nunca faz update direto na
+-- tabela profiles, mesmo sendo tecnicamente permitido pra admin pela RLS
+-- + trigger da Etapa 3. Isso mantém toda escrita privilegiada centralizada
+-- e auditável num único lugar.
+
+-- profiles não guarda e-mail (fica em auth.users, schema que o cliente
+-- não acessa via PostgREST) — esta função faz o join e devolve pro
+-- frontend só quando quem chama é admin.
+create or replace function public.admin_list_users()
+returns table (
+  id uuid,
+  nome text,
+  email text,
+  role public.user_role_enum,
+  creditos_ia int,
+  creditos_mensais int,
+  data_inicio_pro timestamptz,
+  data_proxima_renovacao timestamptz,
+  created_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin(auth.uid()) then
+    raise exception 'Apenas administradores podem listar usuários.';
+  end if;
+
+  return query
+    select p.id, p.nome, u.email::text, p.role, p.creditos_ia, p.creditos_mensais,
+           p.data_inicio_pro, p.data_proxima_renovacao, p.created_at
+    from public.profiles p
+    join auth.users u on u.id = p.id
+    order by p.created_at desc;
+end;
+$$;
+
+-- Ajuste pontual (positivo ou negativo) no saldo atual de créditos —
+-- usado pelo admin pra dar créditos extras ou corrigir algo manualmente.
+-- Sempre loga em transacoes_creditos (tipo=ajuste_admin) pra manter
+-- rastro de auditoria de toda mudança de saldo.
+create or replace function public.admin_adjust_creditos(target_user uuid, delta int, motivo text default null)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin(auth.uid()) then
+    raise exception 'Apenas administradores podem ajustar créditos.';
+  end if;
+  if delta = 0 then
+    raise exception 'O ajuste não pode ser zero.';
+  end if;
+
+  update public.profiles
+  set creditos_ia = greatest(0, creditos_ia + delta)
+  where id = target_user;
+
+  if not found then
+    raise exception 'Usuário não encontrado.';
+  end if;
+
+  insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
+  values (target_user, 'ajuste_admin', delta, coalesce(nullif(trim(motivo), ''), 'Ajuste manual pelo admin'));
+end;
+$$;
+
+-- Muda o limite mensal (o valor que creditos_ia recebe a cada renovação
+-- via renovar_creditos_pro()) — não mexe no saldo atual, só no teto
+-- futuro, por isso não gera lançamento em transacoes_creditos.
+create or replace function public.admin_set_creditos_mensais(target_user uuid, novo_valor int)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin(auth.uid()) then
+    raise exception 'Apenas administradores podem alterar o limite mensal de créditos.';
+  end if;
+  if novo_valor < 0 then
+    raise exception 'O limite mensal não pode ser negativo.';
+  end if;
+
+  update public.profiles set creditos_mensais = novo_valor where id = target_user;
+
+  if not found then
+    raise exception 'Usuário não encontrado.';
+  end if;
+end;
+$$;
