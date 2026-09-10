@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { ACTIVITY, GOALS } from '../lib/constants'
+import { ACTIVITY, GOALS, PACES } from '../lib/constants'
 import { dayFoodTotals, dayWorkoutKcal } from '../lib/calculations'
 import { computeMonthInsights, computeYearMonthlyBars } from '../lib/insights'
-import { monthAbbrev, monthLabel } from '../lib/dateUtils'
+import { monthAbbrev, monthLabel, parseISODate } from '../lib/dateUtils'
 import { useMonthLogs } from '../hooks/useMonthLogs'
 import { useYearLogs } from '../hooks/useYearLogs'
 import { WeightBodyFatKpi } from './WeightBodyFatKpi'
@@ -15,10 +15,6 @@ function fmtNum(n: number | null | undefined): string {
 function fmtSigned(n: number): string {
   return (n >= 0 ? '+' : '') + fmtNum(n)
 }
-function statusColor(pct: number): string {
-  return pct <= 90 ? 'var(--teal)' : pct <= 105 ? 'var(--blue-light)' : 'var(--coral)'
-}
-
 interface Props {
   profile: Profile
   log: DayLog
@@ -35,7 +31,6 @@ export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, o
   const metaAjustada = targets.kcal + burn
   const restante = metaAjustada - food.kcal
   const pct = metaAjustada > 0 ? Math.round((food.kcal / metaAjustada) * 100) : 0
-  const color = statusColor(pct)
 
   const initials =
     profile.name
@@ -46,28 +41,18 @@ export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, o
       .join('') || '?'
   const activityLabel = ACTIVITY.find((a) => a.key === profile.activity)?.label || profile.activity
   const goalLabel = GOALS.find((g) => g.key === profile.goal)?.label || profile.goal
+  const paceLabel = PACES.find((p) => p.key === profile.pace)?.label || profile.pace
+  const restrictionsNote = profile.restrictions?.note?.trim()
 
   return (
     <div className="flex flex-col gap-4">
       <Card>
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--blue)] font-bold text-white">
-            {initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="mb-1.5 truncate font-[Space_Grotesk] font-bold">{profile.name || 'Sem nome'}</div>
-            <div className="flex flex-wrap gap-1.5">
-              <Chip>{profile.age} anos</Chip>
-              <Chip>
-                peso <b>{profile.weightKg} kg</b>
-              </Chip>
-              <Chip>{profile.heightCm} cm</Chip>
-              <Chip title="Taxa metabólica basal — o que seu corpo gasta parado, em repouso">
-                TMB <b>{targets.tmb} kcal</b> parado
-              </Chip>
-              <Chip>{activityLabel}</Chip>
-              <Chip>{goalLabel}</Chip>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--blue)] font-bold text-white">
+              {initials}
             </div>
+            <div className="min-w-0 truncate font-[Space_Grotesk] font-bold">{profile.name || 'Sem nome'}</div>
           </div>
           <button
             type="button"
@@ -77,6 +62,43 @@ export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, o
             Editar
           </button>
         </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <Chip>{profile.age} anos</Chip>
+          <Chip>{profile.sex === 'M' ? 'Masculino' : 'Feminino'}</Chip>
+          <Chip>
+            peso <b>{profile.weightKg} kg</b>
+          </Chip>
+          <Chip>{profile.heightCm} cm</Chip>
+          {profile.bodyFatPct != null && (
+            <Chip>
+              gordura <b>{profile.bodyFatPct}%</b>
+            </Chip>
+          )}
+        </div>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <Chip title="Taxa metabólica basal — o que seu corpo gasta parado, em repouso">
+            TMB <b>{targets.tmb} kcal</b> parado
+          </Chip>
+          <Chip title="Gasto Energético Total — TMB ajustada pelo seu nível de atividade">
+            GET <b>{targets.get} kcal</b> ativo
+          </Chip>
+          <Chip>{activityLabel}</Chip>
+        </div>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <Chip>{goalLabel}</Chip>
+          <Chip>ritmo {paceLabel.toLowerCase()}</Chip>
+          {profile.targetWeightKg != null && (
+            <Chip>
+              meta <b>{profile.targetWeightKg} kg</b>
+              {profile.targetDate ? ` até ${new Intl.DateTimeFormat('pt-BR').format(parseISODate(profile.targetDate))}` : ''}
+            </Chip>
+          )}
+        </div>
+        {restrictionsNote && (
+          <p className="mt-2 text-[0.76rem] text-[var(--text-soft)]">
+            <b className="text-[var(--text)]">Restrições:</b> {restrictionsNote}
+          </p>
+        )}
       </Card>
 
       <Card>
@@ -86,21 +108,33 @@ export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, o
 
       <Card>
         <CardTitle>Balanço do dia</CardTitle>
-        <div className="grid grid-cols-4 gap-0 overflow-hidden rounded-[12px] border border-[var(--line)]">
-          <Kpi label="Meta" value={fmtNum(targets.kcal)} color="var(--blue)" />
-          <Kpi label="Gasto total" value={fmtNum(targets.tmb + burn)} color="var(--teal)" />
-          <Kpi label="Consumo" value={fmtNum(food.kcal)} color="var(--orange)" />
-          <Kpi label="Saldo" value={fmtSigned(restante)} color={restante < 0 ? 'var(--coral)' : 'var(--teal)'} />
+        <div className="grid grid-cols-4 gap-1">
+          <StatRing
+            label="Meta"
+            value={fmtNum(targets.kcal)}
+            sublabel="kcal"
+            fillPct={metaAjustada > 0 ? targets.kcal / metaAjustada : 0}
+            color="var(--blue)"
+          />
+          <StatRing
+            label="Gasto total"
+            value={fmtNum(targets.tmb + burn)}
+            sublabel="kcal"
+            fillPct={metaAjustada > 0 ? (targets.tmb + burn) / metaAjustada : 0}
+            color="var(--teal)"
+          />
+          <StatRing label="Consumo" value={fmtNum(food.kcal)} sublabel="kcal" fillPct={pct / 100} color="var(--orange)" />
+          <StatRing
+            label="Saldo"
+            value={fmtSigned(restante)}
+            sublabel="kcal"
+            fillPct={metaAjustada > 0 ? Math.abs(restante) / metaAjustada : 0}
+            color={restante < 0 ? 'var(--coral)' : 'var(--teal)'}
+          />
         </div>
-        <div className="mt-3">
-          <div className="mb-1.5 flex items-center justify-between text-[0.82rem]">
-            <span>{pct}% da meta ajustada</span>
-            <b>{fmtNum(metaAjustada)} kcal</b>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-[var(--line)]">
-            <div className="h-full rounded-full" style={{ width: `${Math.min(100, pct)}%`, background: color }} />
-          </div>
-        </div>
+        <p className="mt-3 text-center text-[0.78rem] text-[var(--text-soft)]">
+          {pct}% da meta ajustada de <b>{fmtNum(metaAjustada)} kcal</b>
+        </p>
       </Card>
 
       <Card>
@@ -148,33 +182,24 @@ function Chip({ children, title }: { children: React.ReactNode; title?: string }
     </span>
   )
 }
-function Kpi({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div className="border-l border-[var(--line)] px-2 py-3 text-center first:border-l-0" style={{ borderTopColor: color, borderTopWidth: 3 }}>
-      <div className="text-[1.15rem] font-extrabold" style={{ color }}>
-        {value}
-      </div>
-      <div className="text-[0.62rem] uppercase tracking-wide text-[var(--text-soft)]">{label}</div>
-    </div>
-  )
-}
-function MacroRing({
+function StatRing({
   label,
-  consumed,
-  target,
+  value,
+  sublabel,
+  fillPct,
   color,
 }: {
   label: string
-  consumed: number
-  target: number | null
+  value: string
+  sublabel: string
+  fillPct: number
   color: string
 }) {
   const size = 76
   const stroke = 7
   const r = (size - stroke) / 2
   const circumference = 2 * Math.PI * r
-  const pct = target != null && target > 0 ? Math.min(1, consumed / target) : 0
-  const dash = target != null ? circumference * pct : 0
+  const dash = Math.max(0, Math.min(1, fillPct)) * circumference
 
   return (
     <div className="flex flex-col items-center gap-1.5">
@@ -200,14 +225,33 @@ function MacroRing({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[1.05rem] font-extrabold leading-none text-[var(--text)]">{fmtNum(consumed)}</span>
-          <span className="mt-0.5 text-[0.58rem] leading-none text-[var(--text-soft)]">
-            {target != null ? `/${fmtNum(target)}g` : 'g'}
-          </span>
+          <span className="text-[1.05rem] font-extrabold leading-none text-[var(--text)]">{value}</span>
+          <span className="mt-0.5 text-[0.58rem] leading-none text-[var(--text-soft)]">{sublabel}</span>
         </div>
       </div>
       <span className="text-center text-[0.68rem] font-semibold text-[var(--text-soft)]">{label}</span>
     </div>
+  )
+}
+function MacroRing({
+  label,
+  consumed,
+  target,
+  color,
+}: {
+  label: string
+  consumed: number
+  target: number | null
+  color: string
+}) {
+  return (
+    <StatRing
+      label={label}
+      value={fmtNum(consumed)}
+      sublabel={target != null ? `/${fmtNum(target)}g` : 'g'}
+      fillPct={target != null && target > 0 ? consumed / target : 0}
+      color={color}
+    />
   )
 }
 

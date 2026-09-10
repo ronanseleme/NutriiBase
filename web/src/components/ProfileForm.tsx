@@ -19,6 +19,7 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
     activity: profile.activity,
     goal: profile.goal,
     pace: profile.pace,
+    restrictionsNote: profile.restrictions?.note || '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -27,7 +28,11 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
     e.preventDefault()
     setSaving(true)
     setError(null)
-    const { error: saveError } = await onSave(form)
+    const { restrictionsNote, ...rest } = form
+    const { error: saveError } = await onSave({
+      ...rest,
+      restrictions: { tags: [], note: restrictionsNote.trim() },
+    })
     setSaving(false)
     if (saveError) {
       setError('Não foi possível salvar, tente novamente.')
@@ -172,6 +177,15 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
               </select>
             </Field>
           </div>
+
+          <Field label="Restrições alimentares (opcional)">
+            <textarea
+              placeholder="Ex: sem lactose, vegetariano, alergia a amendoim…"
+              value={form.restrictionsNote}
+              onChange={(e) => setForm({ ...form, restrictionsNote: e.target.value })}
+              className="nb-input min-h-14"
+            />
+          </Field>
 
           <div className="mt-3 flex justify-end gap-2.5">
             <button type="button" onClick={onClose} className="nb-btn nb-btn-secondary px-4 py-2 text-sm">

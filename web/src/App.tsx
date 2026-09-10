@@ -61,13 +61,18 @@ function App() {
       <div className="sticky top-0 z-10 bg-[var(--surface)]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <Logo size={28} />
-          <button
-            type="button"
-            onClick={() => signOut()}
-            className="nb-btn nb-btn-secondary px-3 py-1.5 text-xs"
-          >
-            Sair
-          </button>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="min-w-0 truncate text-xs font-semibold text-[var(--text-soft)]" title={user.email ?? undefined}>
+              {profile.name || user.email}
+            </span>
+            <button
+              type="button"
+              onClick={() => signOut()}
+              className="nb-btn nb-btn-secondary shrink-0 px-3 py-1.5 text-xs"
+            >
+              Sair
+            </button>
+          </div>
         </div>
         <TabBar active={tab} onChange={setTab} />
         <div className="h-[3px] bg-[image:var(--brand-gradient)] opacity-80" />
