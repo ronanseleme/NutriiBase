@@ -243,8 +243,11 @@ create policy "metas_mensais_delete_own" on public.metas_mensais
 -- Sem isso, um usuário que entra pelo Google nunca passa pelo ProfileForm
 -- salvando a linha em profiles — o trigger garante que a linha sempre existe,
 -- com nome pré-preenchido a partir do Google quando disponível, e o resto
--- com os defaults da tabela (nivel_atividade/objetivo/ritmo). Não existem
--- colunas de role/créditos neste projeto — só os campos nutricionais acima.
+-- com os defaults da tabela (nivel_atividade/objetivo/ritmo/role/créditos —
+-- role/créditos foram adicionados depois, na seção "papéis de acesso e
+-- créditos de IA" mais abaixo, mas por serem colunas com default na
+-- tabela, todo INSERT feito por este trigger já sai com os valores certos
+-- sem precisar tocar aqui).
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -266,3 +269,57 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ========== papéis de acesso e créditos de IA — Etapa 1 (schema) ==========
+-- Etapas seguintes (fora deste arquivo por enquanto, chegam em commits
+-- separados): 2) lógica de virar Pro / renovar_creditos_pro() / pg_cron,
+-- 3) policies de RLS admin + proteção contra o usuário alterar essas
+-- colunas na própria linha, 4-7) frontend, tela de Admin, consumo de
+-- créditos nas Edge Functions.
+
+do $$ begin
+  create type public.user_role_enum as enum ('admin', 'pro', 'free');
+exception when duplicate_object then null; end $$;
+
+alter table public.profiles
+  add column if not exists role public.user_role_enum not null default 'free',
+  add column if not exists creditos_ia integer not null default 0,
+  add column if not exists creditos_mensais integer not null default 50,
+  add column if not exists data_inicio_pro timestamptz,
+  add column if not exists data_proxima_renovacao timestamptz;
+
+do $$ begin
+  create type public.tipo_transacao_credito_enum as enum ('consumo', 'renovacao_mensal', 'ajuste_admin');
+exception when duplicate_object then null; end $$;
+
+create table if not exists public.transacoes_creditos (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  tipo public.tipo_transacao_credito_enum not null,
+  quantidade int not null,
+  descricao text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists transacoes_creditos_user_idx on public.transacoes_creditos(user_id, created_at desc);
+
+-- RLS ligado desde já (fail-closed: sem nenhuma policy ainda, ninguém além
+-- do service role consegue ler/gravar aqui). As policies de verdade
+-- (usuário vê o próprio histórico, admin vê/grava tudo) entram na Etapa 3.
+alter table public.transacoes_creditos enable row level security;
+
+-- security definer + search_path fixo: roda com os privilégios de quem
+-- criou a função (o dono do projeto), que por padrão ignora RLS — por
+-- isso não entra em recursão ao consultar profiles (que também tem RLS)
+-- de dentro de uma policy da própria tabela profiles.
+create or replace function public.is_admin(uid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles p where p.id = uid and p.role = 'admin'
+  );
+$$;
