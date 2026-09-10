@@ -113,9 +113,12 @@ export function Dashboard({ profile, log, userId, onEditProfile, onSaveWeight, o
 
       <Card>
         <CardTitle>Macros do dia</CardTitle>
-        <MacroRow label="Proteína" consumed={food.protein} target={targets.protein} color="var(--protein)" />
-        <MacroRow label="Carboidratos" consumed={food.carbs} target={targets.carb} color="var(--carb)" />
-        <MacroRow label="Gordura" consumed={food.fat} target={targets.fat} color="var(--fat)" />
+        <div className="grid grid-cols-4 gap-1">
+          <MacroRing label="Proteínas" consumed={food.protein} target={targets.protein} color="var(--protein)" />
+          <MacroRing label="Carboidratos" consumed={food.carbs} target={targets.carb} color="var(--carb)" />
+          <MacroRing label="Gordura" consumed={food.fat} target={targets.fat} color="var(--fat)" />
+          <MacroRing label="Gramas" consumed={food.grams} target={null} color="var(--orange-light)" />
+        </div>
       </Card>
 
       <Card>
@@ -155,21 +158,55 @@ function Kpi({ label, value, color }: { label: string; value: string; color: str
     </div>
   )
 }
-function MacroRow({ label, consumed, target, color }: { label: string; consumed: number; target: number; color: string }) {
-  const pct = target > 0 ? Math.min(100, Math.round((consumed / target) * 100)) : 0
+function MacroRing({
+  label,
+  consumed,
+  target,
+  color,
+}: {
+  label: string
+  consumed: number
+  target: number | null
+  color: string
+}) {
+  const size = 76
+  const stroke = 7
+  const r = (size - stroke) / 2
+  const circumference = 2 * Math.PI * r
+  const pct = target != null && target > 0 ? Math.min(1, consumed / target) : 0
+  const dash = target != null ? circumference * pct : 0
+
   return (
-    <div className="mb-3 last:mb-0">
-      <div className="mb-1.5 flex items-center justify-between text-[0.85rem]">
-        <span className="font-semibold" style={{ color }}>
-          {label}
-        </span>
-        <span>
-          {fmtNum(consumed)} / {fmtNum(target)} g
-        </span>
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            strokeWidth={stroke}
+            style={{ stroke: `color-mix(in srgb, ${color} 18%, transparent)` }}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${dash} ${circumference}`}
+            style={{ stroke: color }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[1.05rem] font-extrabold leading-none text-[var(--text)]">{fmtNum(consumed)}</span>
+          <span className="mt-0.5 text-[0.58rem] leading-none text-[var(--text-soft)]">
+            {target != null ? `/${fmtNum(target)}g` : 'g'}
+          </span>
+        </div>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-[var(--line)]">
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
-      </div>
+      <span className="text-center text-[0.68rem] font-semibold text-[var(--text-soft)]">{label}</span>
     </div>
   )
 }
