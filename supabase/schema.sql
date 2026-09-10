@@ -91,6 +91,51 @@ drop policy if exists "profiles_delete_own" on public.profiles;
 create policy "profiles_delete_own" on public.profiles
   for delete using (auth.uid() = id);
 
+-- ========== papéis de acesso e créditos de IA — colunas + is_admin() ==========
+-- Precisa vir aqui, logo após as policies "own" de profiles: as policies
+-- de admin abaixo (e o trigger de proteção de colunas, mais abaixo) usam
+-- is_admin(), e CREATE POLICY valida a expressão using/check na hora —
+-- diferente de uma função plpgsql, ela não aceita referência a uma
+-- função que ainda não existe no momento em que a policy é criada. Como
+-- este arquivo é pensado para ser rodado inteiro do zero (comentário no
+-- topo do arquivo), a ordem aqui dentro importa de verdade.
+
+do $$ begin
+  create type public.user_role_enum as enum ('admin', 'pro', 'free');
+exception when duplicate_object then null; end $$;
+
+alter table public.profiles
+  add column if not exists role public.user_role_enum not null default 'free',
+  add column if not exists creditos_ia integer not null default 0,
+  add column if not exists creditos_mensais integer not null default 50,
+  add column if not exists data_inicio_pro timestamptz,
+  add column if not exists data_proxima_renovacao timestamptz;
+
+-- security definer + search_path fixo: roda com os privilégios de quem
+-- criou a função (o dono do projeto), que por padrão ignora RLS — por
+-- isso não entra em recursão ao consultar profiles (que também tem RLS)
+-- de dentro de uma policy da própria tabela profiles.
+create or replace function public.is_admin(uid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles p where p.id = uid and p.role = 'admin'
+  );
+$$;
+
+-- Admin enxerga e edita qualquer perfil (Etapa 3).
+drop policy if exists "profiles_select_admin" on public.profiles;
+create policy "profiles_select_admin" on public.profiles
+  for select using (public.is_admin(auth.uid()));
+
+drop policy if exists "profiles_update_admin" on public.profiles;
+create policy "profiles_update_admin" on public.profiles
+  for update using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
 begin
@@ -103,6 +148,47 @@ drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at
   before update on public.profiles
   for each row execute function public.set_updated_at();
+
+-- RLS é por LINHA, não por coluna — a policy "profiles_update_own" acima
+-- deixa o próprio usuário atualizar a linha dele inteira, o que incluiria
+-- role/créditos se nada mais impedisse. Este trigger fecha essa brecha:
+-- só passa a alteração dessas 5 colunas se quem está atualizando for
+-- admin (is_admin), for o service role (Edge Function de consumo de
+-- créditos, Etapa 6) ou tiver marcado a flag de sessão
+-- app.bypass_profile_protection (usada por renovar_creditos_pro(), que
+-- roda via pg_cron sem nenhum auth.uid() — não tem como ser "admin").
+create or replace function public.protect_profile_privileged_columns()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.role() = 'service_role' then
+    return new;
+  end if;
+  if current_setting('app.bypass_profile_protection', true) = 'true' then
+    return new;
+  end if;
+  if public.is_admin(auth.uid()) then
+    return new;
+  end if;
+  if new.role is distinct from old.role
+     or new.creditos_ia is distinct from old.creditos_ia
+     or new.creditos_mensais is distinct from old.creditos_mensais
+     or new.data_inicio_pro is distinct from old.data_inicio_pro
+     or new.data_proxima_renovacao is distinct from old.data_proxima_renovacao
+  then
+    raise exception 'Não é permitido alterar role ou créditos diretamente.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_protect_privileged_columns on public.profiles;
+create trigger profiles_protect_privileged_columns
+  before update on public.profiles
+  for each row execute function public.protect_profile_privileged_columns();
 
 -- ========== refeicoes ==========
 create table if not exists public.refeicoes (
@@ -141,6 +227,14 @@ drop policy if exists "refeicoes_delete_own" on public.refeicoes;
 create policy "refeicoes_delete_own" on public.refeicoes
   for delete using (auth.uid() = user_id);
 
+drop policy if exists "refeicoes_select_admin" on public.refeicoes;
+create policy "refeicoes_select_admin" on public.refeicoes
+  for select using (public.is_admin(auth.uid()));
+
+drop policy if exists "refeicoes_update_admin" on public.refeicoes;
+create policy "refeicoes_update_admin" on public.refeicoes
+  for update using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
 -- ========== treinos ==========
 create table if not exists public.treinos (
   id uuid primary key default gen_random_uuid(),
@@ -176,6 +270,14 @@ drop policy if exists "treinos_delete_own" on public.treinos;
 create policy "treinos_delete_own" on public.treinos
   for delete using (auth.uid() = user_id);
 
+drop policy if exists "treinos_select_admin" on public.treinos;
+create policy "treinos_select_admin" on public.treinos
+  for select using (public.is_admin(auth.uid()));
+
+drop policy if exists "treinos_update_admin" on public.treinos;
+create policy "treinos_update_admin" on public.treinos
+  for update using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
 -- ========== registros_peso ==========
 create table if not exists public.registros_peso (
   id uuid primary key default gen_random_uuid(),
@@ -206,6 +308,14 @@ create policy "registros_peso_update_own" on public.registros_peso
 drop policy if exists "registros_peso_delete_own" on public.registros_peso;
 create policy "registros_peso_delete_own" on public.registros_peso
   for delete using (auth.uid() = user_id);
+
+drop policy if exists "registros_peso_select_admin" on public.registros_peso;
+create policy "registros_peso_select_admin" on public.registros_peso
+  for select using (public.is_admin(auth.uid()));
+
+drop policy if exists "registros_peso_update_admin" on public.registros_peso;
+create policy "registros_peso_update_admin" on public.registros_peso
+  for update using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
 
 -- ========== metas_mensais ==========
 create table if not exists public.metas_mensais (
@@ -239,14 +349,21 @@ drop policy if exists "metas_mensais_delete_own" on public.metas_mensais;
 create policy "metas_mensais_delete_own" on public.metas_mensais
   for delete using (auth.uid() = user_id);
 
+drop policy if exists "metas_mensais_select_admin" on public.metas_mensais;
+create policy "metas_mensais_select_admin" on public.metas_mensais
+  for select using (public.is_admin(auth.uid()));
+
+drop policy if exists "metas_mensais_update_admin" on public.metas_mensais;
+create policy "metas_mensais_update_admin" on public.metas_mensais
+  for update using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
 -- ========== auto-criação de profile em todo novo usuário (e-mail ou OAuth) ==========
 -- Sem isso, um usuário que entra pelo Google nunca passa pelo ProfileForm
 -- salvando a linha em profiles — o trigger garante que a linha sempre existe,
 -- com nome pré-preenchido a partir do Google quando disponível, e o resto
 -- com os defaults da tabela (nivel_atividade/objetivo/ritmo/role/créditos —
--- role/créditos foram adicionados depois, na seção "papéis de acesso e
--- créditos de IA" mais abaixo, mas por serem colunas com default na
--- tabela, todo INSERT feito por este trigger já sai com os valores certos
+-- role/créditos, definidos mais acima, também têm default na tabela,
+-- então todo INSERT feito por este trigger já sai com os valores certos
 -- sem precisar tocar aqui).
 create or replace function public.handle_new_user()
 returns trigger
@@ -270,23 +387,10 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- ========== papéis de acesso e créditos de IA — Etapa 1 (schema) ==========
--- Etapas seguintes (fora deste arquivo por enquanto, chegam em commits
--- separados): 2) lógica de virar Pro / renovar_creditos_pro() / pg_cron,
--- 3) policies de RLS admin + proteção contra o usuário alterar essas
--- colunas na própria linha, 4-7) frontend, tela de Admin, consumo de
--- créditos nas Edge Functions.
-
-do $$ begin
-  create type public.user_role_enum as enum ('admin', 'pro', 'free');
-exception when duplicate_object then null; end $$;
-
-alter table public.profiles
-  add column if not exists role public.user_role_enum not null default 'free',
-  add column if not exists creditos_ia integer not null default 0,
-  add column if not exists creditos_mensais integer not null default 50,
-  add column if not exists data_inicio_pro timestamptz,
-  add column if not exists data_proxima_renovacao timestamptz;
+-- ========== papéis de acesso e créditos de IA — transações de crédito ==========
+-- As colunas role/creditos_* em profiles e a função is_admin() já foram
+-- criadas mais acima (logo após as policies "own" de profiles). Aqui
+-- entra só a tabela de auditoria de créditos.
 
 do $$ begin
   create type public.tipo_transacao_credito_enum as enum ('consumo', 'renovacao_mensal', 'ajuste_admin');
@@ -303,26 +407,23 @@ create table if not exists public.transacoes_creditos (
 
 create index if not exists transacoes_creditos_user_idx on public.transacoes_creditos(user_id, created_at desc);
 
--- RLS ligado desde já (fail-closed: sem nenhuma policy ainda, ninguém além
--- do service role consegue ler/gravar aqui). As policies de verdade
--- (usuário vê o próprio histórico, admin vê/grava tudo) entram na Etapa 3.
 alter table public.transacoes_creditos enable row level security;
 
--- security definer + search_path fixo: roda com os privilégios de quem
--- criou a função (o dono do projeto), que por padrão ignora RLS — por
--- isso não entra em recursão ao consultar profiles (que também tem RLS)
--- de dentro de uma policy da própria tabela profiles.
-create or replace function public.is_admin(uid uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1 from public.profiles p where p.id = uid and p.role = 'admin'
-  );
-$$;
+-- Só leitura por policy — o próprio usuário vê seu histórico, admin vê o
+-- de todo mundo. Não existe insert/update/delete por policy de propósito:
+-- toda escrita nessa tabela passa pelas funções security definer
+-- (promote_user_to_pro, demote_user_to_free, renovar_creditos_pro, e a
+-- Edge Function de consumo de créditos na Etapa 6), que ignoram RLS por
+-- rodarem como o dono do projeto — assim a tabela de auditoria nunca
+-- pode ser adulterada diretamente por um usuário comum nem por um admin
+-- direto no cliente, só pelo caminho controlado do backend.
+drop policy if exists "transacoes_creditos_select_own" on public.transacoes_creditos;
+create policy "transacoes_creditos_select_own" on public.transacoes_creditos
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "transacoes_creditos_select_admin" on public.transacoes_creditos;
+create policy "transacoes_creditos_select_admin" on public.transacoes_creditos
+  for select using (public.is_admin(auth.uid()));
 
 -- ========== papéis de acesso e créditos de IA — Etapa 2 (promoção/renovação) ==========
 -- promote_user_to_pro / demote_user_to_free são as únicas formas suportadas
@@ -400,6 +501,12 @@ $$;
 -- tempo, um usuário muito atrasado só avança um ciclo de 30 dias por
 -- execução — mas como isso roda todo dia, ele se recupera sozinho em
 -- poucos dias sem precisar de intervenção manual.
+--
+-- (Atualizada na Etapa 3): pg_cron não carrega nenhum JWT — auth.uid()
+-- fica null aqui dentro, então is_admin(auth.uid()) do trigger de
+-- proteção de colunas nunca passaria. set_config com o 3º argumento
+-- `true` deixa a flag valendo só dentro desta transação, sem vazar pra
+-- fora nem exigir um "unset" depois.
 create or replace function public.renovar_creditos_pro()
 returns void
 language plpgsql
@@ -407,6 +514,7 @@ security definer
 set search_path = public
 as $$
 begin
+  perform set_config('app.bypass_profile_protection', 'true', true);
   with renovados as (
     update public.profiles
     set creditos_ia = creditos_mensais,
