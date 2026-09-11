@@ -2,6 +2,7 @@ import { leanMassKg } from '../../lib/calculations'
 import { WeightBodyFatKpi } from '../WeightBodyFatKpi'
 import { CalcMemoryKcal, CalcMemoryMacro } from '../CalcMemory'
 import { GoalsForm } from './GoalsForm'
+import { MacroOverrideForm } from './MacroOverrideForm'
 import { parseISODate } from '../../lib/dateUtils'
 import type { Profile } from '../../types'
 
@@ -107,6 +108,7 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, onSaveProfile
           Memória de cálculo — macros
         </div>
         <CalcMemoryMacro p={profile} t={t} />
+        <MacroOverrideForm profile={profile} onSave={onSaveProfile} />
       </div>
 
       {weeklyGoal ? (

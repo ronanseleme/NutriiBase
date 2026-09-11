@@ -190,6 +190,17 @@ create trigger profiles_protect_privileged_columns
   before update on public.profiles
   for each row execute function public.protect_profile_privileged_columns();
 
+-- Override manual de proteína/gordura (em gramas) na aba Metas — quando
+-- preenchido, o carboidrato da meta passa a ser o restante das calorias
+-- (kcal - proteína*4 - gordura*9)/4, calculado no frontend. NULL em
+-- qualquer um dos dois significa "usar o cálculo automático" para
+-- aquele macro especificamente. Coluna comum, editável pelo próprio
+-- usuário (não faz parte da proteção de colunas privilegiadas da
+-- Etapa 3 — aquilo é só sobre role/créditos).
+alter table public.profiles
+  add column if not exists override_proteina_g int,
+  add column if not exists override_gordura_g int;
+
 -- ========== refeicoes ==========
 create table if not exists public.refeicoes (
   id uuid primary key default gen_random_uuid(),

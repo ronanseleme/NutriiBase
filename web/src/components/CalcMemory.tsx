@@ -36,14 +36,20 @@ export function CalcMemoryKcal({ t }: { t: Targets }) {
 }
 
 export function CalcMemoryMacro({ p, t }: { p: Profile; t: Targets }) {
+  const proteinOverridden = p.macroOverride?.proteinG != null
+  const fatOverridden = p.macroOverride?.fatG != null
   return (
     <div>
       <Step
-        label={`Proteína — ${t.proteinPerKg} g/kg × ${fmtNum(t.proteinBaseKg)} kg${t.usingLBM ? ' de massa magra' : ' de peso corporal'}`}
+        label={
+          proteinOverridden
+            ? 'Proteína — definida manualmente'
+            : `Proteína — ${t.proteinPerKg} g/kg × ${fmtNum(t.proteinBaseKg)} kg${t.usingLBM ? ' de massa magra' : ' de peso corporal'}`
+        }
         value={<span style={{ color: 'var(--protein)' }}>{fmtNum(t.protein)} g</span>}
       />
       <Step
-        label={`Gordura — ${t.fatPerKg} g/kg × ${fmtNum(p.weightKg)} kg de peso corporal`}
+        label={fatOverridden ? 'Gordura — definida manualmente' : `Gordura — ${t.fatPerKg} g/kg × ${fmtNum(p.weightKg)} kg de peso corporal`}
         value={<span style={{ color: 'var(--fat)' }}>{fmtNum(t.fat)} g</span>}
       />
       <Step

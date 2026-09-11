@@ -45,6 +45,8 @@ export interface ProfileRow {
   meta_proteina_g: number | null
   meta_carbo_g: number | null
   meta_gordura_g: number | null
+  override_proteina_g: number | null
+  override_gordura_g: number | null
   role: string | null
   creditos_ia: number | null
   creditos_mensais: number | null
@@ -80,6 +82,8 @@ export function profileToDbRow(p: Profile, userId: string) {
     meta_proteina_g: p.targets?.protein ?? null,
     meta_carbo_g: p.targets?.carb ?? null,
     meta_gordura_g: p.targets?.fat ?? null,
+    override_proteina_g: p.macroOverride?.proteinG ?? null,
+    override_gordura_g: p.macroOverride?.fatG ?? null,
   }
 }
 
@@ -100,7 +104,10 @@ export function dbProfileToLocal(row: ProfileRow): Omit<Profile, 'targets'> {
     targetDate: row.data_meta || null,
     weeklyWorkoutGoal: row.meta_treinos_semanais ?? null,
     restrictions: { tags: [], note: row.restricoes_alimentares || '' },
-    macroOverride: null,
+    macroOverride:
+      row.override_proteina_g != null || row.override_gordura_g != null
+        ? { proteinG: row.override_proteina_g, fatG: row.override_gordura_g }
+        : null,
     role: (row.role as Profile['role']) || 'free',
     creditosIa: row.creditos_ia ?? 0,
     creditosMensais: row.creditos_mensais ?? 50,
