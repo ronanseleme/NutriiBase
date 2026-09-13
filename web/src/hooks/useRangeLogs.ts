@@ -9,11 +9,13 @@ import type { RefeicaoRow, RegistroPesoRow, TreinoRow } from '../lib/mappers'
  * arrastado pelo usuário no calendário. */
 export function useRangeLogs(userId: string | null, startIso: string, endIso: string) {
   const [rangeMap, setRangeMap] = useState<Record<string, DayInsightData>>({})
+  const [refeicoes, setRefeicoes] = useState<RefeicaoRow[]>([])
   const [loading, setLoading] = useState(true)
 
   const reload = useCallback(async () => {
     if (!userId) {
       setRangeMap({})
+      setRefeicoes([])
       setLoading(false)
       return
     }
@@ -23,9 +25,11 @@ export function useRangeLogs(userId: string | null, startIso: string, endIso: st
       supabase.from('treinos').select('*').eq('user_id', userId).gte('data', startIso).lte('data', endIso),
       supabase.from('registros_peso').select('*').eq('user_id', userId).gte('data', startIso).lte('data', endIso),
     ])
+    const refeicoesData = (refeicoesRes.data as RefeicaoRow[]) || []
+    setRefeicoes(refeicoesData)
     setRangeMap(
       buildDayMap(
-        (refeicoesRes.data as RefeicaoRow[]) || [],
+        refeicoesData,
         (treinosRes.data as TreinoRow[]) || [],
         (pesosRes.data as RegistroPesoRow[]) || [],
       ),
@@ -37,5 +41,5 @@ export function useRangeLogs(userId: string | null, startIso: string, endIso: st
     reload()
   }, [reload])
 
-  return { rangeMap, loading, reload }
+  return { rangeMap, refeicoes, loading, reload }
 }

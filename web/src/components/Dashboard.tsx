@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { dayFoodTotals, dayWorkoutKcal } from '../lib/calculations'
 import { computeMonthInsights, computeRangeTotals, computeYearMonthlyBars } from '../lib/insights'
-import { formatShortDate, monthAbbrev, monthLabel, pad, parseISODate } from '../lib/dateUtils'
+import { formatShortDate, monthAbbrev, monthLabel, pad, parseISODate, todayISO } from '../lib/dateUtils'
+import { useDayLog } from '../hooks/useDayLog'
 import { useMonthLogs } from '../hooks/useMonthLogs'
 import { useRangeLogs } from '../hooks/useRangeLogs'
 import { useYearLogs } from '../hooks/useYearLogs'
@@ -68,9 +69,29 @@ export function Dashboard({ profile, log, userId, dateIso, viewMode, customRange
         ? `Olá, ${firstName} — aqui está seu progresso.`
         : 'Aqui está seu progresso.'
 
+  // Sinal do dia: sempre reflete o dia de HOJE (independente de qual dia/mês
+  // o usuário esteja navegando no restante do painel) — é um status fixo,
+  // "você está indo bem hoje ou não", parecido com um placar diário.
+  const { log: todayLog } = useDayLog(userId, todayISO())
+  const todayFood = dayFoodTotals(todayLog.meals)
+  const todayBurn = dayWorkoutKcal(todayLog.workouts)
+  const todayMetaAjustada = targets.kcal + todayBurn
+  const todayRestante = todayMetaAjustada - todayFood.kcal
+  const goalSignal =
+    todayFood.kcal === 0
+      ? { icon: '📝', color: 'var(--text-soft)', text: 'você ainda não registrou nada hoje.' }
+      : todayRestante >= 0
+        ? { icon: '✅', color: 'var(--teal)', text: `você está dentro da meta de hoje — faltam ${fmtNum(todayRestante)} kcal.` }
+        : { icon: '⚠️', color: 'var(--coral)', text: `você já passou ${fmtNum(Math.abs(todayRestante))} kcal da meta de hoje.` }
+
   return (
     <div className="flex flex-col gap-4">
-      <p className="px-1 text-[0.95rem] font-semibold text-[var(--text)]">{greeting}</p>
+      <div className="px-1">
+        <p className="text-[0.95rem] font-semibold text-[var(--text)]">{greeting}</p>
+        <p className="mt-1 text-[0.85rem] font-semibold" style={{ color: goalSignal.color }}>
+          {goalSignal.icon} {goalSignal.text}
+        </p>
+      </div>
 
       <Card>
         <CardTitle>{isMonthly ? 'Balanço do mês' : 'Balanço do dia'}</CardTitle>

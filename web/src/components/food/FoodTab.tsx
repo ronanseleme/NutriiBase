@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { MEALS } from '../../lib/constants'
 import { dayFoodTotals, mealTotals } from '../../lib/calculations'
-import { computeRangeTotals } from '../../lib/insights'
+import { computeRangeMealTotals, computeRangeTotals } from '../../lib/insights'
 import { formatShortDate, monthLabel, pad, parseISODate } from '../../lib/dateUtils'
 import { useRangeLogs } from '../../hooks/useRangeLogs'
 import { MealSummary } from './MealSummary'
@@ -54,7 +54,7 @@ export function FoodTab({
   const selM = selected.getMonth() + 1
   const rangeStart = customRange?.start ?? `${selY}-${pad(selM)}-01`
   const rangeEnd = customRange?.end ?? dateIso
-  const { rangeMap, reload: reloadRange } = useRangeLogs(userId, rangeStart, rangeEnd)
+  const { rangeMap, refeicoes: rangeRefeicoes, reload: reloadRange } = useRangeLogs(userId, rangeStart, rangeEnd)
   useEffect(() => {
     reloadRange()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -62,6 +62,7 @@ export function FoodTab({
 
   if (viewMode === 'monthly') {
     const mtd = computeRangeTotals(rangeStart, rangeEnd, rangeMap)
+    const mealTotalsRange = computeRangeMealTotals(rangeRefeicoes)
     const periodLabel = customRange
       ? `${formatShortDate(rangeStart)} até ${formatShortDate(rangeEnd)}`
       : `1 a ${selected.getDate()} de ${monthLabel(selY, selM)}`
@@ -69,6 +70,42 @@ export function FoodTab({
       <div className="nb-card">
         <div className="nb-card-title">Resumo do mês</div>
         <p className="mb-3 text-[0.8rem] text-[var(--text-soft)]">Acumulado de {periodLabel}</p>
+        <div className="mb-1.5 grid grid-cols-[1fr_repeat(5,44px)] gap-1 border-b border-[var(--line)] pb-1.5 text-[0.62rem] font-bold uppercase tracking-wide text-[var(--text-soft)]">
+          <span />
+          <span className="text-right">Gramas</span>
+          <span className="text-right">Kcal</span>
+          <span className="text-right" style={{ color: 'var(--protein)' }}>
+            Prot
+          </span>
+          <span className="text-right" style={{ color: 'var(--carb)' }}>
+            Carb
+          </span>
+          <span className="text-right" style={{ color: 'var(--fat)' }}>
+            Gord
+          </span>
+        </div>
+        {MEALS.map((m) => {
+          const t = mealTotalsRange[m.key] || { kcal: 0, protein: 0, carbs: 0, fat: 0, grams: 0 }
+          return (
+            <div
+              key={m.key}
+              className="grid grid-cols-[1fr_repeat(5,44px)] items-center gap-1 border-b border-[var(--line)] py-2 text-[0.82rem] last:border-b-0"
+            >
+              <span>{m.label}</span>
+              <span className="text-right font-semibold text-[var(--text-soft)]">{fmtNum(t.grams)}</span>
+              <span className="text-right font-semibold">{fmtNum(t.kcal)}</span>
+              <span className="text-right font-semibold" style={{ color: 'var(--protein)' }}>
+                {fmtNum(t.protein)}
+              </span>
+              <span className="text-right font-semibold" style={{ color: 'var(--carb)' }}>
+                {fmtNum(t.carbs)}
+              </span>
+              <span className="text-right font-semibold" style={{ color: 'var(--fat)' }}>
+                {fmtNum(t.fat)}
+              </span>
+            </div>
+          )
+        })}
         <div className="grid grid-cols-[1fr_repeat(5,44px)] items-center gap-1 border-t-2 border-[var(--line-strong)] pt-2.5 text-[0.85rem] font-extrabold">
           <span>Total</span>
           <span className="text-right text-[var(--text-soft)]">{fmtNum(mtd.grams)}</span>
