@@ -8,6 +8,22 @@ import type { AiAccess, FoodItem } from '../../types'
 
 type Mode = 'db' | 'ai' | 'manual'
 
+/**
+ * Referência (gramas + macros) usada para recalcular kcal/macros quando o
+ * usuário muda a quantidade em gramas nos modos "ai"/"manual". Sempre
+ * recalculamos a partir desta âncora fixa (nunca a partir do último valor
+ * já arredondado exibido em tela) para não acumular erro de arredondamento
+ * a cada edição sucessiva de gramas — a mesma lógica que o modo "Base"
+ * (scaledFood) e o "Descrever com IA" (per100) já usam.
+ */
+interface MacroAnchor {
+  grams: number
+  kcal: number
+  protein: number
+  carbs: number
+  fat: number
+}
+
 interface Props {
   mealLabel: string
   editItem: FoodItem | null
@@ -42,7 +58,11 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
     carbs: editItem && !dbMatch ? String(editItem.carbs) : '',
     fat: editItem && !dbMatch ? String(editItem.fat) : '',
   })
-  const [lastGrams, setLastGrams] = useState(editItem && !dbMatch ? editItem.grams || 0 : 0)
+  const [anchor, setAnchor] = useState<MacroAnchor | null>(
+    editItem && !dbMatch && editItem.grams
+      ? { grams: editItem.grams, kcal: editItem.kcal, protein: editItem.protein, carbs: editItem.carbs, fat: editItem.fat }
+      : null,
+  )
   const [aiDesc, setAiDesc] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
@@ -61,18 +81,45 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
   }
 
   function handleGramsChange(newGrams: number) {
-    if (lastGrams > 0 && newGrams > 0 && newGrams !== lastGrams) {
-      const ratio = newGrams / lastGrams
+    if (anchor && anchor.grams > 0 && newGrams > 0) {
+      const ratio = newGrams / anchor.grams
       setManual((m) => ({
         ...m,
-        kcal: String(Math.round((+m.kcal || 0) * ratio)),
-        protein: String(Math.round((+m.protein || 0) * ratio * 10) / 10),
-        carbs: String(Math.round((+m.carbs || 0) * ratio * 10) / 10),
-        fat: String(Math.round((+m.fat || 0) * ratio * 10) / 10),
+        grams: String(newGrams),
+        kcal: String(Math.round(anchor.kcal * ratio)),
+        protein: String(Math.round(anchor.protein * ratio)),
+        carbs: String(Math.round(anchor.carbs * ratio)),
+        fat: String(Math.round(anchor.fat * ratio)),
       }))
+      return
     }
-    setLastGrams(newGrams)
+    // Ainda não há âncora (primeira vez que gramas passa a fazer sentido) —
+    // só registra o valor e usa os macros já presentes neste momento como
+    // referência para futuras mudanças de gramas.
     setManual((m) => ({ ...m, grams: String(newGrams) }))
+    if (newGrams > 0) {
+      setAnchor({
+        grams: newGrams,
+        kcal: +manual.kcal || 0,
+        protein: +manual.protein || 0,
+        carbs: +manual.carbs || 0,
+        fat: +manual.fat || 0,
+      })
+    }
+  }
+
+  function updateMacroField(field: 'kcal' | 'protein' | 'carbs' | 'fat', value: string) {
+    setManual((m) => ({ ...m, [field]: value }))
+    const grams = +manual.grams || 0
+    if (grams > 0) {
+      setAnchor({
+        grams,
+        kcal: field === 'kcal' ? +value || 0 : +manual.kcal || 0,
+        protein: field === 'protein' ? +value || 0 : +manual.protein || 0,
+        carbs: field === 'carbs' ? +value || 0 : +manual.carbs || 0,
+        fat: field === 'fat' ? +value || 0 : +manual.fat || 0,
+      })
+    }
   }
 
   async function askAI() {
@@ -92,7 +139,11 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
           carbs: String(data.carbs || 0),
           fat: String(data.fat || 0),
         })
-        setLastGrams(data.grams || 0)
+        setAnchor(
+          data.grams > 0
+            ? { grams: data.grams, kcal: data.kcal || 0, protein: data.protein || 0, carbs: data.carbs || 0, fat: data.fat || 0 }
+            : null,
+        )
         setAiApplied(true)
       }
     } catch (err) {
@@ -148,7 +199,7 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
     setSearch('')
     setSelected(null)
     setManual({ name: '', grams: '', kcal: '', protein: '', carbs: '', fat: '' })
-    setLastGrams(0)
+    setAnchor(null)
     setAiDesc('')
     setAiApplied(false)
     setAiError(null)
@@ -244,13 +295,17 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
                   {aiLoading ? 'Consultando IA…' : 'Perguntar à IA'}
                 </button>
                 {aiError && <div className="mb-3 rounded-[10px] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface))] p-2.5 text-[0.82rem] text-[var(--coral)]">{aiError}</div>}
-                {aiApplied && <ManualFields manual={manual} setManual={setManual} onGramsChange={handleGramsChange} />}
+                {aiApplied && (
+                  <ManualFields manual={manual} setManual={setManual} onGramsChange={handleGramsChange} onFieldChange={updateMacroField} />
+                )}
               </>
             )}
           </div>
         )}
 
-        {mode === 'manual' && <ManualFields manual={manual} setManual={setManual} onGramsChange={handleGramsChange} />}
+        {mode === 'manual' && (
+          <ManualFields manual={manual} setManual={setManual} onGramsChange={handleGramsChange} onFieldChange={updateMacroField} />
+        )}
 
         <div className="mt-4 flex justify-end gap-2.5">
           <button type="button" onClick={onClose} className="nb-btn nb-btn-secondary px-4 py-2 text-sm">
@@ -302,10 +357,12 @@ function ManualFields({
   manual,
   setManual,
   onGramsChange,
+  onFieldChange,
 }: {
   manual: ManualState
   setManual: (fn: (m: ManualState) => ManualState) => void
   onGramsChange: (g: number) => void
+  onFieldChange: (field: 'kcal' | 'protein' | 'carbs' | 'fat', value: string) => void
 }) {
   const inputCls = 'nb-input'
   return (
@@ -335,21 +392,21 @@ function ManualFields({
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5">
           <span className="text-[0.8rem] font-bold text-[var(--text-soft)]">Calorias (kcal)</span>
-          <input type="number" min={0} value={manual.kcal} onChange={(e) => setManual((m) => ({ ...m, kcal: e.target.value }))} className={inputCls} />
+          <input type="number" min={0} value={manual.kcal} onChange={(e) => onFieldChange('kcal', e.target.value)} className={inputCls} />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-[0.8rem] font-bold text-[var(--text-soft)]">Proteína (g)</span>
-          <input type="number" min={0} step={0.1} value={manual.protein} onChange={(e) => setManual((m) => ({ ...m, protein: e.target.value }))} className={inputCls} />
+          <input type="number" min={0} step={0.1} value={manual.protein} onChange={(e) => onFieldChange('protein', e.target.value)} className={inputCls} />
         </label>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5">
           <span className="text-[0.8rem] font-bold text-[var(--text-soft)]">Carboidratos (g)</span>
-          <input type="number" min={0} step={0.1} value={manual.carbs} onChange={(e) => setManual((m) => ({ ...m, carbs: e.target.value }))} className={inputCls} />
+          <input type="number" min={0} step={0.1} value={manual.carbs} onChange={(e) => onFieldChange('carbs', e.target.value)} className={inputCls} />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-[0.8rem] font-bold text-[var(--text-soft)]">Gordura (g)</span>
-          <input type="number" min={0} step={0.1} value={manual.fat} onChange={(e) => setManual((m) => ({ ...m, fat: e.target.value }))} className={inputCls} />
+          <input type="number" min={0} step={0.1} value={manual.fat} onChange={(e) => onFieldChange('fat', e.target.value)} className={inputCls} />
         </label>
       </div>
     </div>

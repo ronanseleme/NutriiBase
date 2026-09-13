@@ -5,6 +5,31 @@ import { Logo } from './Logo'
 
 type Mode = 'signin' | 'signup'
 
+function EyeIcon({ open }: { open: boolean }) {
+  return open ? (
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={12} cy={12} r={3.2} stroke="currentColor" strokeWidth={1.8} />
+    </svg>
+  ) : (
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M1 12s4-7 11-7c2.1 0 3.9.55 5.4 1.3M23 12s-1.6 2.8-4.4 4.7M4.5 6.5 19.5 17.9M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 // Ícone oficial do Google ("G" multicolor).
 function GoogleIcon() {
   return (
@@ -26,6 +51,7 @@ export function AuthScreen() {
   const [info, setInfo] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const isSignin = mode === 'signin'
 
@@ -133,15 +159,26 @@ export function AuthScreen() {
           </label>
           <label className="flex flex-col gap-1.5">
             <span className="text-[0.8rem] font-bold text-[var(--text-soft)]">Senha</span>
-            <input
-              type="password"
-              required
-              minLength={6}
-              autoComplete={isSignin ? 'current-password' : 'new-password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="nb-input"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                minLength={6}
+                autoComplete={isSignin ? 'current-password' : 'new-password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="nb-input pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={showPassword}
+                className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-transparent text-[var(--text-soft)] hover:bg-[var(--bg)]"
+              >
+                <EyeIcon open={showPassword} />
+              </button>
+            </div>
           </label>
           <button
             type="submit"

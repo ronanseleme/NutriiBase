@@ -1,6 +1,7 @@
 import { addDays, pad, parseISODate, todayISO, toISODate } from './dateUtils'
+import { MEAL_KEY_FROM_DB } from './mappers'
 import type { RefeicaoRow, RegistroPesoRow, TreinoRow } from './mappers'
-import type { Profile } from '../types'
+import type { MealKey, Profile } from '../types'
 
 export interface DayInsightData {
   kcal: number
@@ -309,6 +310,34 @@ export function computeYearMonthlyBars(
     bars.push({ month: m, saldo: tracked > 0 ? total : null, trackedDays: tracked })
   }
   return bars
+}
+
+export interface MealRangeTotals {
+  kcal: number
+  protein: number
+  carbs: number
+  fat: number
+  grams: number
+}
+
+/**
+ * Acumulado por tipo de refeição (Café da manhã, Almoço, ...) das linhas
+ * `refeicoes` de um período — usado pelo "Resumo do mês" para mostrar,
+ * além do total geral, quanto cada refeição já somou no acumulado.
+ */
+export function computeRangeMealTotals(refeicoes: RefeicaoRow[]): Record<MealKey, MealRangeTotals> {
+  const totals = {} as Record<MealKey, MealRangeTotals>
+  refeicoes.forEach((r) => {
+    const key = MEAL_KEY_FROM_DB[r.tipo_refeicao]
+    if (!key) return
+    if (!totals[key]) totals[key] = { kcal: 0, protein: 0, carbs: 0, fat: 0, grams: 0 }
+    totals[key].kcal += r.kcal
+    totals[key].protein += r.proteina_g
+    totals[key].carbs += r.carboidrato_g
+    totals[key].fat += r.gordura_g
+    totals[key].grams += r.porcao || 0
+  })
+  return totals
 }
 
 export interface RangeTotals {
