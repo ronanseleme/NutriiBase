@@ -1,9 +1,10 @@
-import { leanMassKg } from '../../lib/calculations'
+import { dayFoodTotals, dayWorkoutKcal, leanMassKg } from '../../lib/calculations'
 import { WeightBodyFatKpi } from '../WeightBodyFatKpi'
-import { CalcMemoryKcal, CalcMemoryMacro } from '../CalcMemory'
+import { CalcMemoryKcal, CalcMemoryMacro, CalcMemorySaldo } from '../CalcMemory'
 import { GoalsForm } from './GoalsForm'
 import { MacroOverrideForm } from './MacroOverrideForm'
-import { parseISODate } from '../../lib/dateUtils'
+import { parseISODate, todayISO } from '../../lib/dateUtils'
+import { useDayLog } from '../../hooks/useDayLog'
 import type { Profile } from '../../types'
 
 function fmtNum(n: number | null | undefined): string {
@@ -14,12 +15,19 @@ interface Props {
   profile: Profile
   startWeight: number
   weekWorkoutCount: number
+  userId: string | null
   onSaveProfile: (updates: Partial<Omit<Profile, 'id' | 'targets'>>) => Promise<{ error: Error | null }>
 }
 
-export function MetasTab({ profile, startWeight, weekWorkoutCount, onSaveProfile }: Props) {
+export function MetasTab({ profile, startWeight, weekWorkoutCount, userId, onSaveProfile }: Props) {
   const t = profile.targets
   const leanMassNow = leanMassKg(profile)
+
+  // Números de hoje, para a memória de cálculo do saldo — sempre o dia
+  // atual, independente de qualquer navegação de data em outras abas.
+  const { log: todayLog } = useDayLog(userId, todayISO())
+  const todayConsumido = dayFoodTotals(todayLog.meals).kcal
+  const todayBurn = dayWorkoutKcal(todayLog.workouts)
 
   let progressPct: number | null = null
   if (profile.targetWeightKg) {
@@ -109,6 +117,15 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, onSaveProfile
         </div>
         <CalcMemoryMacro p={profile} t={t} />
         <MacroOverrideForm profile={profile} onSave={onSaveProfile} />
+      </div>
+
+      <div className="nb-card">
+        <div className="mb-3 font-[Space_Grotesk] font-bold">Saldo calórico de hoje</div>
+        <p className="mb-3 text-[0.8rem] text-[var(--text-soft)]">
+          O "Saldo" mostrado no Painel é quanto ainda cabe na sua meta de hoje — não é o mesmo que "calorias
+          gastas menos calorias comidas". Veja o passo a passo:
+        </p>
+        <CalcMemorySaldo t={t} burn={todayBurn} consumido={todayConsumido} />
       </div>
 
       {weeklyGoal ? (

@@ -131,6 +131,16 @@ export function Dashboard({ profile, log, userId, dateIso, viewMode, customRange
       </Card>
 
       <Card>
+        <CardTitle>{isMonthly ? 'Macros do mês' : 'Macros do dia'}</CardTitle>
+        <div className="grid grid-cols-4 gap-1">
+          <MacroRing label="Proteínas" consumed={food.protein} target={scaledProteinTarget} color="var(--protein)" />
+          <MacroRing label="Carboidratos" consumed={food.carbs} target={scaledCarbTarget} color="var(--carb)" />
+          <MacroRing label="Gordura" consumed={food.fat} target={scaledFatTarget} color="var(--fat)" />
+          <MacroRing label="Gramas" consumed={food.grams} target={null} color="var(--orange-light)" />
+        </div>
+      </Card>
+
+      <Card>
         <CardTitle>Peso e composição corporal</CardTitle>
         <WeightBodyFatKpi profile={profile} />
       </Card>
@@ -141,16 +151,6 @@ export function Dashboard({ profile, log, userId, dateIso, viewMode, customRange
         <p className="mt-3 text-[0.78rem] text-[var(--text-soft)]">
           Verde = déficit (abaixo da meta) · Vermelho = superávit (acima da meta).
         </p>
-      </Card>
-
-      <Card>
-        <CardTitle>{isMonthly ? 'Macros do mês' : 'Macros do dia'}</CardTitle>
-        <div className="grid grid-cols-4 gap-1">
-          <MacroRing label="Proteínas" consumed={food.protein} target={scaledProteinTarget} color="var(--protein)" />
-          <MacroRing label="Carboidratos" consumed={food.carbs} target={scaledCarbTarget} color="var(--carb)" />
-          <MacroRing label="Gordura" consumed={food.fat} target={scaledFatTarget} color="var(--fat)" />
-          <MacroRing label="Gramas" consumed={food.grams} target={null} color="var(--orange-light)" />
-        </div>
       </Card>
 
       <Card>

@@ -189,6 +189,7 @@ function App() {
             profile={profile}
             startWeight={startWeight}
             weekWorkoutCount={weekWorkoutCount}
+            userId={user.id}
             onSaveProfile={saveProfile}
           />
         )}

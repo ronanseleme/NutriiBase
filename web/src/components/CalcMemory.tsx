@@ -35,6 +35,25 @@ export function CalcMemoryKcal({ t }: { t: Targets }) {
   )
 }
 
+export function CalcMemorySaldo({ t, burn, consumido }: { t: Targets; burn: number; consumido: number }) {
+  const metaAjustada = t.kcal + burn
+  const saldo = metaAjustada - consumido
+  return (
+    <div>
+      <Step label="Meta calórica diária" value={`${fmtNum(t.kcal)} kcal`} sub="Vem da Memória de cálculo — meta calórica, acima." />
+      <Step label="+ Gasto extra do treino de hoje" value={`${fmtSigned(burn)} kcal`} sub="Soma dos treinos registrados hoje (0 se nenhum)." />
+      <Step label="= Meta ajustada" value={`${fmtNum(metaAjustada)} kcal`} sub="Quanto você pode consumir hoje, já contando o que treinou." />
+      <Step label="− Consumo de hoje" value={`${fmtSigned(-consumido)} kcal`} sub="Soma de tudo que já foi registrado como alimento hoje." />
+      <Step
+        label={saldo >= 0 ? 'Saldo — ainda dentro da meta' : 'Saldo — já passou da meta'}
+        value={<span style={{ color: saldo >= 0 ? 'var(--teal)' : 'var(--coral)' }}>{fmtSigned(saldo)} kcal</span>}
+        sub={saldo >= 0 ? 'Positivo: quanto ainda pode comer hoje.' : 'Negativo: quanto já ficou acima da meta ajustada.'}
+        isTotal
+      />
+    </div>
+  )
+}
+
 export function CalcMemoryMacro({ p, t }: { p: Profile; t: Targets }) {
   const proteinOverridden = p.macroOverride?.proteinG != null
   const fatOverridden = p.macroOverride?.fatG != null
