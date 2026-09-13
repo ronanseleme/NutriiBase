@@ -76,7 +76,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-svh bg-[var(--bg)] pb-8">
+    <div className="min-h-svh bg-[var(--bg)] pb-24">
       <div className="sticky top-0 z-10 bg-[var(--surface)]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <Logo size={28} />
@@ -104,7 +104,6 @@ function App() {
             </button>
           </div>
         </div>
-        <TabBar active={tab} onChange={setTab} showAdmin={profile.role === 'admin'} />
         <div className="h-[3px] bg-[image:var(--brand-gradient)] opacity-80" />
       </div>
 
@@ -210,6 +209,8 @@ function App() {
       {showProfileForm && (
         <ProfileForm profile={profile} onSave={saveProfile} onClose={() => setShowProfileForm(false)} />
       )}
+
+      <TabBar active={tab} onChange={setTab} showAdmin={profile.role === 'admin'} />
     </div>
   )
 }
