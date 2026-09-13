@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { dayFoodTotals, dayWorkoutKcal } from '../lib/calculations'
-import { computeMonthInsights, computeRangeTotals, computeYearMonthlyBars } from '../lib/insights'
+import {
+  computeMonthInsights,
+  computeMonthMetricBars,
+  computeRangeTotals,
+  computeYearMetricBars,
+  computeYearMonthlyBars,
+} from '../lib/insights'
 import { formatShortDate, monthAbbrev, monthLabel, pad, parseISODate, todayISO } from '../lib/dateUtils'
 import { useDayLog } from '../hooks/useDayLog'
 import { useMonthLogs } from '../hooks/useMonthLogs'
@@ -148,20 +154,23 @@ export function Dashboard({ profile, log, userId, dateIso, viewMode, customRange
       <Card>
         <CardTitle>Saldo calórico</CardTitle>
         <CalorieBalanceChart userId={userId} profile={profile} />
-        <p className="mt-3 text-[0.78rem] text-[var(--text-soft)]">
-          Verde = déficit (abaixo da meta) · Vermelho = superávit (acima da meta).
-        </p>
       </Card>
 
       <Card>
-        <CardTitle>
-          Peso do dia <span className="text-[0.78rem] font-medium text-[var(--text-soft)]">(opcional)</span>
-        </CardTitle>
-        <WeightInput value={log.weight} placeholder="kg" onSave={onSaveWeight} />
-        <div className="mb-3 mt-4 font-bold">
-          Percentual de gordura do dia <span className="text-[0.78rem] font-medium text-[var(--text-soft)]">(opcional)</span>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="min-w-0">
+            <div className="mb-2 text-[0.85rem] font-bold">
+              Peso do dia <span className="text-[0.72rem] font-medium text-[var(--text-soft)]">(opcional)</span>
+            </div>
+            <WeightInput value={log.weight} placeholder="kg" onSave={onSaveWeight} />
+          </div>
+          <div className="min-w-0">
+            <div className="mb-2 text-[0.85rem] font-bold">
+              % de gordura do dia <span className="text-[0.72rem] font-medium text-[var(--text-soft)]">(opcional)</span>
+            </div>
+            <WeightInput value={log.bodyFatPct} placeholder="%" onSave={onSaveBodyFat} />
+          </div>
         </div>
-        <WeightInput value={log.bodyFatPct} placeholder="%" onSave={onSaveBodyFat} />
       </Card>
     </div>
   )
@@ -247,8 +256,16 @@ function MacroRing({
 }
 
 type ChartMode = 'daily' | 'monthly'
+type ChartMetric = 'saldo' | 'food' | 'workout'
+
+const METRIC_TABS: { key: ChartMetric; label: string }[] = [
+  { key: 'saldo', label: 'Saldo' },
+  { key: 'food', label: 'Alimentação' },
+  { key: 'workout', label: 'Treino' },
+]
 
 function CalorieBalanceChart({ userId, profile }: { userId: string | null; profile: Profile }) {
+  const [metric, setMetric] = useState<ChartMetric>('saldo')
   const [mode, setMode] = useState<ChartMode>('daily')
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() + 1 })
@@ -259,15 +276,20 @@ function CalorieBalanceChart({ userId, profile }: { userId: string | null; profi
 
   const monthInfo = computeMonthInsights(ym.y, ym.m, profile, monthMap)
   const yearBars = computeYearMonthlyBars(year, yearMap, profile.targets.kcal)
+  const foodMonthBars = computeMonthMetricBars(ym.y, ym.m, monthMap, 'kcal')
+  const workoutMonthBars = computeMonthMetricBars(ym.y, ym.m, monthMap, 'workoutKcal')
+  const foodYearBars = computeYearMetricBars(year, yearMap, 'kcal')
+  const workoutYearBars = computeYearMetricBars(year, yearMap, 'workoutKcal')
 
   const labelEvery = Math.max(1, Math.ceil(monthInfo.bars.length / 8))
-  const dailyBars: BalanceBar[] = monthInfo.bars.map((b, i) => ({
+
+  const saldoDailyBars: BalanceBar[] = monthInfo.bars.map((b, i) => ({
     key: b.day,
     label: i % labelEvery === 0 || i === monthInfo.bars.length - 1 ? String(b.day) : '',
     saldo: b.saldo,
     title: b.saldo != null ? `Dia ${b.day}: ${fmtSigned(b.saldo)} kcal vs. meta` : `Dia ${b.day}: sem dado`,
   }))
-  const monthlyBars: BalanceBar[] = yearBars.map((b) => ({
+  const saldoMonthlyBars: BalanceBar[] = yearBars.map((b) => ({
     key: b.month,
     label: monthAbbrev(b.month),
     saldo: b.saldo,
@@ -276,6 +298,50 @@ function CalorieBalanceChart({ userId, profile }: { userId: string | null; profi
         ? `${monthAbbrev(b.month)}: ${fmtSigned(b.saldo)} kcal vs. meta (${b.trackedDays} dia(s) com registro)`
         : `${monthAbbrev(b.month)}: sem dado`,
   }))
+  const foodDailyBars: BalanceBar[] = foodMonthBars.map((b, i) => ({
+    key: b.day,
+    label: i % labelEvery === 0 || i === foodMonthBars.length - 1 ? String(b.day) : '',
+    saldo: b.value,
+    title: b.value != null ? `Dia ${b.day}: ${fmtNum(b.value)} kcal consumidos` : `Dia ${b.day}: sem dado`,
+  }))
+  const workoutDailyBars: BalanceBar[] = workoutMonthBars.map((b, i) => ({
+    key: b.day,
+    label: i % labelEvery === 0 || i === workoutMonthBars.length - 1 ? String(b.day) : '',
+    saldo: b.value,
+    title: b.value != null ? `Dia ${b.day}: ${fmtNum(b.value)} kcal de treino` : `Dia ${b.day}: sem dado`,
+  }))
+  const foodMonthlyBars: BalanceBar[] = foodYearBars.map((b) => ({
+    key: b.month,
+    label: monthAbbrev(b.month),
+    saldo: b.value,
+    title:
+      b.value != null
+        ? `${monthAbbrev(b.month)}: ${fmtNum(b.value)} kcal consumidos (${b.trackedDays} dia(s) com registro)`
+        : `${monthAbbrev(b.month)}: sem dado`,
+  }))
+  const workoutMonthlyBars: BalanceBar[] = workoutYearBars.map((b) => ({
+    key: b.month,
+    label: monthAbbrev(b.month),
+    saldo: b.value,
+    title:
+      b.value != null
+        ? `${monthAbbrev(b.month)}: ${fmtNum(b.value)} kcal de treino (${b.trackedDays} dia(s) com registro)`
+        : `${monthAbbrev(b.month)}: sem dado`,
+  }))
+
+  const dailyBars = metric === 'saldo' ? saldoDailyBars : metric === 'food' ? foodDailyBars : workoutDailyBars
+  const monthlyBars = metric === 'saldo' ? saldoMonthlyBars : metric === 'food' ? foodMonthlyBars : workoutMonthlyBars
+  const barColor = metric === 'food' ? 'var(--orange)' : metric === 'workout' ? 'var(--teal)' : undefined
+  const legend =
+    metric === 'saldo' ? (
+      <p className="mt-3 text-[0.78rem] text-[var(--text-soft)]">
+        Verde = déficit (abaixo da meta) · Vermelho = superávit (acima da meta).
+      </p>
+    ) : metric === 'food' ? (
+      <p className="mt-3 text-[0.78rem] text-[var(--text-soft)]">Total de kcal consumidos por dia/mês.</p>
+    ) : (
+      <p className="mt-3 text-[0.78rem] text-[var(--text-soft)]">Total de kcal queimados em treino por dia/mês.</p>
+    )
 
   function prevMonth() {
     setYm((cur) => (cur.m === 1 ? { y: cur.y - 1, m: 12 } : { y: cur.y, m: cur.m - 1 }))
@@ -286,6 +352,18 @@ function CalorieBalanceChart({ userId, profile }: { userId: string | null; profi
 
   return (
     <div>
+      <div className="nb-segmented mb-2.5">
+        {METRIC_TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setMetric(t.key)}
+            className={`flex-1 py-1.5 text-[0.78rem] font-semibold transition-colors ${metric === t.key ? 'bg-[image:var(--blue-gradient)] text-white' : 'bg-[var(--surface)]'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
       <div className="nb-segmented mb-3">
         <button
           type="button"
@@ -325,14 +403,15 @@ function CalorieBalanceChart({ userId, profile }: { userId: string | null; profi
               ›
             </button>
           </div>
-          <BalanceBarChart bars={dailyBars} />
+          <BalanceBarChart bars={dailyBars} barColor={barColor} />
         </>
       ) : (
         <>
           <div className="mb-2 text-center text-[0.82rem] font-bold">{year}</div>
-          <BalanceBarChart bars={monthlyBars} />
+          <BalanceBarChart bars={monthlyBars} barColor={barColor} />
         </>
       )}
+      {legend}
     </div>
   )
 }
@@ -367,26 +446,28 @@ function WeightInput({
   }
 
   return (
-    <div className="flex gap-2">
-      <input
-        type="number"
-        step={0.1}
-        min={0}
-        inputMode="decimal"
-        placeholder={placeholder}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        className="nb-input flex-1"
-      />
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="nb-btn nb-btn-primary px-4 py-2.5 text-sm"
-      >
-        {saving ? 'Salvando…' : saved ? '✓ Salvo!' : 'Salvar'}
-      </button>
-      {error && <span className="self-center text-xs text-[var(--coral)]">Erro ao salvar</span>}
+    <div>
+      <div className="flex gap-1.5">
+        <input
+          type="number"
+          step={0.1}
+          min={0}
+          inputMode="decimal"
+          placeholder={placeholder}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="nb-input min-w-0 flex-1 px-2.5"
+        />
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="nb-btn nb-btn-primary shrink-0 px-3 py-2.5 text-[0.8rem]"
+        >
+          {saving ? '…' : saved ? '✓' : 'Salvar'}
+        </button>
+      </div>
+      {error && <span className="mt-1 block text-xs text-[var(--coral)]">Erro ao salvar</span>}
     </div>
   )
 }

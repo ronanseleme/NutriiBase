@@ -282,6 +282,66 @@ export function computeMonthInsights(
   }
 }
 
+export type DailyMetric = 'kcal' | 'workoutKcal'
+
+export interface MetricDayBar {
+  day: number
+  value: number | null
+}
+
+/** Como computeMonthInsights, mas para uma métrica bruta (kcal consumido ou
+ * kcal de treino) em vez do saldo — usado pelas abas "Alimentação"/"Treino"
+ * do gráfico de evolução no Painel. */
+export function computeMonthMetricBars(
+  y: number,
+  m: number,
+  monthMap: Record<string, DayInsightData>,
+  metric: DailyMetric,
+): MetricDayBar[] {
+  const dim = new Date(y, m, 0).getDate()
+  const today = new Date()
+  const isCurrentMonth = y === today.getFullYear() && m === today.getMonth() + 1
+  const lastDay = isCurrentMonth ? today.getDate() : dim
+
+  const bars: MetricDayBar[] = []
+  for (let d = 1; d <= dim; d++) {
+    const iso = `${y}-${pad(m)}-${pad(d)}`
+    const dayData = monthMap[iso]
+    bars.push({ day: d, value: dayData && hasData(dayData) && d <= lastDay ? dayData[metric] : null })
+  }
+  return bars
+}
+
+export interface MetricMonthTotal {
+  month: number
+  value: number | null
+  trackedDays: number
+}
+
+/** Como computeYearMonthlyBars, mas para uma métrica bruta em vez do saldo. */
+export function computeYearMetricBars(
+  year: number,
+  yearMap: Record<string, DayInsightData>,
+  metric: DailyMetric,
+): MetricMonthTotal[] {
+  const bars: MetricMonthTotal[] = []
+  for (let m = 1; m <= 12; m++) {
+    const dim = new Date(year, m, 0).getDate()
+    let total = 0
+    let tracked = 0
+    for (let d = 1; d <= dim; d++) {
+      const iso = `${year}-${pad(m)}-${pad(d)}`
+      const dayData = yearMap[iso]
+      if (dayData && hasData(dayData)) {
+        total += dayData[metric]
+        tracked++
+      }
+    }
+    bars.push({ month: m, value: tracked > 0 ? total : null, trackedDays: tracked })
+  }
+  return bars
+}
+
 export interface YearMonthBar {
   month: number // 1-12
   saldo: number | null // soma do saldo dos dias com registro no mês; null = nenhum dia com dado

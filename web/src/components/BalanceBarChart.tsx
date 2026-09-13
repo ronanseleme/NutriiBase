@@ -5,14 +5,25 @@ export interface BalanceBar {
   title: string
 }
 
-export function BalanceBarChart({ bars, height = 52 }: { bars: BalanceBar[]; height?: number }) {
+/** Quando informado, todas as barras com valor usam esta cor fixa em vez da
+ * lógica vermelho/verde por sinal — usado pelas métricas "brutas" (kcal
+ * consumido, kcal de treino) que não têm sentido de positivo/negativo. */
+export function BalanceBarChart({
+  bars,
+  height = 52,
+  barColor,
+}: {
+  bars: BalanceBar[]
+  height?: number
+  barColor?: string
+}) {
   const maxAbs = Math.max(1, ...bars.map((b) => (b.saldo != null ? Math.abs(b.saldo) : 0)))
   return (
     <div>
       <div className="flex items-end gap-[2px]" style={{ height }}>
         {bars.map((b) => {
           const h = b.saldo != null ? Math.max(3, Math.round((Math.abs(b.saldo) / maxAbs) * (height - 8))) : 2
-          const color = b.saldo == null ? 'var(--line)' : b.saldo > 0 ? 'var(--coral)' : 'var(--teal)'
+          const color = b.saldo == null ? 'var(--line)' : barColor ?? (b.saldo > 0 ? 'var(--coral)' : 'var(--teal)')
           return (
             <div key={b.key} title={b.title} className="flex h-full flex-1 flex-col items-center justify-end">
               <div className="w-3/5 rounded-t-[3px]" style={{ height: h, background: color }} />
