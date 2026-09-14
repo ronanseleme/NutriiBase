@@ -191,7 +191,7 @@ export function MealAiModal({ mealLabel, access, onAddMany, onClose }: Props) {
           disabled={loading || !desc.trim()}
           className="nb-btn nb-btn-blue mb-3 w-full py-2.5"
         >
-          {loading ? 'Consultando IA…' : 'Perguntar à IA'}
+          {loading ? 'Consultando IA…' : 'Descrever com IA'}
         </button>
 
         {(error || recorder.errorMessage) && (

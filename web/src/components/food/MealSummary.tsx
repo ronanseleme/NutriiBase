@@ -1,5 +1,6 @@
 import { MEALS } from '../../lib/constants'
 import { dayFoodTotals, mealTotals } from '../../lib/calculations'
+import { MEAL_ICONS } from './mealIcons'
 import type { MealsByKey, Targets } from '../../types'
 
 function fmtNum(n: number | null | undefined): string {
@@ -50,9 +51,13 @@ export function MealSummary({ meals, targets }: { meals: MealsByKey; targets: Ta
       {MEALS.map((m) => {
         const t = mealTotals(meals[m.key])
         const share = dayTotals.kcal > 0 ? Math.round((t.kcal / dayTotals.kcal) * 100) : 0
+        const Icon = MEAL_ICONS[m.key]
         return (
           <div key={m.key} className="grid grid-cols-[1fr_repeat(5,44px)] items-center gap-1 border-b border-[var(--line)] py-2 text-[0.82rem] last:border-b-0">
-            <span>{m.label}</span>
+            <span className="flex items-center gap-1.5 text-[var(--purple)]">
+              <Icon />
+              <span className="text-[var(--text)]">{m.label}</span>
+            </span>
             <span className="text-right font-semibold text-[var(--text-soft)]">{fmtNum(t.grams)}</span>
             <span className="text-right font-semibold">{fmtNum(t.kcal)}</span>
             <span className="text-right font-semibold" style={{ color: 'var(--protein)' }}>

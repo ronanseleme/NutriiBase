@@ -2,7 +2,12 @@ import { MEALS } from '../../lib/constants'
 import { MEAL_ICONS } from './mealIcons'
 import type { MealKey } from '../../types'
 
+function fmtNum(n: number): string {
+  return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
+}
+
 interface Props {
+  kcalByMeal: Record<MealKey, number>
   onPick: (mealKey: MealKey) => void
   onClose: () => void
 }
@@ -10,7 +15,7 @@ interface Props {
 // Passo 1 do fluxo "Adicionar Refeição": só escolhe QUAL refeição. O passo
 // 2 (base de dados / manual / IA) já existe dentro do AddFoodModal — quem
 // chama este picker abre o AddFoodModal em seguida para a refeição escolhida.
-export function AddMealPicker({ onPick, onClose }: Props) {
+export function AddMealPicker({ kcalByMeal, onPick, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]">
       <div className="nb-modal w-full max-w-md">
@@ -25,10 +30,13 @@ export function AddMealPicker({ onPick, onClose }: Props) {
                 key={m.key}
                 type="button"
                 onClick={() => onPick(m.key)}
-                className="flex flex-col items-center gap-1 rounded-2xl border border-[var(--line-strong)] bg-[var(--bg)] py-3 text-[0.72rem] font-semibold transition-all hover:border-transparent hover:bg-[image:var(--brand-gradient)] hover:text-white"
+                className="group flex flex-col items-center gap-1 rounded-2xl border border-[var(--line-strong)] bg-[var(--bg)] py-3 text-[0.72rem] font-semibold transition-all hover:border-transparent hover:bg-[image:var(--brand-gradient)] hover:text-white"
               >
                 <Icon />
                 <span className="text-center leading-tight">{m.label}</span>
+                <span className="text-[0.66rem] text-[var(--text-soft)] group-hover:text-white/80">
+                  {fmtNum(kcalByMeal[m.key])} kcal
+                </span>
               </button>
             )
           })}

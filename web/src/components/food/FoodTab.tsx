@@ -8,6 +8,7 @@ import { MealSummary } from './MealSummary'
 import { MealDetail } from './MealDetail'
 import { AddMealPicker } from './AddMealPicker'
 import { AddFoodModal } from './AddFoodModal'
+import { MealAiModal } from './MealAiModal'
 import { GeralIcon, MEAL_ICONS } from './mealIcons'
 import type { ViewMode } from '../ViewModeToggle'
 import type { AiAccess, DateRange, DayLog, FoodItem, MealKey, Targets } from '../../types'
@@ -52,7 +53,9 @@ export function FoodTab({
   const [active, setActive] = useState<MealKey | 'geral'>('geral')
   const [pickingMeal, setPickingMeal] = useState(false)
   const [addFlowMeal, setAddFlowMeal] = useState<MealKey | null>(null)
+  const [aiFlowMeal, setAiFlowMeal] = useState<MealKey | null>(null)
   const dayTotals = dayFoodTotals(log.meals)
+  const kcalByMeal = Object.fromEntries(MEALS.map((m) => [m.key, mealTotals(log.meals[m.key]).kcal])) as Record<MealKey, number>
 
   const selected = parseISODate(dateIso)
   const selY = selected.getFullYear()
@@ -179,6 +182,7 @@ export function FoodTab({
 
       {pickingMeal && (
         <AddMealPicker
+          kcalByMeal={kcalByMeal}
           onPick={(mealKey) => {
             setPickingMeal(false)
             setAddFlowMeal(mealKey)
@@ -194,9 +198,24 @@ export function FoodTab({
           access={access}
           onAdd={(item) => onAddToDraft(addFlowMeal, item)}
           onUpdate={async () => ({ error: null })}
+          onDescribeWithAI={() => {
+            setAiFlowMeal(addFlowMeal)
+            setAddFlowMeal(null)
+          }}
           onClose={() => {
             setActive(addFlowMeal)
             setAddFlowMeal(null)
+          }}
+        />
+      )}
+      {aiFlowMeal && (
+        <MealAiModal
+          mealLabel={MEALS.find((m) => m.key === aiFlowMeal)!.label}
+          access={access}
+          onAddMany={(items) => onAddManyToDraft(aiFlowMeal, items)}
+          onClose={() => {
+            setActive(aiFlowMeal)
+            setAiFlowMeal(null)
           }}
         />
       )}

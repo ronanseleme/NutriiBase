@@ -114,6 +114,10 @@ export function MealDetail({
           access={access}
           onAdd={(item) => onAddToDraft(item)}
           onUpdate={async () => ({ error: null })}
+          onDescribeWithAI={() => {
+            setShowAdd(false)
+            setShowAi(true)
+          }}
           onClose={() => setShowAdd(false)}
         />
       )}
