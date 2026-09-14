@@ -106,7 +106,8 @@ Deno.serve(async (req) => {
       parts: [{ inline_data: { mime_type: mimeType, data: audioBase64 } }],
       temperature: 0,
     });
-  } catch {
+  } catch (err) {
+    console.error("transcribe-audio: falha ao chamar o Gemini", err);
     return errorResponse("upstream_error", "Não foi possível consultar a IA agora.", 502);
   }
 
@@ -114,6 +115,7 @@ Deno.serve(async (req) => {
     return errorResponse("rate_limited", "Muitas solicitações — aguarde um instante.", 429);
   }
   if (!geminiRes.ok) {
+    console.error("transcribe-audio: Gemini respondeu", geminiRes.status, await geminiRes.text());
     return errorResponse("upstream_error", "A IA não respondeu corretamente.", 502);
   }
 

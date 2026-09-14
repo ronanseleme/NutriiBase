@@ -133,13 +133,15 @@ Deno.serve(async (req) => {
     let geminiRes: Response;
     try {
       geminiRes = await callGemini({ apiKey: geminiKey, prompt, responseSchema: TIPS_SCHEMA });
-    } catch {
+    } catch (err) {
+      console.error("chat-assistant/insights: falha ao chamar o Gemini", err);
       return errorResponse("upstream_error", "Não foi possível consultar a IA agora.", 502);
     }
     if (geminiRes.status === 429) {
       return errorResponse("rate_limited", "Muitas solicitações — aguarde um instante.", 429);
     }
     if (!geminiRes.ok) {
+      console.error("chat-assistant/insights: Gemini respondeu", geminiRes.status, await geminiRes.text());
       return errorResponse("upstream_error", "A IA não respondeu corretamente.", 502);
     }
 
@@ -186,13 +188,15 @@ Deno.serve(async (req) => {
       prompt: `${systemPrompt}\n\n${conversationText}`,
       responseSchema: CHAT_SCHEMA,
     });
-  } catch {
+  } catch (err) {
+    console.error("chat-assistant/chat: falha ao chamar o Gemini", err);
     return errorResponse("upstream_error", "Não foi possível consultar a IA agora.", 502);
   }
   if (geminiRes.status === 429) {
     return errorResponse("rate_limited", "Muitas solicitações — aguarde um instante.", 429);
   }
   if (!geminiRes.ok) {
+    console.error("chat-assistant/chat: Gemini respondeu", geminiRes.status, await geminiRes.text());
     return errorResponse("upstream_error", "A IA não respondeu corretamente.", 502);
   }
 
