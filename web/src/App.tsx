@@ -7,6 +7,7 @@ import { useRecentLogs } from './hooks/useRecentLogs'
 import { AuthScreen } from './components/AuthScreen'
 import { ProfileForm } from './components/ProfileForm'
 import { ProfileScreen } from './components/ProfileScreen'
+import { OnboardingWizard } from './components/onboarding/OnboardingWizard'
 import { Dashboard } from './components/Dashboard'
 import { Logo } from './components/Logo'
 import { DateNav } from './components/DateNav'
@@ -61,6 +62,15 @@ function App() {
   const { startWeight, weekWorkoutCount } = useMetasExtras(user?.id ?? null, profile?.weightKg ?? 70)
   const { recentMap } = useRecentLogs(user?.id ?? null)
   const [showProfileForm, setShowProfileForm] = useState(false)
+  const [onboardingInited, setOnboardingInited] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  useEffect(() => {
+    if (!profileLoading && profile && !onboardingInited) {
+      setShowOnboarding(isNew)
+      setOnboardingInited(true)
+    }
+  }, [profileLoading, profile, isNew, onboardingInited])
 
   if (authLoading) {
     return (
@@ -78,6 +88,10 @@ function App() {
         Carregando seus dados…
       </div>
     )
+  }
+
+  if (showOnboarding) {
+    return <OnboardingWizard profile={profile} onSaveProfile={saveProfile} onFinish={() => setShowOnboarding(false)} />
   }
 
   return (
@@ -114,17 +128,6 @@ function App() {
       </div>
 
       <div className="mx-auto max-w-md p-4">
-        {isNew && (
-          <div className="nb-card mb-4 border-l-4 border-[var(--orange)]">
-            <p className="mb-2.5 text-[0.86rem]">
-              <strong>Bem-vindo(a)!</strong> Complete seu perfil para calcularmos sua meta calórica e de macros.
-            </p>
-            <button type="button" onClick={() => setShowProfileForm(true)} className="nb-btn nb-btn-primary px-4 py-2 text-sm">
-              Editar perfil
-            </button>
-          </div>
-        )}
-
         {(tab === 'dashboard' || tab === 'food' || tab === 'workout') && (
           <>
             <DateNav
