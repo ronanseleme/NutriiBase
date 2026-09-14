@@ -52,6 +52,7 @@ export interface ProfileRow {
   creditos_ia: number | null
   creditos_mensais: number | null
   data_proxima_renovacao: string | null
+  licenca_avulsa_expira_em: string | null
 }
 
 // Propositalmente NÃO inclui role/creditos_ia/creditos_mensais/
@@ -115,6 +116,7 @@ export function dbProfileToLocal(row: ProfileRow): Omit<Profile, 'targets'> {
     creditosIa: row.creditos_ia ?? 0,
     creditosMensais: row.creditos_mensais ?? 50,
     dataProximaRenovacao: row.data_proxima_renovacao,
+    licencaAvulsaExpiraEm: row.licenca_avulsa_expira_em,
   }
 }
 

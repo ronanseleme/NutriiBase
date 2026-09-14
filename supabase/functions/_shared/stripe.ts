@@ -5,6 +5,17 @@
 
 const STRIPE_API = "https://api.stripe.com/v1";
 
+// Os 4 "produtos-licença" cadastrados no Stripe pelo dono do app — única
+// lista de verdade, usada por list-plans (pra saber o que mostrar) e
+// create-checkout-session (pra validar o priceId recebido do frontend e
+// saber quantos dias a licença avulsa via Pix deve durar).
+export const LICENSE_PRODUCTS: { id: string; label: string; days: number }[] = [
+  { id: "prod_VG53dMDufAq4mz", label: "Mensal", days: 30 },
+  { id: "prod_VG57rA5pRCN02x", label: "Trimestral", days: 90 },
+  { id: "prod_VG5BIw7P5Rk4bB", label: "Semestral", days: 180 },
+  { id: "prod_VG5GcfW4tb9ARB", label: "Anual", days: 365 },
+];
+
 function toFormBody(params: Record<string, unknown>, prefix = ""): string[] {
   const pairs: string[] = [];
   for (const [key, value] of Object.entries(params)) {

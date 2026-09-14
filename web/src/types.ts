@@ -68,6 +68,7 @@ export interface Profile {
   creditosIa: number
   creditosMensais: number
   dataProximaRenovacao: string | null
+  licencaAvulsaExpiraEm: string | null
 }
 
 // Subconjunto de Profile usado só para as regras de acesso a IA (Chat e

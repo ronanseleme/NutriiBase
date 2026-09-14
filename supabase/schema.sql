@@ -179,6 +179,7 @@ begin
      or new.data_inicio_pro is distinct from old.data_inicio_pro
      or new.data_proxima_renovacao is distinct from old.data_proxima_renovacao
      or new.stripe_customer_id is distinct from old.stripe_customer_id
+     or new.licenca_avulsa_expira_em is distinct from old.licenca_avulsa_expira_em
   then
     raise exception 'Não é permitido alterar role, créditos ou dados de cobrança diretamente.';
   end if;
@@ -594,6 +595,70 @@ begin
 end;
 $$;
 
+-- Licença avulsa (pagamento único, ex: Pix — que não tem cobrança
+-- recorrente de verdade). Diferente de stripe_activate_pro (assinatura
+-- recorrente, cancelamento vem via webhook do Stripe), aqui NÓS que
+-- controlamos o vencimento: licenca_avulsa_expira_em guarda até quando o
+-- acesso vale, e o cron expirar_licencas_avulsas() (abaixo) rebaixa quem
+-- passou da data. Fica null pra quem é Pro via assinatura recorrente.
+alter table public.profiles
+  add column if not exists licenca_avulsa_expira_em timestamptz;
+
+create or replace function public.stripe_activate_pro_avulso(target_user uuid, dias int)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_creditos_mensais int;
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'stripe_activate_pro_avulso só pode ser chamada pelo webhook do Stripe.';
+  end if;
+
+  update public.profiles
+  set role = 'pro',
+      data_inicio_pro = coalesce(data_inicio_pro, now()),
+      data_proxima_renovacao = now() + interval '30 days',
+      creditos_ia = creditos_mensais,
+      licenca_avulsa_expira_em = now() + (dias || ' days')::interval
+  where id = target_user
+  returning creditos_mensais into v_creditos_mensais;
+
+  if not found then
+    raise exception 'Usuário não encontrado.';
+  end if;
+
+  insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
+  values (target_user, 'ajuste_admin', v_creditos_mensais, 'Licença avulsa (Pix) ativada — carga inicial de créditos');
+end;
+$$;
+
+-- Roda diariamente (agendado mais abaixo, junto com renovar_creditos_pro)
+-- e rebaixa quem comprou licença avulsa e passou do vencimento. Não mexe
+-- em quem é Pro via assinatura recorrente (licenca_avulsa_expira_em fica
+-- null pra esses — a queda deles vem do webhook, não daqui).
+create or replace function public.expirar_licencas_avulsas()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform set_config('app.bypass_profile_protection', 'true', true);
+  update public.profiles
+  set role = 'free',
+      creditos_ia = 0,
+      data_inicio_pro = null,
+      data_proxima_renovacao = null,
+      licenca_avulsa_expira_em = null
+  where role = 'pro'
+    and licenca_avulsa_expira_em is not null
+    and licenca_avulsa_expira_em < now();
+end;
+$$;
+
 -- Roda diariamente (via pg_cron, agendado mais abaixo) e renova todo Pro
 -- cujo ciclo de 30 dias já venceu. Se o cron ficar fora do ar por um
 -- tempo, um usuário muito atrasado só avança um ciclo de 30 dias por
@@ -643,6 +708,18 @@ select cron.schedule(
   'renovar-creditos-pro-diario',
   '0 3 * * *',
   $$select public.renovar_creditos_pro();$$
+);
+
+do $$
+begin
+  perform cron.unschedule(jobid) from cron.job where jobname = 'expirar-licencas-avulsas-diario';
+exception when others then null;
+end $$;
+
+select cron.schedule(
+  'expirar-licencas-avulsas-diario',
+  '0 3 * * *',
+  $$select public.expirar_licencas_avulsas();$$
 );
 
 -- ========== papéis de acesso e créditos de IA — Etapa 5 (tela de Administração) ==========

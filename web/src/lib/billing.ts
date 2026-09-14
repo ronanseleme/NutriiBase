@@ -1,13 +1,20 @@
 import { supabase } from './supabase'
 
-export interface Plan {
-  productId: string
+export interface PriceInfo {
   priceId: string
-  label: string
   unitAmount: number
   currency: string
+}
+export interface RecurringPriceInfo extends PriceInfo {
   interval: string
   intervalCount: number
+}
+export interface Plan {
+  productId: string
+  label: string
+  days: number
+  recurring: RecurringPriceInfo | null
+  oneTime: PriceInfo | null
 }
 
 export class BillingError extends Error {
@@ -43,11 +50,11 @@ export async function listPlans(): Promise<Plan[]> {
   return data.plans
 }
 
-export async function startCheckout(priceId: string): Promise<void> {
+export async function startCheckout(priceId: string, mode: 'subscription' | 'payment' = 'subscription'): Promise<void> {
   const origin = window.location.origin + import.meta.env.BASE_URL
   const data = await unwrap<{ url: string }>(
     supabase.functions.invoke('create-checkout-session', {
-      body: { priceId, successUrl: origin, cancelUrl: origin },
+      body: { priceId, mode, successUrl: origin, cancelUrl: origin },
     }),
   )
   window.location.href = data.url

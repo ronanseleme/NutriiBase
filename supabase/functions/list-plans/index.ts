@@ -5,10 +5,15 @@
 // desatualizado (se o valor mudar no Stripe, aparece certo aqui sem precisar
 // mexer em código).
 //
+// Cada produto pode ter até 2 Preços ativos: um recorrente (assinatura via
+// cartão) e um avulso/pagamento único (Pix — que não tem cobrança
+// recorrente de verdade). Devolve os dois quando existirem; o frontend só
+// mostra o botão de Pix se "oneTime" vier preenchido.
+//
 // Deploy: supabase functions deploy list-plans
 // Secret: supabase secrets set STRIPE_SECRET_KEY=sk_...
 
-import { stripeGet } from "../_shared/stripe.ts";
+import { stripeGet, LICENSE_PRODUCTS } from "../_shared/stripe.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -27,13 +32,15 @@ function errorResponse(code: string, message: string, status: number) {
   return jsonResponse({ error: { code, message } }, status);
 }
 
-// Os 4 "produtos-licença" cadastrados no Stripe — id -> rótulo exibido.
-const PRODUCTS: { id: string; label: string }[] = [
-  { id: "prod_VG53dMDufAq4mz", label: "Mensal" },
-  { id: "prod_VG57rA5pRCN02x", label: "Trimestral" },
-  { id: "prod_VG5BIw7P5Rk4bB", label: "Semestral" },
-  { id: "prod_VG5GcfW4tb9ARB", label: "Anual" },
-];
+interface PriceInfo {
+  priceId: string;
+  unitAmount: number;
+  currency: string;
+}
+interface RecurringPriceInfo extends PriceInfo {
+  interval: string;
+  intervalCount: number;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -46,22 +53,36 @@ Deno.serve(async (req) => {
   }
 
   const plans = await Promise.all(
-    PRODUCTS.map(async ({ id, label }) => {
+    LICENSE_PRODUCTS.map(async ({ id, label, days }) => {
       try {
-        const res = await stripeGet("prices", stripeKey, { product: id, active: "true", limit: "1" });
+        const res = await stripeGet("prices", stripeKey, { product: id, active: "true", limit: "10" });
         if (!res.ok) return null;
         const json = await res.json();
-        const price = json?.data?.[0];
-        if (!price) return null;
-        return {
-          productId: id,
-          priceId: price.id as string,
-          label,
-          unitAmount: price.unit_amount as number,
-          currency: (price.currency as string).toUpperCase(),
-          interval: price.recurring?.interval as string,
-          intervalCount: price.recurring?.interval_count as number,
-        };
+        const prices: any[] = json?.data || [];
+        if (!prices.length) return null;
+
+        const recurringPrice = prices.find((p) => p.recurring);
+        const oneTimePrice = prices.find((p) => !p.recurring);
+
+        const recurring: RecurringPriceInfo | null = recurringPrice
+          ? {
+              priceId: recurringPrice.id,
+              unitAmount: recurringPrice.unit_amount,
+              currency: (recurringPrice.currency as string).toUpperCase(),
+              interval: recurringPrice.recurring.interval,
+              intervalCount: recurringPrice.recurring.interval_count,
+            }
+          : null;
+        const oneTime: PriceInfo | null = oneTimePrice
+          ? {
+              priceId: oneTimePrice.id,
+              unitAmount: oneTimePrice.unit_amount,
+              currency: (oneTimePrice.currency as string).toUpperCase(),
+            }
+          : null;
+
+        if (!recurring && !oneTime) return null;
+        return { productId: id, label, days, recurring, oneTime };
       } catch {
         return null;
       }

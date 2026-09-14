@@ -13,18 +13,13 @@
 // Secret: supabase secrets set STRIPE_SECRET_KEY=sk_...
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { stripeGet, stripePost } from "../_shared/stripe.ts";
+import { stripeGet, stripePost, LICENSE_PRODUCTS } from "../_shared/stripe.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-// Mesmos 4 produtos de list-plans — valida que o priceId recebido do
-// frontend realmente pertence a um deles antes de mandar pro Stripe
-// (nunca confia cegamente num valor vindo do cliente).
-const ALLOWED_PRODUCT_IDS = ["prod_VG53dMDufAq4mz", "prod_VG57rA5pRCN02x", "prod_VG5BIw7P5Rk4bB", "prod_VG5GcfW4tb9ARB"];
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -62,13 +57,14 @@ Deno.serve(async (req) => {
     return errorResponse("unauthorized", "Sessão inválida ou expirada.", 401);
   }
 
-  let body: { priceId?: string; successUrl?: string; cancelUrl?: string };
+  let body: { priceId?: string; successUrl?: string; cancelUrl?: string; mode?: string };
   try {
     body = await req.json();
   } catch {
     return errorResponse("bad_request", "Corpo da requisição inválido.", 400);
   }
   const { priceId, successUrl, cancelUrl } = body;
+  const checkoutMode = body.mode === "payment" ? "payment" : "subscription";
   if (!priceId || !successUrl || !cancelUrl) {
     return errorResponse("bad_request", "Faltam priceId/successUrl/cancelUrl.", 400);
   }
@@ -79,15 +75,28 @@ Deno.serve(async (req) => {
   }
 
   // Confere que o priceId pertence a um dos 4 produtos permitidos antes de
-  // criar a sessão — busca o preço no Stripe pra pegar o product associado.
+  // criar a sessão — busca o preço no Stripe pra pegar o product associado
+  // (e, se for licença avulsa via Pix, quantos dias ela vale).
   const priceCheck = await stripeGet(`prices/${priceId}`, stripeKey, { "expand[]": "product" });
   if (!priceCheck.ok) {
     return errorResponse("bad_request", "Plano inválido.", 400);
   }
   const priceJson = await priceCheck.json();
   const productId = typeof priceJson.product === "string" ? priceJson.product : priceJson.product?.id;
-  if (!ALLOWED_PRODUCT_IDS.includes(productId)) {
+  const product = LICENSE_PRODUCTS.find((p) => p.id === productId);
+  if (!product) {
     return errorResponse("bad_request", "Plano inválido.", 400);
+  }
+  // mode=payment é pra pagamento único (Pix) — o priceId escolhido precisa
+  // ser um preço SEM recorrência; mode=subscription precisa do oposto. Isso
+  // evita, por exemplo, mandar o preço recorrente do "Anual" pro fluxo de
+  // Pix (o Stripe rejeitaria mesmo, mas erra com uma mensagem melhor aqui).
+  const priceIsRecurring = !!priceJson.recurring;
+  if (checkoutMode === "payment" && priceIsRecurring) {
+    return errorResponse("bad_request", "Esse plano não tem opção de pagamento avulso (Pix).", 400);
+  }
+  if (checkoutMode === "subscription" && !priceIsRecurring) {
+    return errorResponse("bad_request", "Esse plano não tem opção de assinatura recorrente.", 400);
   }
 
   // Perfil próprio, pra saber se já é Cliente Stripe (reaproveita) ou não
@@ -99,13 +108,21 @@ Deno.serve(async (req) => {
     .single();
 
   const params: Record<string, unknown> = {
-    mode: "subscription",
+    mode: checkoutMode,
     line_items: [{ price: priceId, quantity: 1 }],
     client_reference_id: userData.user.id,
     success_url: successUrl,
     cancel_url: cancelUrl,
-    allow_promotion_codes: "true",
   };
+  if (checkoutMode === "subscription") {
+    params.allow_promotion_codes = "true";
+  } else {
+    // Pix é o único método aceito nesse fluxo avulso — deixar o Stripe
+    // decidir sozinho (dynamic payment methods) também mostraria cartão,
+    // que já tem seu próprio botão de assinatura recorrente.
+    params.payment_method_types = ["pix"];
+    params.metadata = { license_days: String(product.days) };
+  }
   if (profileRow?.stripe_customer_id) {
     params.customer = profileRow.stripe_customer_id;
   } else if (userData.user.email) {

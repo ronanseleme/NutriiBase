@@ -9,8 +9,16 @@
 // Depois do deploy, cadastre esta URL no Stripe Dashboard → Developers →
 // Webhooks → Add endpoint:
 //   https://<seu-projeto>.supabase.co/functions/v1/stripe-webhook
-// Eventos a assinar: checkout.session.completed, customer.subscription.updated,
+// Eventos a assinar: checkout.session.completed,
+// checkout.session.async_payment_succeeded, customer.subscription.updated,
 // customer.subscription.deleted
+//
+// checkout.session.async_payment_succeeded é essencial pro Pix: métodos
+// assíncronos (Pix, boleto) disparam "completed" assim que a pessoa sai da
+// tela de pagamento, ANTES do banco confirmar de verdade — então
+// "completed" sozinho liberaria acesso pra quem nem pagou ainda. Por isso
+// "completed" só ativa se payment_status já vier "paid" (cartão costuma
+// vir assim); pro Pix, quem ativa é o "async_payment_succeeded" de verdade.
 //
 // Deploy: supabase functions deploy stripe-webhook --no-verify-jwt
 // Secrets: supabase secrets set STRIPE_SECRET_KEY=sk_...
@@ -55,16 +63,14 @@ Deno.serve(async (req) => {
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    if (event.type === "checkout.session.completed") {
+    if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
       const session = event.data.object;
-      const userId = session.client_reference_id as string | null;
-      const customerId = session.customer as string | null;
-      if (session.mode === "subscription" && userId && customerId) {
-        const { error } = await supabaseAdmin.rpc("stripe_activate_pro", {
-          target_user: userId,
-          p_stripe_customer_id: customerId,
-        });
-        if (error) console.error("stripe-webhook: stripe_activate_pro falhou", error);
+      // Pix/boleto chegam com payment_status "unpaid" no "completed" (a
+      // pessoa só viu o QR code, ainda não pagou) — só ativa quando o
+      // Stripe confirma o pagamento de fato, seja no próprio "completed"
+      // (cartão, instantâneo) ou no "async_payment_succeeded" (Pix, depois).
+      if (session.payment_status === "paid") {
+        await handleCompletedCheckout(supabaseAdmin, session);
       }
     } else if (event.type === "customer.subscription.deleted") {
       await deactivateByCustomer(supabaseAdmin, event.data.object.customer);
@@ -83,6 +89,28 @@ Deno.serve(async (req) => {
 
   return new Response("ok", { status: 200 });
 });
+
+async function handleCompletedCheckout(supabaseAdmin: ReturnType<typeof createClient>, session: any) {
+  const userId = session.client_reference_id as string | null;
+  if (!userId) return;
+
+  if (session.mode === "subscription") {
+    const customerId = session.customer as string | null;
+    if (!customerId) return;
+    const { error } = await supabaseAdmin.rpc("stripe_activate_pro", {
+      target_user: userId,
+      p_stripe_customer_id: customerId,
+    });
+    if (error) console.error("stripe-webhook: stripe_activate_pro falhou", error);
+  } else if (session.mode === "payment") {
+    // Licença avulsa (hoje, só Pix) — sem assinatura recorrente no Stripe,
+    // então quem controla até quando o acesso vale é license_days (metadata
+    // anexada em create-checkout-session, com base no produto escolhido).
+    const dias = Number(session.metadata?.license_days) || 30;
+    const { error } = await supabaseAdmin.rpc("stripe_activate_pro_avulso", { target_user: userId, dias });
+    if (error) console.error("stripe-webhook: stripe_activate_pro_avulso falhou", error);
+  }
+}
 
 async function deactivateByCustomer(supabaseAdmin: ReturnType<typeof createClient>, customerId: string | undefined) {
   if (!customerId) return;
