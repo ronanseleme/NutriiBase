@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ACTIVITY, GOALS, PACES } from '../lib/constants'
+import { useTheme } from '../hooks/useTheme'
 import type { Profile } from '../types'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function ProfileForm({ profile, onSave, onClose }: Props) {
+  const { theme, setTheme } = useTheme()
   const [form, setForm] = useState({
     name: profile.name,
     age: profile.age,
@@ -54,6 +56,27 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
             {error}
           </div>
         )}
+
+        <div className="mb-4">
+          <span className="mb-1.5 block text-[0.8rem] font-bold text-[var(--text-soft)]">Tema</span>
+          <div className="flex overflow-hidden rounded-[9px] border border-[var(--line-strong)]">
+            {(['dark', 'light'] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTheme(t)}
+                className={`flex-1 py-2 text-sm font-semibold transition-colors ${
+                  theme === t ? 'bg-[image:var(--blue-gradient)] text-white' : 'bg-[var(--bg)] text-[var(--text)]'
+                }`}
+              >
+                {t === 'dark' ? 'Escuro' : 'Claro'}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[0.75rem] text-[var(--text-soft)]">
+            Aplica na hora — não precisa clicar em "Salvar perfil". Fica salvo só neste dispositivo.
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <Field label="Nome">

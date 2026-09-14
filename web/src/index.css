@@ -51,6 +51,54 @@
   --modal-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
 }
 
+/* Tema claro — fundo branco, texto e acentos em roxo escuro. Ativado via
+   data-theme="light" em <html> (ver hooks/useTheme.ts), escolhido pelo
+   usuário em Editar perfil. Os tons "claros" da marca (lavanda/lilás) são
+   escurecidos aqui em relação ao tema escuro — usados como texto sobre
+   fundo branco, o lilás bem claro do brand book ficaria ilegível. */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #faf8fc;
+  --bg-2: #f1ecfa;
+  --surface: #ffffff;
+  --surface-2: #f5f1fb;
+
+  --text: #1e1833;
+  --text-soft: #6b6284;
+  --text-meta: #9a93b0;
+
+  --line: rgba(124, 58, 237, 0.14);
+  --line-strong: #d9cff0;
+
+  --purple: #7c3aed;
+  --purple-hover: #6d28d9;
+  --lavender: #8b5cf6;
+  --lilac: #a78bfa;
+  --gold: #d97706;
+
+  --orange: var(--gold);
+  --orange-light: #f59e0b;
+  --blue: var(--purple);
+  --blue-light: var(--lavender);
+  --blue-deep: #4c1d95;
+  --green: #059669;
+  --green-light: #34d399;
+  --coral: #dc2626;
+  --teal: #059669;
+
+  --protein: var(--purple);
+  --carb: var(--lavender);
+  --fat: var(--lilac);
+
+  --on-accent: #ffffff;
+  --brand-gradient: linear-gradient(135deg, var(--lilac) 0%, var(--lavender) 50%, var(--purple) 100%);
+  --accent-gradient: linear-gradient(135deg, var(--purple), var(--purple-hover));
+  --blue-gradient: linear-gradient(135deg, var(--purple), var(--lavender));
+  --card-shadow: 0 1px 2px rgba(30, 24, 51, 0.06), 0 18px 34px -22px rgba(30, 24, 51, 0.18);
+  --modal-shadow: 0 24px 60px -24px rgba(30, 24, 51, 0.35);
+}
+
 * {
   box-sizing: border-box;
 }
