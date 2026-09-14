@@ -1,3 +1,5 @@
+import { useTheme } from '../hooks/useTheme'
+
 interface Props {
   size?: number
   variant?: 'full' | 'mark' | 'wordmark'
@@ -5,12 +7,14 @@ interface Props {
 }
 
 // Marca real do NutriiBase (arquivos em web/public/brand/), fornecida pelo
-// usuário. logo-full.png é a versão nova (coração + haltere + folha, roxo/
-// lavanda) do rebrand 2026; logo-mark.png/logo-wordmark.png ainda são a
-// marca antiga (anel azul/folha verde) — só a "full" tem substituto novo
-// até o momento, e é a única usada hoje (topbar + AuthScreen).
+// usuário. A versão "full" tem uma imagem por tema — logo-full-light.png
+// (roxo/preto, pro fundo claro) e logo-full-dark.png (branca, pro fundo
+// escuro) — porque o texto "Nutrii" é preto numa versão e branco na outra,
+// e ficaria ilegível no tema errado. logo-mark.png/logo-wordmark.png ainda
+// são a marca antiga (anel azul/folha verde) — não usadas hoje (só a
+// "full" é renderizada, no topbar e na AuthScreen).
 const MARK_RATIO = 1563 / 1606 // largura/altura de logo-mark.png
-const FULL_RATIO = 850 / 359 // largura/altura de logo-full.png
+const FULL_RATIO = 1837 / 576 // largura/altura de logo-full-light.png / logo-full-dark.png
 const WORDMARK_RATIO = 1415 / 217 // largura/altura de logo-wordmark.png
 const BRAND_URL = `${import.meta.env.BASE_URL}brand/`
 
@@ -42,11 +46,12 @@ export function LogoWordmark({ size = 32, className = '' }: { size?: number; cla
 }
 
 export function Logo({ size = 32, variant = 'full', className = '' }: Props) {
+  const { theme } = useTheme()
   if (variant === 'mark') return <LogoMark size={size} className={className} />
   if (variant === 'wordmark') return <LogoWordmark size={size} className={className} />
   return (
     <img
-      src={`${BRAND_URL}logo-full.png`}
+      src={`${BRAND_URL}${theme === 'dark' ? 'logo-full-dark.png' : 'logo-full-light.png'}`}
       alt="NutriiBase"
       height={size}
       width={Math.round(size * FULL_RATIO)}
