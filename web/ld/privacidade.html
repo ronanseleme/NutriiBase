@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidade — NutriiBase</title>
+  <meta name="description" content="Saiba como o NutriiBase coleta, utiliza, protege e processa seus dados nutricionais e pessoais com total transparência e em conformidade com a LGPD." />
+  <meta property="og:title" content="Política de Privacidade — NutriiBase" />
+  <meta property="og:description" content="Transparência e segurança no tratamento dos seus dados em conformidade com a LGPD." />
+  <meta property="og:image" content="Logo%20Branca%20SF.png" />
+  <meta property="og:type" content="article" />
+  <link rel="icon" type="image/png" href="NutriiBase.favicon.png" />
+
+  <!-- Google Fonts: Fraunces & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0F0C1B;
+      --bg-2: #161226;
+      --surface: #1E1833;
+      --surface-2: #282044;
+      --ink: #F8F6FD;
+      --ink-muted: #CAC2DF;
+      --ink-faint: #8D82AA;
+      --purple-accent: #B388FF;
+      --purple-cta: #7C3AED;
+      --purple-cta-hover: #6D28D9;
+      --line: #382D5C;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 100px;
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header */
+    #site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: rgba(15, 12, 27, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+      height: 72px;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-logo {
+      height: 40px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-link {
+      color: var(--ink-muted);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--ink);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      border-radius: var(--radius-pill);
+      padding: 10px 22px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--surface);
+      border-color: var(--purple-accent);
+    }
+
+    .btn-primary {
+      background-color: var(--purple-cta);
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+      border: 1px solid transparent;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--purple-cta-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Hero Banner Legal */
+    .legal-hero {
+      padding: 56px 0 36px;
+      background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 70%);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .legal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background-color: rgba(124, 58, 237, 0.15);
+      border: 1px solid rgba(179, 136, 255, 0.3);
+      border-radius: var(--radius-pill);
+      color: var(--purple-accent);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .legal-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 4vw, 3rem);
+      font-weight: 600;
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+
+    .legal-meta {
+      color: var(--ink-faint);
+      font-size: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+    }
+
+    /* Layout Principal Legal */
+    .legal-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 48px;
+      padding: 48px 0 80px;
+    }
+
+    /* Sidebar Índice */
+    .legal-sidebar {
+      position: sticky;
+      top: 104px;
+      height: fit-content;
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 24px 20px;
+    }
+
+    .sidebar-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--purple-accent);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-link {
+      font-size: 0.875rem;
+      color: var(--ink-muted);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      line-height: 1.35;
+    }
+
+    .sidebar-link:hover, .sidebar-link.active {
+      background-color: var(--surface-2);
+      color: var(--ink);
+    }
+
+    /* Conteúdo Textual */
+    .legal-content {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 44px;
+    }
+
+    .legal-section {
+      margin-bottom: 40px;
+      scroll-margin-top: 100px;
+    }
+
+    .legal-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .legal-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.625rem;
+      color: var(--ink);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .legal-section h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 24px 0 10px;
+    }
+
+    .legal-section p {
+      color: var(--ink-muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .legal-section ul, .legal-section ol {
+      margin: 0 0 18px 22px;
+      color: var(--ink-muted);
+      line-height: 1.7;
+    }
+
+    .legal-section li {
+      margin-bottom: 8px;
+    }
+
+    .highlight-card {
+      background-color: rgba(124, 58, 237, 0.08);
+      border: 1px solid rgba(179, 136, 255, 0.25);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .highlight-card strong {
+      color: var(--purple-accent);
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    .highlight-card p {
+      color: var(--ink-muted);
+      font-size: 0.9375rem;
+      margin-bottom: 0;
+    }
+
+    /* Footer */
+    #site-footer {
+      background-color: var(--bg);
+      padding: 64px 0 32px;
+      border-top: 1px solid var(--line);
+      margin-top: auto;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 360px;
+    }
+
+    .footer-logo {
+      height: 40px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      align-self: flex-start;
+      display: block;
+    }
+
+    .footer-brand-desc {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    .footer-col-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-link {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--ink);
+    }
+
+    .footer-bottom {
+      padding-top: 32px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .health-disclaimer {
+      font-size: 0.8125rem;
+      color: var(--ink-faint);
+      line-height: 1.5;
+    }
+
+    .copyright {
+      font-size: 0.8125rem;
+      color: var(--ink-faint);
+    }
+
+    /* Responsividade */
+    @media (max-width: 900px) {
+      .legal-layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .legal-sidebar {
+        position: static;
+        order: -1;
+      }
+
+      .footer-top {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .legal-content {
+        padding: 28px 20px;
+      }
+
+      .header-nav {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header id="site-header">
+    <div class="container header-content">
+      <a href="/" class="header-brand" aria-label="Voltar para a página inicial do NutriiBase">
+        <img 
+          src="Logo%20Branca%20SF.png" 
+          alt="NutriiBase Logo" 
+          class="header-logo"
+          onerror="this.src='logo-nutriibase.png';"
+        />
+      </a>
+
+      <nav class="header-nav">
+        <a href="/" class="nav-link">Página Inicial</a>
+        <a href="/termos.html" class="nav-link">Termos de Uso</a>
+        <a href="/suporte.html" class="nav-link">Suporte</a>
+        <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Já sou cliente</a>
+        <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Começar 5 dias grátis</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Banner de Entrada -->
+    <section class="legal-hero">
+      <div class="container">
+        <div class="legal-badge">
+          <span>LGPD & Proteção de Dados</span>
+        </div>
+        <h1>Política de Privacidade</h1>
+        <div class="legal-meta">
+          <span>Última atualização: 14 de Setembro de 2026</span>
+          <span>•</span>
+          <span>NutriiBase Tecnologia e Saúde Digital Ltda.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layout Dividido -->
+    <div class="container">
+      <div class="legal-layout">
+        
+        <!-- Navegação Rápida -->
+        <aside class="legal-sidebar" aria-label="Índice da política de privacidade">
+          <div class="sidebar-title">Neste Documento</div>
+          <nav class="sidebar-nav">
+            <a href="#introducao" class="sidebar-link">1. Introdução e Compromisso</a>
+            <a href="#dados-coletados" class="sidebar-link">2. Dados que Coletamos</a>
+            <a href="#finalidade" class="sidebar-link">3. Finalidade e Uso da IA</a>
+            <a href="#compartilhamento" class="sidebar-link">4. Compartilhamento Restrito</a>
+            <a href="#seguranca" class="sidebar-link">5. Segurança e Armazenamento</a>
+            <a href="#direitos" class="sidebar-link">6. Seus Direitos (LGPD)</a>
+            <a href="#contato-dpo" class="sidebar-link">7. Contato e Encarregado (DPO)</a>
+          </nav>
+        </aside>
+
+        <!-- Artigos e Diretrizes -->
+        <article class="legal-content">
+          
+          <section id="introducao" class="legal-section">
+            <h2>1. Introdução e Compromisso</h2>
+            <p>
+              O <strong>NutriiBase</strong> ("nós", "nosso" ou "aplicação") valoriza a sua privacidade e tem o firme compromisso de proteger as informações pessoais e nutricionais confiadas por você ("usuário").
+            </p>
+            <p>
+              Esta Política de Privacidade descreve como coletamos, tratamos, processamos e protegemos seus dados em conformidade com a <strong>Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 - LGPD)</strong>, com o Marco Civil da Internet (Lei nº 12.965/2014) e com o Código de Defesa do Consumidor (Lei nº 8.078/1990).
+            </p>
+            <div class="highlight-card">
+              <strong>Princípio Central do NutriiBase</strong>
+              <p>Nunca comercializamos, alugamos ou transferimos seus dados pessoais ou registros alimentares para anunciantes, seguradoras ou terceiros de qualquer natureza.</p>
+            </div>
+          </section>
+
+          <section id="dados-coletados" class="legal-section">
+            <h2>2. Dados que Coletamos</h2>
+            <p>Para proporcionar o acompanhamento calórico diário personalizado, coletamos apenas os dados estritamente necessários:</p>
+            
+            <h3>2.1. Dados de Cadastro e Identificação</h3>
+            <ul>
+              <li><strong>Nome completo e e-mail:</strong> para autenticação da conta, controle de acesso e comunicações essenciais sobre sua assinatura.</li>
+              <li><strong>Número de telefone/WhatsApp:</strong> caso você opte por receber suporte ou notificações de acompanhamento pelo canal.</li>
+            </ul>
+
+            <h3>2.2. Métricas Corporais e Objetivos Físicos</h3>
+            <ul>
+              <li>Idade, sexo biológico, altura e peso inicial.</li>
+              <li>Peso desejado (meta), nível de atividade física declarada e ritmo de evolução pretendido (ex.: déficit calórico para emagrecimento ou superávit para ganho de massa).</li>
+            </ul>
+
+            <h3>2.3. Registros Alimentares e de Treino</h3>
+            <ul>
+              <li>Frases, textos ou áudios enviados por você contendo os alimentos e porções consumidas nas refeições.</li>
+              <li>Horários das refeições, histórico de hidratação e notas adicionais de evolução física.</li>
+            </ul>
+          </section>
+
+          <section id="finalidade" class="legal-section">
+            <h2>3. Finalidade e Uso da Inteligência Artificial</h2>
+            <p>Os seus dados são tratados sob as bases legais de execução de contrato (prestação dos serviços contratados) e consentimento expresso:</p>
+            <ul>
+              <li><strong>Processamento de Linguagem Natural:</strong> As descrições em texto do que você comeu (por exemplo: <em>"2 ovos mexidos com 1 fatia de pão integral e café sem açúcar"</em>) são enviadas para modelos de inteligência artificial de última geração exclusivamente para reconhecimento de itens, porções e conversão matemática em calorias e macronutrientes (proteínas, carboidratos e gorduras).</li>
+              <li><strong>Não Treinamento com Dados Sensíveis Identificáveis:</strong> Nenhuma informação que identifique você pessoalmente (como nome, CPF ou e-mail) é utilizada para treinar modelos abertos ao público.</li>
+              <li><strong>Evolução e Estatísticas Pessoais:</strong> Gerar os gráficos de médias semanais, controle de metas diárias e histórico de evolução dentro do seu painel restrito.</li>
+            </ul>
+          </section>
+
+          <section id="compartilhamento" class="legal-section">
+            <h2>4. Compartilhamento Restrito</h2>
+            <p>O compartilhamento de dados ocorre exclusivamente com provedores essenciais para a operação do sistema:</p>
+            <ul>
+              <li><strong>Provedores de Pagamento:</strong> Plataformas seguras de faturamento e processamento de cartão de crédito e Pix (com certificação PCI-DSS). O NutriiBase não armazena dados completos do seu cartão.</li>
+              <li><strong>Infraestrutura em Nuvem:</strong> Servidores de hospedagem com criptografia de ponta a ponta e redundância internacional.</li>
+              <li><strong>Cumprimento Legal:</strong> Mediante ordem judicial fundamentada ou solicitação de autoridade pública competente, nos termos estritos da legislação brasileira.</li>
+            </ul>
+          </section>
+
+          <section id="seguranca" class="legal-section">
+            <h2>5. Segurança e Armazenamento</h2>
+            <p>
+              Adotamos práticas técnicas e administrativas avançadas de segurança da informação:
+            </p>
+            <ul>
+              <li>Criptografia HTTPS/TLS em todas as transmissões de dados entre seu navegador/aplicativo e nossos servidores.</li>
+              <li>Armazenamento seguro em bancos de dados protegidos com senhas criptografadas por algoritmos modernos (hashing salgado).</li>
+              <li>Controle rigoroso de acessos internos baseado no princípio do menor privilégio.</li>
+            </ul>
+          </section>
+
+          <section id="direitos" class="legal-section">
+            <h2>6. Seus Direitos (LGPD)</h2>
+            <p>
+              Em conformidade com o Art. 18 da LGPD, você possui controle absoluto sobre suas informações pessoais e pode exercer a qualquer momento:
+            </p>
+            <ul>
+              <li><strong>Confirmação e Acesso:</strong> Saber quais dados pessoais mantemos sobre você.</li>
+              <li><strong>Correção:</strong> Solicitar a correção de dados incompletos, inexatos ou desatualizados.</li>
+              <li><strong>Portabilidade:</strong> Exportar os seus dados de refeições e peso em formato legível por máquina (JSON ou CSV).</li>
+              <li><strong>Eliminação Total:</strong> Solicitar a exclusão definitiva da sua conta e de todo o histórico de refeições dos nossos servidores.</li>
+              <li><strong>Revogação de Consentimento:</strong> Retirar seu consentimento para o tratamento de dados a qualquer momento, implicando no encerramento da conta.</li>
+            </ul>
+          </section>
+
+          <section id="contato-dpo" class="legal-section">
+            <h2>7. Contato e Encarregado de Dados (DPO)</h2>
+            <p>
+              Caso deseje exercer qualquer um dos seus direitos ou tirar dúvidas sobre esta Política de Privacidade, entre em contato diretamente com o nosso Encarregado pelo Tratamento de Dados Pessoais:
+            </p>
+            <div class="highlight-card">
+              <strong>Canal Direto de Privacidade (DPO)</strong>
+              <p>E-mail oficial: <a href="mailto:nutriibase@gmail.com" style="color: var(--purple-accent); font-weight: 600;">nutriibase@gmail.com</a></p>
+              <p style="margin-top: 6px; font-size: 0.85rem; color: var(--ink-faint);">Prazo de resposta para solicitações de titulares: até 5 dias úteis.</p>
+            </div>
+          </section>
+
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img 
+            src="Logo%20Branca%20SF.png" 
+            alt="NutriiBase Logo" 
+            class="footer-logo"
+            onerror="this.src='logo-nutriibase.png';"
+          />
+          <p class="footer-brand-desc">
+            Controle calórico e evolução física através de inteligência artificial simples, feita para a realidade brasileira.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Navegação</h4>
+          <ul class="footer-links">
+            <li><a href="/" class="footer-link">Página Inicial</a></li>
+            <li><a href="/#como-funciona" class="footer-link">Como funciona</a></li>
+            <li><a href="/#planos" class="footer-link">Planos e preços</a></li>
+            <li><a href="/#faq" class="footer-link">Perguntas frequentes</a></li>
+            <li><a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="footer-link">Já sou cliente</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Legal e Suporte</h4>
+          <ul class="footer-links">
+            <li><a href="/privacidade.html" class="footer-link" style="color: var(--purple-accent); font-weight: 600;">Privacidade</a></li>
+            <li><a href="/termos.html" class="footer-link">Termos de uso</a></li>
+            <li><a href="/suporte.html" class="footer-link">Suporte</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="health-disclaimer">
+          A inteligência artificial do NutriiBase fornece estimativas nutricionais aproximadas para auxiliar no seu acompanhamento diário e não substitui o diagnóstico, prescrição ou acompanhamento individualizado de um nutricionista ou médico.
+        </p>
+        <p class="copyright">
+          © 2026 NutriiBase. Todos os direitos reservados.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

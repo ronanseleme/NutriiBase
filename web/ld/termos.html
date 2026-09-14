@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Termos de Uso — NutriiBase</title>
+  <meta name="description" content="Leia os Termos e Condições de Uso do NutriiBase. Conheça as regras de assinatura, período de teste de 5 dias, cancelamento e aviso sobre estimativas de saúde." />
+  <meta property="og:title" content="Termos de Uso — NutriiBase" />
+  <meta property="og:description" content="Regras e condições transparentes de assinatura, cancelamento e uso do aplicativo NutriiBase." />
+  <meta property="og:image" content="Logo%20Branca%20SF.png" />
+  <meta property="og:type" content="article" />
+  <link rel="icon" type="image/png" href="NutriiBase.favicon.png" />
+
+  <!-- Google Fonts: Fraunces & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0F0C1B;
+      --bg-2: #161226;
+      --surface: #1E1833;
+      --surface-2: #282044;
+      --ink: #F8F6FD;
+      --ink-muted: #CAC2DF;
+      --ink-faint: #8D82AA;
+      --purple-accent: #B388FF;
+      --purple-cta: #7C3AED;
+      --purple-cta-hover: #6D28D9;
+      --line: #382D5C;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 100px;
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header */
+    #site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: rgba(15, 12, 27, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+      height: 72px;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-logo {
+      height: 40px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-link {
+      color: var(--ink-muted);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--ink);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      border-radius: var(--radius-pill);
+      padding: 10px 22px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--surface);
+      border-color: var(--purple-accent);
+    }
+
+    .btn-primary {
+      background-color: var(--purple-cta);
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+      border: 1px solid transparent;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--purple-cta-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Hero Banner Legal */
+    .legal-hero {
+      padding: 56px 0 36px;
+      background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 70%);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .legal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background-color: rgba(124, 58, 237, 0.15);
+      border: 1px solid rgba(179, 136, 255, 0.3);
+      border-radius: var(--radius-pill);
+      color: var(--purple-accent);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .legal-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 4vw, 3rem);
+      font-weight: 600;
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+
+    .legal-meta {
+      color: var(--ink-faint);
+      font-size: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+    }
+
+    /* Layout Principal Legal */
+    .legal-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 48px;
+      padding: 48px 0 80px;
+    }
+
+    /* Sidebar Índice */
+    .legal-sidebar {
+      position: sticky;
+      top: 104px;
+      height: fit-content;
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 24px 20px;
+    }
+
+    .sidebar-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--purple-accent);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-link {
+      font-size: 0.875rem;
+      color: var(--ink-muted);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      line-height: 1.35;
+    }
+
+    .sidebar-link:hover, .sidebar-link.active {
+      background-color: var(--surface-2);
+      color: var(--ink);
+    }
+
+    /* Conteúdo Textual */
+    .legal-content {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 44px;
+    }
+
+    .legal-section {
+      margin-bottom: 40px;
+      scroll-margin-top: 100px;
+    }
+
+    .legal-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .legal-section h2 {
+      font-family: var(--font-display);
+      font-size: 1.625rem;
+      color: var(--ink);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .legal-section h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 24px 0 10px;
+    }
+
+    .legal-section p {
+      color: var(--ink-muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .legal-section ul, .legal-section ol {
+      margin: 0 0 18px 22px;
+      color: var(--ink-muted);
+      line-height: 1.7;
+    }
+
+    .legal-section li {
+      margin-bottom: 8px;
+    }
+
+    .highlight-card {
+      background-color: rgba(124, 58, 237, 0.08);
+      border: 1px solid rgba(179, 136, 255, 0.25);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .highlight-card.warning {
+      background-color: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .highlight-card.warning strong {
+      color: #FBBF24;
+    }
+
+    .highlight-card strong {
+      color: var(--purple-accent);
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    .highlight-card p {
+      color: var(--ink-muted);
+      font-size: 0.9375rem;
+      margin-bottom: 0;
+    }
+
+    /* Footer */
+    #site-footer {
+      background-color: var(--bg);
+      padding: 64px 0 32px;
+      border-top: 1px solid var(--line);
+      margin-top: auto;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 360px;
+    }
+
+    .footer-logo {
+      height: 40px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      align-self: flex-start;
+      display: block;
+    }
+
+    .footer-brand-desc {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    .footer-col-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-link {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--ink);
+    }
+
+    .footer-bottom {
+      padding-top: 32px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .health-disclaimer {
+      font-size: 0.8125rem;
+      color: var(--ink-faint);
+      line-height: 1.5;
+    }
+
+    .copyright {
+      font-size: 0.8125rem;
+      color: var(--ink-faint);
+    }
+
+    @media (max-width: 900px) {
+      .legal-layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .legal-sidebar {
+        position: static;
+        order: -1;
+      }
+
+      .footer-top {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .legal-content {
+        padding: 28px 20px;
+      }
+
+      .header-nav {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header id="site-header">
+    <div class="container header-content">
+      <a href="/" class="header-brand" aria-label="Voltar para a página inicial do NutriiBase">
+        <img 
+          src="Logo%20Branca%20SF.png" 
+          alt="NutriiBase Logo" 
+          class="header-logo"
+          onerror="this.src='logo-nutriibase.png';"
+        />
+      </a>
+
+      <nav class="header-nav">
+        <a href="/" class="nav-link">Página Inicial</a>
+        <a href="/privacidade.html" class="nav-link">Privacidade</a>
+        <a href="/suporte.html" class="nav-link">Suporte</a>
+        <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Já sou cliente</a>
+        <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Começar 5 dias grátis</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Banner de Entrada -->
+    <section class="legal-hero">
+      <div class="container">
+        <div class="legal-badge">
+          <span>Contrato & Condições de Uso</span>
+        </div>
+        <h1>Termos de Uso</h1>
+        <div class="legal-meta">
+          <span>Última atualização: 14 de Setembro de 2026</span>
+          <span>•</span>
+          <span>Válido para todas as assinaturas e acessos</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layout Dividido -->
+    <div class="container">
+      <div class="legal-layout">
+        
+        <!-- Navegação Rápida -->
+        <aside class="legal-sidebar" aria-label="Índice dos termos de uso">
+          <div class="sidebar-title">Neste Documento</div>
+          <nav class="sidebar-nav">
+            <a href="#aceite" class="sidebar-link">1. Aceite dos Termos</a>
+            <a href="#natureza" class="sidebar-link">2. Natureza do Serviço</a>
+            <a href="#aviso-saude" class="sidebar-link">3. Isenção e Aviso de Saúde</a>
+            <a href="#teste-gratis" class="sidebar-link">4. Teste Grátis (5 Dias)</a>
+            <a href="#planos-pagamento" class="sidebar-link">5. Planos e Pagamentos</a>
+            <a href="#cancelamento" class="sidebar-link">6. Cancelamento e Reembolso</a>
+            <a href="#propriedade" class="sidebar-link">7. Propriedade Intelectual</a>
+            <a href="#foro" class="sidebar-link">8. Foro e Legislação</a>
+          </nav>
+        </aside>
+
+        <!-- Artigos e Diretrizes -->
+        <article class="legal-content">
+          
+          <section id="aceite" class="legal-section">
+            <h2>1. Aceite dos Termos</h2>
+            <p>
+              Ao criar uma conta, iniciar o período de teste gratuito ou contratar qualquer plano do <strong>NutriiBase</strong>, você declara ter lido, compreendido e concordado integralmente com estes Termos de Uso e com a nossa Política de Privacidade.
+            </p>
+            <p>
+              Caso discorde de qualquer disposição deste termo, solicitamos que não prossiga com o cadastro ou utilização do aplicativo.
+            </p>
+          </section>
+
+          <section id="natureza" class="legal-section">
+            <h2>2. Natureza e Funcionamento do Serviço</h2>
+            <p>
+              O NutriiBase é uma plataforma tecnológica que utiliza inteligência artificial para auxiliar usuários no registro e acompanhamento de sua alimentação diária e atividades físicas.
+            </p>
+            <p>
+              O usuário descreve refeições em linguagem natural e o sistema converte tais informações em estimativas numéricas de calorias e macronutrientes (proteínas, carboidratos e lipídios), permitindo visualização de metas e médias diárias.
+            </p>
+          </section>
+
+          <section id="aviso-saude" class="legal-section">
+            <h2>3. Isenção e Aviso de Saúde (Health Disclaimer)</h2>
+            <div class="highlight-card warning">
+              <strong>Importante: Aviso Médico e Nutricional</strong>
+              <p>
+                O NutriiBase é uma ferramenta estritamente informativa de suporte à rotina e <strong>NÃO substitui consultas, diagnósticos, tratamentos ou prescrições individualizadas</strong> de médicos nutrólogos, nutricionistas ou educadores físicos.
+              </p>
+            </div>
+            <p>
+              As estimativas calóricas são aproximações baseadas em tabelas nutricionais consolidadas e algoritmos de processamento de texto. Fatores como modo de preparo, marcas comerciais, temperos e absorção biológica individual podem gerar variações nos valores reais consumidos.
+            </p>
+            <p>
+              Recomendamos expressamente que qualquer alteração drástica de dieta ou prática intensa de exercícios seja orientada por um profissional de saúde habilitado.
+            </p>
+          </section>
+
+          <section id="teste-gratis" class="legal-section">
+            <h2>4. Período de Teste Grátis (5 Dias)</h2>
+            <ul>
+              <li><strong>Acesso Completo:</strong> Novos usuários têm direito a 5 (cinco) dias consecutivos de acesso gratuito a todos os recursos da ferramenta.</li>
+              <li><strong>Transparência:</strong> O usuário pode utilizar o serviço e cancelar a qualquer momento durante o período de teste sem cobrança de assinatura.</li>
+              <li><strong>Prevenção de Abuso:</strong> É permitida apenas 1 (uma) ativação do período de teste por usuário/CPF/cartão. Tentativas de cadastros repetitivos visando burlar o sistema poderão resultar em bloqueio definitivo.</li>
+            </ul>
+          </section>
+
+          <section id="planos-pagamento" class="legal-section">
+            <h2>5. Planos e Condições de Pagamento</h2>
+            <p>O NutriiBase oferece planos com cobrança recorrente nos períodos:</p>
+            <ul>
+              <li><strong>Plano Mensal:</strong> Cobrança a cada 30 dias.</li>
+              <li><strong>Plano Trimestral:</strong> Cobrança a cada 90 dias com desconto proporcional.</li>
+              <li><strong>Plano Semestral:</strong> Cobrança a cada 180 dias com desconto progressivo.</li>
+              <li><strong>Plano Anual:</strong> Cobrança a cada 365 dias com o maior desconto de fidelidade.</li>
+            </ul>
+            <p>
+              Os pagamentos são processados via cartão de crédito ou Pix através de gateways de pagamento terceirizados seguros e certificados.
+            </p>
+          </section>
+
+          <section id="cancelamento" class="legal-section">
+            <h2>6. Cancelamento e Política de Reembolso</h2>
+            <h3>6.1. Cancelamento a Qualquer Momento</h3>
+            <p>
+              Você pode cancelar a renovação automática da sua assinatura a qualquer momento, diretamente no painel do usuário ou pelo e-mail de suporte (<a href="mailto:nutriibase@gmail.com" style="color: var(--purple-accent);">nutriibase@gmail.com</a>). Não há taxas ou multas de rescisão.
+            </p>
+            <p>
+              Ao cancelar, você continuará com acesso total aos recursos até o fim do período já faturado.
+            </p>
+
+            <h3>6.2. Direito de Arrependimento (CDC Art. 49)</h3>
+            <p>
+              Em conformidade com o Artigo 49 do Código de Defesa do Consumidor brasileiro, o usuário tem direito de solicitar o cancelamento com <strong>reembolso integral de 100%</strong> do valor pago no prazo de até 7 (sete) dias corridos a contar da data da primeira cobrança, bastando formalizar o pedido via suporte.
+            </p>
+          </section>
+
+          <section id="propriedade" class="legal-section">
+            <h2>7. Propriedade Intelectual</h2>
+            <p>
+              A marca <strong>NutriiBase</strong>, logotipo, design do aplicativo, códigos-fonte, arquitetura de software e conteúdos originais são propriedade exclusiva de seus criadores e estão protegidos pelas leis brasileiras de direitos autorais e propriedade industrial. É vedada qualquer reprodução não autorizada, engenharia reversa ou cópia comercial do sistema.
+            </p>
+          </section>
+
+          <section id="foro" class="legal-section">
+            <h2>8. Foro e Legislação Aplicável</h2>
+            <p>
+              Estes Termos de Uso são regidos e interpretados segundo as leis da República Federativa do Brasil. Para dirimir quaisquer litígios decorrentes deste instrumento, fica eleito o Foro da Comarca de domicílio do consumidor, em conformidade com as normas protetivas do Código de Defesa do Consumidor.
+            </p>
+          </section>
+
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img 
+            src="Logo%20Branca%20SF.png" 
+            alt="NutriiBase Logo" 
+            class="footer-logo"
+            onerror="this.src='logo-nutriibase.png';"
+          />
+          <p class="footer-brand-desc">
+            Controle calórico e evolução física através de inteligência artificial simples, feita para a realidade brasileira.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Navegação</h4>
+          <ul class="footer-links">
+            <li><a href="/" class="footer-link">Página Inicial</a></li>
+            <li><a href="/#como-funciona" class="footer-link">Como funciona</a></li>
+            <li><a href="/#planos" class="footer-link">Planos e preços</a></li>
+            <li><a href="/#faq" class="footer-link">Perguntas frequentes</a></li>
+            <li><a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="footer-link">Já sou cliente</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Legal e Suporte</h4>
+          <ul class="footer-links">
+            <li><a href="/privacidade.html" class="footer-link">Privacidade</a></li>
+            <li><a href="/termos.html" class="footer-link" style="color: var(--purple-accent); font-weight: 600;">Termos de uso</a></li>
+            <li><a href="/suporte.html" class="footer-link">Suporte</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="health-disclaimer">
+          A inteligência artificial do NutriiBase fornece estimativas nutricionais aproximadas para auxiliar no seu acompanhamento diário e não substitui o diagnóstico, prescrição ou acompanhamento individualizado de um nutricionista ou médico.
+        </p>
+        <p class="copyright">
+          © 2026 NutriiBase. Todos os direitos reservados.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

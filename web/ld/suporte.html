@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Central de Ajuda e Suporte — NutriiBase</title>
+  <meta name="description" content="Precisa de ajuda com sua conta, assinatura ou acompanhamento nutricional no NutriiBase? Fale conosco via WhatsApp, e-mail ou tire dúvidas rápidas." />
+  <meta property="og:title" content="Central de Ajuda e Suporte — NutriiBase" />
+  <meta property="og:description" content="Atendimento rápido e esclarecimento de dúvidas sobre a plataforma NutriiBase." />
+  <meta property="og:image" content="Logo%20Branca%20SF.png" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/png" href="NutriiBase.favicon.png" />
+
+  <!-- Google Fonts: Fraunces & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #0F0C1B;
+      --bg-2: #161226;
+      --surface: #1E1833;
+      --surface-2: #282044;
+      --ink: #F8F6FD;
+      --ink-muted: #CAC2DF;
+      --ink-faint: #8D82AA;
+      --purple-accent: #B388FF;
+      --purple-cta: #7C3AED;
+      --purple-cta-hover: #6D28D9;
+      --line: #382D5C;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 100px;
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header */
+    #site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: rgba(15, 12, 27, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+      height: 72px;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-logo {
+      height: 40px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-link {
+      color: var(--ink-muted);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--ink);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      border-radius: var(--radius-pill);
+      padding: 10px 22px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--surface);
+      border-color: var(--purple-accent);
+    }
+
+    .btn-primary {
+      background-color: var(--purple-cta);
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+      border: 1px solid transparent;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--purple-cta-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Hero Suporte */
+    .support-hero {
+      padding: 64px 0 44px;
+      text-align: center;
+      background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.16) 0%, transparent 70%);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .support-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background-color: rgba(124, 58, 237, 0.15);
+      border: 1px solid rgba(179, 136, 255, 0.3);
+      border-radius: var(--radius-pill);
+      color: var(--purple-accent);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .support-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.3rem, 4.5vw, 3.25rem);
+      font-weight: 600;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: var(--ink);
+    }
+
+    .support-hero p {
+      max-width: 620px;
+      margin: 0 auto;
+      font-size: 1.05rem;
+      color: var(--ink-muted);
+    }
+
+    /* Canais Rápidos em Cards */
+    .channels-section {
+      padding: 48px 0;
+    }
+
+    .channels-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 56px;
+    }
+
+    .channel-card {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .channel-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--purple-accent);
+    }
+
+    .channel-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background-color: rgba(124, 58, 237, 0.2);
+      border: 1px solid rgba(179, 136, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--purple-accent);
+      font-size: 1.4rem;
+    }
+
+    .channel-card h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .channel-card p {
+      font-size: 0.925rem;
+      color: var(--ink-muted);
+      line-height: 1.5;
+      flex-grow: 1;
+    }
+
+    .channel-link {
+      color: var(--purple-accent);
+      font-size: 0.925rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: gap 0.2s ease;
+    }
+
+    .channel-link:hover {
+      gap: 10px;
+    }
+
+    /* Layout FAQ e Form */
+    .support-body-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 48px;
+      padding-bottom: 80px;
+    }
+
+    /* FAQ Box */
+    .faq-column h2 {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      margin-bottom: 24px;
+      color: var(--ink);
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .faq-item {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+
+    .faq-item:hover {
+      border-color: var(--purple-accent);
+    }
+
+    .faq-header {
+      width: 100%;
+      text-align: left;
+      padding: 18px 20px;
+      background: none;
+      border: none;
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 0.975rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .faq-header .icon-toggle {
+      font-size: 1.2rem;
+      color: var(--purple-accent);
+      transition: transform 0.2s ease;
+    }
+
+    .faq-item.open .faq-header .icon-toggle {
+      transform: rotate(45deg);
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 0 20px 18px;
+      color: var(--ink-muted);
+      font-size: 0.925rem;
+      line-height: 1.6;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      padding-top: 14px;
+    }
+
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+
+    /* Formulário de Atendimento */
+    .form-column {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      height: fit-content;
+    }
+
+    .form-column h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+
+    .form-column p {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      margin-bottom: 24px;
+    }
+
+    .support-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      background-color: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 0.925rem;
+      transition: border-color 0.2s ease, outline 0.2s ease;
+      outline: none;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--purple-accent);
+      box-shadow: 0 0 0 2px rgba(179, 136, 255, 0.2);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .form-notice {
+      font-size: 0.8rem;
+      color: var(--ink-faint);
+      line-height: 1.4;
+    }
+
+    .form-status-msg {
+      display: none;
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      background-color: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34D399;
+      font-size: 0.875rem;
+      text-align: center;
+    }
+
+    /* Footer */
+    #site-footer {
+      background-color: var(--bg);
+      padding: 64px 0 32px;
+      border-top: 1px solid var(--line);
+      margin-top: auto;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 360px;
+    }
+
+    .footer-logo {
+      height: 40px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      align-self: flex-start;
+      display: block;
+    }
+
+    .footer-brand-desc {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    .footer-col-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-link {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--ink);
+    }
+
+    .footer-bottom {
+      padding-top: 32px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .health-disclaimer {
+      font-size: 0.8125rem;
+      color: var(--ink-faint);
+      line-height: 1.5;
+    }
+
+    .copyright {
+      font-size: 0.8125rem;
+      color: var(--ink-faint);
+    }
+
+    @media (max-width: 900px) {
+      .channels-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .support-body-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+
+      .footer-top {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .form-column {
+        padding: 24px 20px;
+      }
+
+      .header-nav {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header id="site-header">
+    <div class="container header-content">
+      <a href="/" class="header-brand" aria-label="Voltar para a página inicial do NutriiBase">
+        <img 
+          src="Logo%20Branca%20SF.png" 
+          alt="NutriiBase Logo" 
+          class="header-logo"
+          onerror="this.src='logo-nutriibase.png';"
+        />
+      </a>
+
+      <nav class="header-nav">
+        <a href="/" class="nav-link">Página Inicial</a>
+        <a href="/privacidade.html" class="nav-link">Privacidade</a>
+        <a href="/termos.html" class="nav-link">Termos de Uso</a>
+        <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Já sou cliente</a>
+        <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Começar 5 dias grátis</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Suporte -->
+    <section class="support-hero">
+      <div class="container">
+        <div class="support-badge">
+          <span>Atendimento & Ajuda</span>
+        </div>
+        <h1>Como podemos ajudar você hoje?</h1>
+        <p>Estamos prontos para tirar dúvidas sobre sua assinatura, funcionamento da IA, recuperação de conta ou sugestões para o aplicativo.</p>
+      </div>
+    </section>
+
+    <!-- Seção de Canais e Conteúdo -->
+    <section class="channels-section">
+      <div class="container">
+        
+        <!-- 3 Cards de Contato -->
+        <div class="channels-grid">
+          
+          <div class="channel-card">
+            <div class="channel-icon" aria-hidden="true">💬</div>
+            <h3>WhatsApp de Suporte</h3>
+            <p>Atendimento humanizado para dúvidas rápidas sobre cadastro, pagamentos e uso diário.</p>
+            <a href="https://wa.me/5548999999999?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20NutriiBase" target="_blank" rel="noopener noreferrer" class="channel-link">
+              Conversar no WhatsApp →
+            </a>
+          </div>
+
+          <div class="channel-card">
+            <div class="channel-icon" aria-hidden="true">✉️</div>
+            <h3>E-mail Oficial</h3>
+            <p>Canal formal para solicitações de faturamento, dados (LGPD) ou suporte ao assinante.</p>
+            <a href="mailto:nutriibase@gmail.com" class="channel-link">
+              nutriibase@gmail.com →
+            </a>
+          </div>
+
+          <div class="channel-card">
+            <div class="channel-icon" aria-hidden="true">⚡</div>
+            <h3>Portal do Assinante</h3>
+            <p>Gerencie sua assinatura ativa, faturas, alteração de cartão ou cancelamento imediato.</p>
+            <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="channel-link">
+              Acessar minha conta →
+            </a>
+          </div>
+
+        </div>
+
+        <!-- Grid: FAQ + Formulário de Chamado -->
+        <div class="support-body-grid">
+          
+          <!-- Perguntas Frequentes de Suporte -->
+          <div class="faq-column">
+            <h2>Dúvidas mais frequentes</h2>
+            
+            <div class="faq-list">
+              <div class="faq-item open">
+                <button class="faq-header" type="button" aria-expanded="true">
+                  <span>Como funciona o período de 5 dias grátis?</span>
+                  <span class="icon-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                  Você ganha acesso ilimitado a todos os recursos da inteligência artificial por 5 dias corridos. Se optar por não continuar, basta cancelar antes do 5º dia no seu painel ou avisar nosso suporte que nenhuma cobrança será efetuada.
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <button class="faq-header" type="button" aria-expanded="false">
+                  <span>Como cancelo a minha assinatura?</span>
+                  <span class="icon-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                  O cancelamento pode ser feito em 2 cliques na área do cliente em nutriibase.com.br na seção "Minha Assinatura", ou enviando uma mensagem para o nosso suporte. Não exigimos tempo mínimo nem cobramos multas.
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <button class="faq-header" type="button" aria-expanded="false">
+                  <span>A estimativa nutricional funciona com comidas típicas brasileiras?</span>
+                  <span class="icon-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                  Sim! A nossa inteligência artificial foi treinada especialmente com a culinária do Brasil: arroz, feijão carioca ou preto, tapioca, açaí, farofa, pão de queijo, carnes grelhadas e pratos do dia a dia.
+                </div>
+              </div>
+
+              <div class="faq-item">
+                <button class="faq-header" type="button" aria-expanded="false">
+                  <span>Esqueci minha senha ou perdi acesso ao e-mail, como recuperar?</span>
+                  <span class="icon-toggle">+</span>
+                </button>
+                <div class="faq-answer">
+                  Na tela de login clique em "Esqueci minha senha" para receber o link de redefinição imediato. Caso tenha perdido o acesso ao e-mail original, nos chame no WhatsApp com seu comprovante de pagamento para reativarmos seu acesso.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulário Direto de Chamado -->
+          <div class="form-column">
+            <h2>Envie uma mensagem</h2>
+            <p>Nossa equipe responde em média em até 4 horas úteis.</p>
+
+            <form class="support-form" id="support-form">
+              <div class="form-group">
+                <label for="form-name" class="form-label">Seu nome</label>
+                <input type="text" id="form-name" class="form-input" placeholder="Ex.: Lucas Silva" required />
+              </div>
+
+              <div class="form-group">
+                <label for="form-email" class="form-label">E-mail cadastrado</label>
+                <input type="email" id="form-email" class="form-input" placeholder="seuemail@exemplo.com" required />
+              </div>
+
+              <div class="form-group">
+                <label for="form-subject" class="form-label">Motivo do contato</label>
+                <select id="form-subject" class="form-select" required>
+                  <option value="duvida-assinatura">Dúvida sobre planos ou assinatura</option>
+                  <option value="suporte-tecnico">Problema técnico no aplicativo</option>
+                  <option value="cancelamento-reembolso">Cancelamento ou reembolso</option>
+                  <option value="sugestao">Sugestão de funcionalidade</option>
+                  <option value="outro">Outro assunto</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="form-message" class="form-label">Mensagem</label>
+                <textarea id="form-message" class="form-textarea" placeholder="Descreva detalhadamente como podemos te ajudar..." required></textarea>
+              </div>
+
+              <p class="form-notice">
+                Ao enviar, você concorda com o processamento dos seus dados conforme nossa <a href="/privacidade.html" style="color: var(--purple-accent);">Política de Privacidade</a>.
+              </p>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;">
+                Enviar mensagem
+              </button>
+
+              <div class="form-status-msg" id="form-status-msg">
+                Mensagem enviada com sucesso! Em breve nossa equipe retornará no seu e-mail.
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer id="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img 
+            src="Logo%20Branca%20SF.png" 
+            alt="NutriiBase Logo" 
+            class="footer-logo"
+            onerror="this.src='logo-nutriibase.png';"
+          />
+          <p class="footer-brand-desc">
+            Controle calórico e evolução física através de inteligência artificial simples, feita para a realidade brasileira.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Navegação</h4>
+          <ul class="footer-links">
+            <li><a href="/" class="footer-link">Página Inicial</a></li>
+            <li><a href="/#como-funciona" class="footer-link">Como funciona</a></li>
+            <li><a href="/#planos" class="footer-link">Planos e preços</a></li>
+            <li><a href="/#faq" class="footer-link">Perguntas frequentes</a></li>
+            <li><a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="footer-link">Já sou cliente</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Legal e Suporte</h4>
+          <ul class="footer-links">
+            <li><a href="/privacidade.html" class="footer-link">Privacidade</a></li>
+            <li><a href="/termos.html" class="footer-link">Termos de uso</a></li>
+            <li><a href="/suporte.html" class="footer-link" style="color: var(--purple-accent); font-weight: 600;">Suporte</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="health-disclaimer">
+          A inteligência artificial do NutriiBase fornece estimativas nutricionais aproximadas para auxiliar no seu acompanhamento diário e não substitui o diagnóstico, prescrição ou acompanhamento individualizado de um nutricionista ou médico.
+        </p>
+        <p class="copyright">
+          © 2026 NutriiBase. Todos os direitos reservados.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Interatividade do formulário de suporte enviando diretamente para nutriibase@gmail.com
+    document.getElementById('support-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var name = document.getElementById('form-name').value.trim();
+      var email = document.getElementById('form-email').value.trim();
+      var subjectSelect = document.getElementById('form-subject');
+      var subjectText = subjectSelect.options[subjectSelect.selectedIndex].text;
+      var message = document.getElementById('form-message').value.trim();
+
+      var btn = this.querySelector('button[type="submit"]');
+      var status = document.getElementById('form-status-msg');
+      btn.disabled = true;
+      btn.textContent = 'Preparando envio...';
+
+      // Monta link mailto com parâmetros codificados
+      var mailtoSubject = encodeURIComponent('[Suporte NutriiBase] ' + subjectText + ' - ' + name);
+      var mailtoBody = encodeURIComponent(
+        'Nome: ' + name + '\n' +
+        'E-mail: ' + email + '\n' +
+        'Motivo: ' + subjectText + '\n\n' +
+        'Mensagem:\n' + message + '\n\n' +
+        '--\nEnviado via Central de Suporte NutriiBase'
+      );
+      var mailtoUrl = 'mailto:nutriibase@gmail.com?subject=' + mailtoSubject + '&body=' + mailtoBody;
+
+      setTimeout(function() {
+        // Dispara cliente de email ou abre tela
+        window.location.href = mailtoUrl;
+        btn.style.display = 'none';
+        status.innerHTML = 'Mensagem direcionada para <strong>nutriibase@gmail.com</strong>! Se o seu aplicativo de e-mail não abriu automaticamente, você também pode nos escrever diretamente para nutriibase@gmail.com.';
+        status.style.display = 'block';
+      }, 500);
+    });
+
+    // Accordion de dúvidas do suporte
+    document.querySelectorAll('.faq-header').forEach(function(header) {
+      header.addEventListener('click', function() {
+        var item = this.closest('.faq-item');
+        var isOpen = item.classList.contains('open');
+        
+        document.querySelectorAll('.faq-item').forEach(function(el) {
+          el.classList.remove('open');
+          el.querySelector('.faq-header').setAttribute('aria-expanded', 'false');
+        });
+
+        if (!isOpen) {
+          item.classList.add('open');
+          this.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

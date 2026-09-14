@@ -1,0 +1,3481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriiBase — Controle calórico e treino com inteligência artificial</title>
+  <meta name="description" content="Descreva o que comeu em uma frase e a inteligência artificial calcula calorias e macros na hora. Simples, rápido e sem tabelas complicadas." />
+  <meta property="og:title" content="NutriiBase — Alimentação com inteligência artificial" />
+  <meta property="og:description" content="Descreva o que comeu em uma frase e a IA estima calorias e macros na hora. Comece agora com 5 dias grátis." />
+  <meta property="og:image" content="logo-nutriibase.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="NutriiBase.favicon.png" />
+
+  <!-- Google Fonts: Fraunces (Headlines) & Inter (UI/Corpo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* -------------------------------------------------------------
+       Variáveis de Cor e Tipografia da Identidade NutriiBase (Paleta Púrpura)
+       ------------------------------------------------------------- */
+    :root {
+      --bg: #0F0C1B;
+      --bg-2: #161226;
+      --surface: #1E1833;
+      --surface-2: #282044;
+      --ink: #F8F6FD;
+      --ink-muted: #CAC2DF;
+      --ink-faint: #8D82AA;
+      --purple-accent: #B388FF;
+      --purple-cta: #7C3AED;
+      --purple-cta-hover: #6D28D9;
+      --gold: #F59E0B;
+      --line: #382D5C;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 100px;
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Tipografia e Hierarquia */
+    h1, h2, h3, .font-serif {
+      font-family: var(--font-display);
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+
+    p {
+      color: var(--ink-muted);
+      font-size: 1rem;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Container base */
+    .container {
+      width: 100%;
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Botões em pílula */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      border-radius: var(--radius-pill);
+      padding: 12px 24px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      text-align: center;
+      border: 1px solid transparent;
+      text-transform: none; /* sentence case estrito */
+    }
+
+    .btn-primary {
+      background-color: var(--purple-cta);
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--purple-cta-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn-outline:hover {
+      background-color: var(--surface);
+      border-color: var(--ink-faint);
+    }
+
+    .btn-subtle {
+      background-color: var(--surface-2);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn-subtle:hover {
+      background-color: var(--surface);
+      border-color: var(--purple-accent);
+    }
+
+    /* -------------------------------------------------------------
+       1. Header
+       ------------------------------------------------------------- */
+    #site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background-color: rgba(15, 12, 27, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+      height: 72px;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-logo {
+      height: 42px;
+      width: auto;
+      max-width: 190px;
+      object-fit: contain;
+      display: block;
+      transition: opacity 0.2s ease;
+    }
+
+    .header-brand:hover .header-logo {
+      opacity: 0.92;
+    }
+
+    .header-brand-fallback {
+      display: none;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--ink);
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-link {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--ink-muted);
+      transition: color 0.2s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--ink);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Mobile Menu Toggle */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      color: var(--ink);
+      padding: 8px;
+      cursor: pointer;
+      line-height: 0;
+    }
+
+    .mobile-menu-drawer {
+      display: none;
+      position: absolute;
+      top: 72px;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-2);
+      border-bottom: 1px solid var(--line);
+      padding: 24px;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .mobile-menu-drawer.open {
+      display: flex;
+    }
+
+    /* -------------------------------------------------------------
+       2. Hero Section
+       ------------------------------------------------------------- */
+    #hero {
+      position: relative;
+      min-height: 88vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 0 80px;
+      background-image: 
+        linear-gradient(180deg, rgba(15, 12, 27, 0.82) 0%, rgba(15, 12, 27, 0.90) 55%, var(--bg) 100%),
+        url('BANNER%20NUTRIIBASE.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-container {
+      max-width: 820px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .eyebrow {
+      color: var(--purple-accent);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      text-transform: none; /* sentence case estrito */
+      letter-spacing: 0;
+      background-color: rgba(179, 136, 255, 0.14);
+      border: 1px solid rgba(179, 136, 255, 0.28);
+      padding: 6px 16px;
+      border-radius: var(--radius-pill);
+      display: inline-block;
+    }
+
+    .hero-title {
+      font-size: clamp(2.35rem, 5vw, 3.85rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      line-height: 1.12;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1.05rem, 2vw, 1.25rem);
+      color: var(--ink-muted);
+      max-width: 660px;
+      line-height: 1.6;
+    }
+
+    .hero-cta-wrapper {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .hero-cta-btn {
+      padding: 16px 36px;
+      font-size: 1.0625rem;
+    }
+
+    .social-proof-line {
+      font-size: 0.875rem;
+      color: var(--ink-faint);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .social-proof-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--purple-accent);
+      display: inline-block;
+    }
+
+    /* -------------------------------------------------------------
+       3. Como funciona (5 passos horizontais compactos)
+       ------------------------------------------------------------- */
+    #como-funciona {
+      padding: 64px 0 72px;
+      background-color: var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-header {
+      margin-bottom: 28px;
+      max-width: 720px;
+    }
+
+    .section-tag {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--purple-accent);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 2.2rem;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+
+    .section-header p {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--ink-muted);
+      margin-bottom: 0;
+    }
+
+    .section-header-compact {
+      margin-bottom: 32px;
+      max-width: 680px;
+    }
+
+    .steps-horizontal-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      position: relative;
+    }
+
+    .step-card {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .step-card:hover {
+      border-color: rgba(179, 136, 255, 0.45);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    .step-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .step-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(179, 136, 255, 0.15));
+      border: 1px solid var(--purple-accent);
+      color: var(--purple-accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      font-family: var(--font-display);
+      flex-shrink: 0;
+    }
+
+    .step-pill {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      color: var(--ink-faint);
+    }
+
+    .step-card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+
+    .step-card-desc {
+      font-size: 0.875rem;
+      color: var(--ink-muted);
+      line-height: 1.5;
+      margin: 0;
+      flex-grow: 1;
+    }
+
+    .step-example-pill {
+      margin-top: 12px;
+      background-color: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-size: 0.775rem;
+      color: var(--purple-accent);
+      font-style: italic;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 1024px) {
+      .steps-horizontal-grid {
+        display: flex;
+        overflow-x: auto;
+        gap: 14px;
+        padding-bottom: 12px;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .step-card {
+        flex: 0 0 240px;
+        scroll-snap-align: start;
+      }
+
+      .steps-horizontal-grid::-webkit-scrollbar {
+        height: 5px;
+      }
+      .steps-horizontal-grid::-webkit-scrollbar-track {
+        background: var(--surface);
+        border-radius: 3px;
+      }
+      .steps-horizontal-grid::-webkit-scrollbar-thumb {
+        background: var(--line);
+        border-radius: 3px;
+      }
+    }
+
+    /* -------------------------------------------------------------
+       4. Recursos / Feature Gallery (4 cards)
+       ------------------------------------------------------------- */
+    #recursos {
+      padding: 56px 0 64px;
+      background-color: var(--bg-2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    #recursos .section-header {
+      margin-bottom: 24px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .feature-card {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      min-width: 0;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(179, 136, 255, 0.45);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Linha superior de identificação do card (sem sobreposição com títulos) */
+    .feature-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      min-height: 24px;
+    }
+
+    .feature-category-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--ink-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pro-badge {
+      background-color: rgba(224, 178, 85, 0.15);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      letter-spacing: 0.03em;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .feature-info {
+      margin-bottom: 20px;
+    }
+
+    .feature-info h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+
+    .feature-info p {
+      font-size: 0.88rem;
+      color: var(--ink-muted);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    /* Single-line Tech Strip */
+    .tech-strip-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 26px;
+      padding: 8px 18px;
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+      overflow-x: auto;
+      width: fit-content;
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .tech-strip-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tech-strip-items {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: nowrap;
+    }
+
+    .tech-strip-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+      white-space: nowrap;
+    }
+
+    .tech-strip-item svg {
+      color: var(--purple-accent);
+      flex-shrink: 0;
+    }
+
+    .tech-strip-divider {
+      color: var(--line);
+      font-size: 0.75rem;
+    }
+
+    /* Mini visual representations inside feature cards */
+    .feature-preview {
+      background-color: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      font-size: 0.82rem;
+      margin-top: auto;
+    }
+
+    /* Card 1 Preview: Input phrase + macro tags */
+    .preview-input-box {
+      color: var(--ink);
+      font-style: italic;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .preview-macro-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .macro-tag {
+      background-color: var(--bg);
+      border: 1px solid var(--line);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      color: var(--purple-accent);
+      white-space: nowrap;
+      line-height: 1.3;
+    }
+
+    .macro-tag.calories {
+      color: #FFFFFF;
+      background-color: rgba(124, 58, 237, 0.25);
+      border-color: rgba(124, 58, 237, 0.5);
+      font-weight: 600;
+    }
+
+    /* Card 2 Preview: Static Evolution Chart */
+    .static-chart-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .static-chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.74rem;
+    }
+
+    .static-chart-target {
+      color: var(--purple-accent);
+      font-weight: 600;
+    }
+
+    .static-chart-badge {
+      color: #4ADE80;
+      background-color: rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+
+    .static-chart-bars-area {
+      position: relative;
+      height: 68px;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      padding: 16px 6px 4px 6px;
+      background: rgba(15, 12, 27, 0.35);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .static-target-guide {
+      position: absolute;
+      top: 22px;
+      left: 0;
+      right: 0;
+      border-top: 1px dashed rgba(192, 132, 252, 0.3);
+      pointer-events: none;
+    }
+
+    .static-bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .static-bar-pillar {
+      width: 100%;
+      max-width: 12px;
+      background: var(--line);
+      border-radius: 2px 2px 0 0;
+      transition: height 0.3s ease;
+    }
+
+    .static-bar-pillar.active {
+      background: linear-gradient(180deg, #C084FC, #7C3AED);
+      box-shadow: 0 0 6px rgba(168, 85, 247, 0.4);
+    }
+
+    .static-bar-day {
+      font-size: 0.64rem;
+      color: var(--ink-faint);
+    }
+
+    .static-chart-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--ink-muted);
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+
+    /* Card 3 Preview: Chat conversation */
+    .chat-bubble-user {
+      background-color: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 6px 6px 0 6px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
+    .chat-bubble-bot {
+      background-color: rgba(179, 136, 255, 0.12);
+      border: 1px solid rgba(179, 136, 255, 0.3);
+      border-radius: 6px 6px 6px 0;
+      padding: 8px 12px;
+      color: var(--ink);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
+    /* Card 4 Preview: Voice input demonstration */
+    .voice-preview-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .voice-audio-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background-color: var(--bg);
+      border: 1px solid rgba(179, 136, 255, 0.35);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+    }
+
+    .voice-mic-icon-box {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #A855F7, #7C3AED);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+    }
+
+    .voice-waves-container {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 20px;
+      flex-grow: 1;
+    }
+
+    .voice-wave-bar {
+      width: 2.5px;
+      background: var(--purple-accent);
+      border-radius: 2px;
+      height: 6px;
+      animation: wavePulse 1.2s ease-in-out infinite alternate;
+    }
+
+    .voice-wave-bar:nth-child(1) { height: 8px; animation-delay: 0.1s; }
+    .voice-wave-bar:nth-child(2) { height: 14px; animation-delay: 0.25s; }
+    .voice-wave-bar:nth-child(3) { height: 18px; animation-delay: 0.4s; }
+    .voice-wave-bar:nth-child(4) { height: 11px; animation-delay: 0.2s; }
+    .voice-wave-bar:nth-child(5) { height: 15px; animation-delay: 0.35s; }
+
+    @keyframes wavePulse {
+      0% { transform: scaleY(0.4); opacity: 0.5; }
+      100% { transform: scaleY(1.1); opacity: 1; }
+    }
+
+    .voice-tag-rec {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--gold);
+      background: rgba(224, 178, 85, 0.12);
+      border: 1px solid rgba(224, 178, 85, 0.3);
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      letter-spacing: 0.03em;
+    }
+
+    .voice-transcription-box {
+      font-size: 0.78rem;
+      color: var(--ink);
+      background-color: var(--bg);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    .voice-transcription-box strong {
+      font-style: normal;
+      color: var(--purple-accent);
+    }
+
+    /* -------------------------------------------------------------
+       5. Planos (Toggle dinâmico + Cards lado a lado)
+       ------------------------------------------------------------- */
+    #planos {
+      padding: 100px 0;
+      background-color: var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .pricing-header-center {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 48px;
+    }
+
+    /* Toggle de Período */
+    .period-toggle-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+
+    .period-toggle {
+      display: inline-flex;
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      padding: 4px;
+      border-radius: var(--radius-pill);
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 100%;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: var(--ink-muted);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .toggle-btn.active {
+      background-color: var(--surface-2);
+      color: var(--ink);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-discount-badge {
+      font-size: 0.72rem;
+      background-color: rgba(179, 136, 255, 0.2);
+      color: var(--purple-accent);
+      padding: 2px 6px;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+    }
+
+    /* Grid de Planos: Free vs Pro */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 44px 36px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .pricing-card.pro-card {
+      border: 1px solid var(--purple-accent);
+      background: linear-gradient(180deg, #2A1F45 0%, var(--surface) 100%);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+    }
+
+    .most-popular-badge {
+      position: absolute;
+      top: -14px;
+      left: 36px;
+      background-color: var(--purple-accent);
+      color: #0F0C1B;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: var(--radius-pill);
+    }
+
+    .plan-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .plan-name {
+      font-size: 1.75rem;
+      font-weight: 600;
+    }
+
+    .plan-description {
+      font-size: 0.925rem;
+      color: var(--ink-muted);
+      margin-bottom: 28px;
+      min-height: 44px;
+    }
+
+    .price-box {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 20px 0;
+      margin-bottom: 28px;
+    }
+
+    .price-main {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .price-period {
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--ink-faint);
+      font-weight: 400;
+    }
+
+    .price-detail {
+      font-size: 0.85rem;
+      color: var(--purple-accent);
+      margin-top: 4px;
+      font-weight: 500;
+      min-height: 20px;
+    }
+
+    .plan-features-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 36px;
+      flex-grow: 1;
+    }
+
+    .plan-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.95rem;
+      color: var(--ink-muted);
+    }
+
+    .plan-feature-item.included {
+      color: var(--ink);
+    }
+
+    .feature-icon-check {
+      color: var(--purple-accent);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .feature-icon-cross {
+      color: var(--ink-faint);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .card-footer-cta {
+      margin-top: auto;
+    }
+
+    .card-footer-cta .btn {
+      width: 100%;
+      padding: 14px 20px;
+    }
+
+    .pricing-microcopy {
+      max-width: 720px;
+      margin: 40px auto 0;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--ink-faint);
+      line-height: 1.5;
+    }
+
+    /* -------------------------------------------------------------
+       6. Prova Social (Depoimentos + Estatísticas)
+       ------------------------------------------------------------- */
+    #prova-social {
+      padding: 100px 0;
+      background-color: var(--bg-2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 64px;
+    }
+
+    .testimonial-card {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .testimonial-quote {
+      font-size: 0.975rem;
+      color: var(--ink);
+      line-height: 1.6;
+      margin-bottom: 24px;
+      font-style: normal;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    .author-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background-color: var(--surface-2);
+      border: 1.5px solid var(--purple-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--purple-accent);
+      font-size: 0.9rem;
+      overflow: hidden;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .author-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 50%;
+    }
+
+    .author-name {
+      font-size: 0.925rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .author-location {
+      font-size: 0.8rem;
+      color: var(--ink-faint);
+    }
+
+    /* Estatísticas em destaque */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 40px 0;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 0 20px;
+      border-right: 1px solid var(--line);
+    }
+
+    .stat-item:last-child {
+      border-right: none;
+    }
+
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: 2.75rem;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      max-width: 220px;
+      margin: 0 auto;
+    }
+
+    /* -------------------------------------------------------------
+       6.5 Telas do Aplicativo (Por dentro do app)
+       ------------------------------------------------------------- */
+    #telas-app {
+      padding: 72px 0 80px;
+      background-color: var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .app-screens-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+
+    .screen-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--ink-muted);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .screen-tab-btn:hover {
+      color: var(--ink);
+      border-color: var(--purple-accent);
+      background-color: var(--surface-2);
+    }
+
+    .screen-tab-btn.active {
+      color: #FFFFFF;
+      background-color: var(--purple-cta);
+      border-color: var(--purple-accent);
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+    }
+
+    .screen-tab-btn svg {
+      flex-shrink: 0;
+    }
+
+    .screens-showcase-wrapper {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .screen-tab-pane {
+      display: none;
+    }
+
+    .screen-tab-pane.active {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 36px;
+      align-items: center;
+      animation: fadeInScreen 0.3s ease;
+    }
+
+    @keyframes fadeInScreen {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Device frame mockup */
+    .app-device-frame {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+    }
+
+    .app-device-header {
+      background-color: var(--surface-2);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .app-device-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .app-device-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--line);
+    }
+
+    .app-device-dot:nth-child(1) { background-color: #EF4444; }
+    .app-device-dot:nth-child(2) { background-color: #F59E0B; }
+    .app-device-dot:nth-child(3) { background-color: #10B981; }
+
+    .app-device-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ink-faint);
+    }
+
+    .app-device-badge {
+      font-size: 0.7rem;
+      color: var(--purple-accent);
+      background-color: rgba(179, 136, 255, 0.12);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      font-weight: 600;
+    }
+
+    .app-device-body {
+      padding: 22px;
+      background-color: var(--bg);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Tela 1: Painel do Dia */
+    .dash-summary-card {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 18px;
+    }
+
+    .dash-summary-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .dash-cal-total {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .dash-cal-target {
+      font-size: 0.85rem;
+      color: var(--ink-faint);
+    }
+
+    .dash-cal-remaining {
+      font-size: 0.8rem;
+      color: var(--purple-accent);
+      font-weight: 600;
+      background-color: rgba(124, 58, 237, 0.18);
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+    }
+
+    .dash-progress-track {
+      height: 8px;
+      background-color: var(--surface-2);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .dash-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #A855F7, #C084FC);
+      border-radius: var(--radius-pill);
+    }
+
+    .dash-macros-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .dash-macro-box {
+      background-color: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      text-align: center;
+    }
+
+    .dash-macro-label {
+      font-size: 0.72rem;
+      color: var(--ink-faint);
+      margin-bottom: 4px;
+    }
+
+    .dash-macro-val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .dash-meals-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dash-meal-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+
+    .dash-meal-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dash-meal-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background-color: rgba(124, 58, 237, 0.15);
+      color: var(--purple-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .dash-meal-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 2px;
+    }
+
+    .dash-meal-desc {
+      font-size: 0.76rem;
+      color: var(--ink-muted);
+    }
+
+    .dash-meal-cals {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--purple-accent);
+      white-space: nowrap;
+    }
+
+    /* Tela 2: Registro por Voz & IA */
+    .input-flow-mockup {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .input-speech-card {
+      background-color: var(--surface);
+      border: 1px solid var(--purple-accent);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .speech-badge-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .speech-badge-active {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #EF4444;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background-color: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #EF4444;
+      animation: pulseAnim 1s infinite alternate;
+    }
+
+    @keyframes pulseAnim {
+      0% { opacity: 0.4; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .speech-text-transcript {
+      font-size: 0.92rem;
+      color: var(--ink);
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    .speech-decomposition-table {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .decomp-header {
+      background-color: var(--surface-2);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--ink-faint);
+    }
+
+    .decomp-items {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .decomp-row {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.82rem;
+    }
+
+    .decomp-row:last-child {
+      border-bottom: none;
+    }
+
+    .decomp-food-name {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .decomp-food-macros {
+      color: var(--ink-muted);
+      font-size: 0.78rem;
+    }
+
+    .decomp-total-bar {
+      background-color: rgba(124, 58, 237, 0.15);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(124, 58, 237, 0.3);
+    }
+
+    .decomp-total-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--purple-accent);
+    }
+
+    .decomp-total-macros {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    /* Tela 3: Chat IA com Memória */
+    .chat-app-mockup {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .chat-app-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chat-msg-user {
+      align-self: flex-end;
+      max-width: 85%;
+      background-color: var(--purple-cta);
+      color: #FFFFFF;
+      padding: 12px 16px;
+      border-radius: 14px 14px 2px 14px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .chat-msg-assistant {
+      align-self: flex-start;
+      max-width: 90%;
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      padding: 14px 16px;
+      border-radius: 14px 14px 14px 2px;
+      font-size: 0.85rem;
+      line-height: 1.55;
+    }
+
+    .chat-msg-assistant strong {
+      color: var(--purple-accent);
+    }
+
+    .chat-suggestions-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .chat-chip-btn {
+      background-color: var(--surface-2);
+      border: 1px solid rgba(179, 136, 255, 0.3);
+      color: var(--purple-accent);
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.76rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Tela 4: Evolução Semanal */
+    .evol-app-mockup {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .evol-stats-banner {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(30, 24, 53, 0.9));
+      border: 1px solid rgba(124, 58, 237, 0.35);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .evol-banner-title {
+      font-size: 0.8rem;
+      color: var(--ink-faint);
+      margin-bottom: 4px;
+    }
+
+    .evol-banner-val {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .evol-badge-success {
+      background-color: rgba(74, 222, 128, 0.15);
+      border: 1px solid rgba(74, 222, 128, 0.35);
+      color: #4ADE80;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+    }
+
+    .evol-chart-card {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 18px;
+    }
+
+    .evol-chart-headline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .evol-bars-container {
+      position: relative;
+      height: 120px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      padding: 20px 8px 4px 8px;
+      background: rgba(15, 12, 27, 0.4);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      margin-bottom: 12px;
+    }
+
+    .evol-target-line {
+      position: absolute;
+      top: 36px;
+      left: 0;
+      right: 0;
+      border-top: 1px dashed rgba(192, 132, 252, 0.4);
+    }
+
+    .evol-bar-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .evol-bar-fill {
+      width: 100%;
+      max-width: 22px;
+      border-radius: 4px 4px 0 0;
+      background: linear-gradient(180deg, #C084FC, #7C3AED);
+    }
+
+    .evol-bar-fill.target-ok {
+      background: linear-gradient(180deg, #C084FC, #7C3AED);
+      box-shadow: 0 0 8px rgba(168, 85, 247, 0.35);
+    }
+
+    .evol-bar-label {
+      font-size: 0.72rem;
+      color: var(--ink-faint);
+    }
+
+    .evol-chart-legend {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+    }
+
+    /* Lateral info card */
+    .screen-details-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .screen-details-tag {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+    }
+
+    .screen-details-title {
+      font-size: 1.7rem;
+      line-height: 1.3;
+      color: var(--ink);
+    }
+
+    .screen-details-desc {
+      font-size: 0.95rem;
+      color: var(--ink-muted);
+      line-height: 1.65;
+    }
+
+    .screen-feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 4px;
+    }
+
+    .screen-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .screen-feature-icon {
+      color: var(--purple-accent);
+      background-color: rgba(124, 58, 237, 0.18);
+      border: 1px solid rgba(124, 58, 237, 0.35);
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* -------------------------------------------------------------
+       7. FAQ (details / summary nativo + botão ver mais)
+       ------------------------------------------------------------- */
+    #faq {
+      padding: 100px 0;
+      background-color: var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .faq-container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    details.faq-item {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+
+    details.faq-item[open] {
+      border-color: rgba(179, 136, 255, 0.4);
+    }
+
+    summary.faq-question {
+      padding: 22px 26px;
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      list-style: none;
+      user-select: none;
+    }
+
+    summary.faq-question::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-icon-chevron {
+      color: var(--ink-faint);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+
+    details[open] .faq-icon-chevron {
+      transform: rotate(180deg);
+      color: var(--purple-accent);
+    }
+
+    .faq-answer {
+      padding: 0 26px 24px;
+      color: var(--ink-muted);
+      font-size: 0.975rem;
+      line-height: 1.6;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+    }
+
+    .faq-secondary-group {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-secondary-group.revealed {
+      display: flex;
+    }
+
+    .faq-more-btn-wrapper {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    /* -------------------------------------------------------------
+       8. Bloco CTA Final
+       ------------------------------------------------------------- */
+    #cta-final {
+      padding: 90px 0;
+      background-color: var(--bg-2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cta-card {
+      background-color: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 64px 40px;
+      text-align: center;
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .cta-title {
+      font-size: clamp(2rem, 3.5vw, 2.75rem);
+      letter-spacing: -0.015em;
+    }
+
+    .cta-subtitle {
+      font-size: 1.1rem;
+      color: var(--ink-muted);
+      max-width: 580px;
+    }
+
+    .cta-btn-large {
+      margin-top: 10px;
+      padding: 16px 36px;
+      font-size: 1.0625rem;
+    }
+
+    /* -------------------------------------------------------------
+       9. Footer
+       ------------------------------------------------------------- */
+    #site-footer {
+      background-color: var(--bg);
+      padding: 64px 0 32px;
+      border-top: 1px solid var(--line);
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 360px;
+    }
+
+    .footer-logo {
+      height: 44px;
+      width: auto;
+      max-width: 200px;
+      object-fit: contain;
+      align-self: flex-start;
+      display: block;
+    }
+
+    .footer-brand-desc {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+
+    .footer-col-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 16px;
+      text-transform: none;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-link {
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      transition: color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .footer-link:hover {
+      color: var(--ink);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--line);
+      padding-top: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .health-disclaimer {
+      font-size: 0.8125rem;
+      color: var(--ink-faint);
+      line-height: 1.5;
+    }
+
+    .copyright {
+      font-size: 0.8125rem;
+      color: var(--ink-faint);
+    }
+
+    /* Modal / Feedback Toast de apoio a links placeholders */
+    .site-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: var(--surface-2);
+      border: 1px solid var(--purple-accent);
+      color: var(--ink);
+      padding: 14px 22px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 100;
+      font-size: 0.9rem;
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .site-toast.show {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* -------------------------------------------------------------
+       Responsividade (Mobile & Tablet)
+       ------------------------------------------------------------- */
+    @media (max-width: 1080px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .screen-tab-pane.active {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .header-nav {
+        display: none;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+
+      .header-actions .btn {
+        display: none;
+      }
+
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+      }
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .testimonials-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .stats-strip {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 32px 0;
+      }
+
+      .stat-item {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 24px;
+      }
+
+      .stat-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      .footer-top {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .period-toggle {
+        gap: 6px;
+        width: 100%;
+        border-radius: var(--radius-md);
+        padding: 6px;
+      }
+
+      .toggle-btn {
+        flex: 1 1 calc(50% - 6px);
+        justify-content: center;
+        padding: 8px 6px;
+        font-size: 0.8rem;
+      }
+
+      .pricing-card {
+        padding: 32px 20px;
+      }
+
+      .cta-card {
+        padding: 40px 20px;
+      }
+
+      .header-logo {
+        height: 38px;
+        max-width: 160px;
+      }
+
+      .footer-logo {
+        height: 40px;
+        max-width: 170px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       1. HEADER (Fixo com leve blur, ícone isolado, menu e outline)
+       ============================================================ -->
+  <header id="site-header">
+    <div class="container header-content">
+      <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="header-brand" aria-label="NutriiBase Página Inicial">
+        <img 
+          src="Logo%20Branca%20SF.png" 
+          alt="NutriiBase" 
+          class="header-logo"
+          onerror="this.src='logo-nutriibase.png';"
+        />
+        <span id="header-brand-name" class="header-brand-fallback">NutriiBase</span>
+      </a>
+
+      <!-- Desktop Nav -->
+      <nav class="header-nav" aria-label="Navegação principal">
+        <a href="#como-funciona" class="nav-link">Como funciona</a>
+        <a href="#recursos" class="nav-link">Recursos</a>
+        <a href="#telas-app" class="nav-link">Por dentro</a>
+        <a href="#planos" class="nav-link">Planos</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </nav>
+
+      <!-- Desktop Actions -->
+      <div class="header-actions">
+        <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="desktop-ja-sou-cliente">
+          Já sou cliente
+        </a>
+        <button class="menu-toggle" id="menu-toggle-btn" aria-label="Abrir menu mobile" aria-expanded="false">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-menu-drawer" id="mobile-menu">
+      <a href="#como-funciona" class="nav-link mobile-link">Como funciona</a>
+      <a href="#recursos" class="nav-link mobile-link">Recursos</a>
+      <a href="#telas-app" class="nav-link mobile-link">Por dentro</a>
+      <a href="#planos" class="nav-link mobile-link">Planos</a>
+      <a href="#faq" class="nav-link mobile-link">FAQ</a>
+      <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="mobile-ja-sou-cliente">
+        Já sou cliente
+      </a>
+      <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary mobile-link">Começar agora, é grátis</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============================================================
+         2. HERO (Banner background, gradiente escuro, conteúdo central)
+         ============================================================ -->
+    <section id="hero" aria-label="Apresentação do NutriiBase">
+      <div class="container hero-container">
+        <div class="eyebrow">Alimentação com inteligência artificial</div>
+        
+        <h1 class="hero-title">
+          Controle o que você come só descrevendo o seu prato
+        </h1>
+
+        <p class="hero-subtitle">
+          Esqueça a busca manual em tabelas infinitas. Descreva sua refeição em uma frase e a inteligência artificial estima calorias e macronutrientes na hora.
+        </p>
+
+        <div class="hero-cta-wrapper">
+          <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary hero-cta-btn">
+            Começar agora, é grátis
+          </a>
+          
+          <div class="social-proof-line">
+            <span class="social-proof-dot"></span>
+            Milhares de refeições já registradas com a ajuda da nossa IA
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         3. COMO FUNCIONA (5 passos horizontais compactos)
+         ============================================================ -->
+    <section id="como-funciona" aria-label="Como funciona o NutriiBase">
+      <div class="container">
+        <div class="section-header section-header-compact">
+          <span class="section-tag">Passo a passo simples</span>
+          <h2 class="section-title">Como funciona na prática</h2>
+          <p>Cinco etapas diretas para você registrar suas refeições e bater suas metas sem burocracia alimentar.</p>
+        </div>
+
+        <div class="steps-horizontal-grid">
+          <!-- Passo 1 -->
+          <div class="step-card" id="passo-1">
+            <div class="step-card-top">
+              <div class="step-badge">1</div>
+              <span class="step-pill">Entrada</span>
+            </div>
+            <h3 class="step-card-title">Descreva a refeição</h3>
+            <p class="step-card-desc">Escreva ou fale em uma frase comum, sem pesar na balança ou caçar códigos.</p>
+            <div class="step-example-pill">"2 ovos, pão e café"</div>
+          </div>
+
+          <!-- Passo 2 -->
+          <div class="step-card" id="passo-2">
+            <div class="step-card-top">
+              <div class="step-badge">2</div>
+              <span class="step-pill">Cálculo</span>
+            </div>
+            <h3 class="step-card-title">A IA calcula na hora</h3>
+            <p class="step-card-desc">O modelo decompõe os itens e estima calorias, carboidratos, proteínas e gorduras.</p>
+          </div>
+
+          <!-- Passo 3 -->
+          <div class="step-card" id="passo-3">
+            <div class="step-card-top">
+              <div class="step-badge">3</div>
+              <span class="step-pill">Ajuste</span>
+            </div>
+            <h3 class="step-card-title">Ajuste se quiser</h3>
+            <p class="step-card-desc">Comeu mais ou trocou um item? Refine quantidades com um toque antes de salvar.</p>
+          </div>
+
+          <!-- Passo 4 -->
+          <div class="step-card" id="passo-4">
+            <div class="step-card-top">
+              <div class="step-badge">4</div>
+              <span class="step-pill">Metas</span>
+            </div>
+            <h3 class="step-card-title">Acompanhe metas</h3>
+            <p class="step-card-desc">Totais atualizados no painel limpo: veja na hora o que resta de calorias e proteínas.</p>
+          </div>
+
+          <!-- Passo 5 -->
+          <div class="step-card" id="passo-5">
+            <div class="step-card-top">
+              <div class="step-badge">5</div>
+              <span class="step-pill">Evolução</span>
+            </div>
+            <h3 class="step-card-title">Ganhe constância</h3>
+            <p class="step-card-desc">Histórico semanal e orientações no chat para manter suas decisões em equilíbrio.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         4. RECURSOS / FEATURE GALLERY (3 cards)
+         ============================================================ -->
+    <section id="recursos" aria-label="Tecnologias e recursos principais do NutriiBase">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Tecnologias do sistema</span>
+          <h2 class="section-title">Construído para facilitar seu dia</h2>
+          <p>Chega de perder 10 minutos procurando a marca exata do queijo ou desistindo do app na segunda semana.</p>
+        </div>
+
+        <!-- Barra única com as tecnologias do sistema em uma linha só -->
+        <div class="tech-strip-container">
+          <div class="tech-strip-label">Tecnologias:</div>
+          <div class="tech-strip-items">
+            <span class="tech-strip-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              IA Generativa
+            </span>
+            <span class="tech-strip-divider">•</span>
+            <span class="tech-strip-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+              Reconhecimento de Voz
+            </span>
+            <span class="tech-strip-divider">•</span>
+            <span class="tech-strip-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              Tabelas TACO &amp; IBGE
+            </span>
+            <span class="tech-strip-divider">•</span>
+            <span class="tech-strip-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              Criptografia &amp; LGPD
+            </span>
+            <span class="tech-strip-divider">•</span>
+            <span class="tech-strip-item">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+              Infraestrutura em Nuvem
+            </span>
+          </div>
+        </div>
+
+        <div class="features-grid">
+          <!-- Card 1: IA que entende descrição -->
+          <div class="feature-card" id="card-feature-ia">
+            <div class="feature-top-row">
+              <span class="feature-category-tag">Linguagem natural</span>
+            </div>
+            <div class="feature-info">
+              <h3>IA no Reconhecimento</h3>
+              <p>Compreende pratos brasileiros, marmitas e receitas caseiras sem rodeios.</p>
+            </div>
+            <div class="feature-preview">
+              <div class="preview-input-box">
+                "Prato feito com arroz, feijão, frango e salada"
+              </div>
+              <div class="preview-macro-row">
+                <span class="macro-tag calories">620 kcal</span>
+                <span class="macro-tag">44g prot</span>
+                <span class="macro-tag">56g carb</span>
+                <span class="macro-tag">18g gord</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Gráficos de evolução (Estático / Apenas informativo) -->
+          <div class="feature-card" id="card-feature-evolucao">
+            <div class="feature-top-row">
+              <span class="feature-category-tag">Constância</span>
+            </div>
+            <div class="feature-info">
+              <h3>Gráficos de Evolução</h3>
+              <p>Histórico visual de calorias e macronutrientes para acompanhar sua constância diária.</p>
+            </div>
+            <div class="feature-preview">
+              <div class="static-chart-wrapper">
+                <div class="static-chart-header">
+                  <span class="static-chart-target">Meta: 2.000 kcal</span>
+                  <span class="static-chart-badge">Ativo</span>
+                </div>
+                <div class="static-chart-bars-area" aria-label="Amostra estática do gráfico de evolução">
+                  <div class="static-target-guide" aria-hidden="true"></div>
+                  <div class="static-bar-item">
+                    <div class="static-bar-pillar" style="height: 60%;"></div>
+                    <span class="static-bar-day">S</span>
+                  </div>
+                  <div class="static-bar-item">
+                    <div class="static-bar-pillar" style="height: 75%;"></div>
+                    <span class="static-bar-day">T</span>
+                  </div>
+                  <div class="static-bar-item">
+                    <div class="static-bar-pillar active" style="height: 90%;"></div>
+                    <span class="static-bar-day">Q</span>
+                  </div>
+                  <div class="static-bar-item">
+                    <div class="static-bar-pillar active" style="height: 85%;"></div>
+                    <span class="static-bar-day">Q</span>
+                  </div>
+                  <div class="static-bar-item">
+                    <div class="static-bar-pillar active" style="height: 95%;"></div>
+                    <span class="static-bar-day">S</span>
+                  </div>
+                  <div class="static-bar-item">
+                    <div class="static-bar-pillar" style="height: 70%;"></div>
+                    <span class="static-bar-day">S</span>
+                  </div>
+                  <div class="static-bar-item">
+                    <div class="static-bar-pillar active" style="height: 88%;"></div>
+                    <span class="static-bar-day">D</span>
+                  </div>
+                </div>
+                <div class="static-chart-footer">
+                  <span>Acompanhamento diário</span>
+                  <span style="color:var(--purple-accent); font-weight:600;">Disponível</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Chat de IA personalizado (Pro) -->
+          <div class="feature-card" id="card-feature-chat">
+            <div class="feature-top-row">
+              <span class="feature-category-tag">Assistente</span>
+              <span class="pro-badge">Exclusivo Pro</span>
+            </div>
+            <div class="feature-info">
+              <h3>Chat Nutricional IA</h3>
+              <p>Assistente que lembra do que você já comeu e sugere ajustes para suas metas.</p>
+            </div>
+            <div class="feature-preview">
+              <div class="chat-bubble-user">
+                "Faltam 30g de proteína hoje. O que comer?"
+              </div>
+              <div class="chat-bubble-bot">
+                "160g de iogurte grego ou 4 claras mexidas (~210 kcal)."
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Adicionar alimentação por voz (Pro) -->
+          <div class="feature-card" id="card-feature-voz">
+            <div class="feature-top-row">
+              <span class="feature-category-tag">Agilidade</span>
+              <span class="pro-badge">Exclusivo Pro</span>
+            </div>
+            <div class="feature-info">
+              <h3>Alimentação por Voz</h3>
+              <p>Dite sua refeição naturalmente enquanto come. A IA transcreve e calcula na hora.</p>
+            </div>
+            <div class="feature-preview">
+              <div class="voice-preview-wrapper">
+                <div class="voice-audio-status">
+                  <div class="voice-mic-icon-box" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                      <line x1="12" y1="19" x2="12" y2="22"></line>
+                    </svg>
+                  </div>
+                  <div class="voice-waves-container" aria-label="Ouvindo áudio">
+                    <span class="voice-wave-bar"></span>
+                    <span class="voice-wave-bar"></span>
+                    <span class="voice-wave-bar"></span>
+                    <span class="voice-wave-bar"></span>
+                    <span class="voice-wave-bar"></span>
+                  </div>
+                  <span class="voice-tag-rec">Gravando</span>
+                </div>
+                <div class="voice-transcription-box">
+                  "2 fatias de pão com ovos mexidos e café" &rarr; <strong>290 kcal</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         5. PLANOS (Toggle dinâmico: Mensal / Trimestral / Semestral)
+         ============================================================ -->
+    <section id="planos" aria-label="Planos e preços do NutriiBase">
+      <div class="container">
+        <div class="pricing-header-center">
+          <span class="section-tag">Preços claros e sem surpresas</span>
+          <h2 class="section-title">Escolha como quer cuidar de você</h2>
+          <p>Comece grátis ou experimente o plano Pro com 5 dias livres para testar tudo.</p>
+        </div>
+
+        <!-- Seletor de Período -->
+        <div class="period-toggle-wrapper">
+          <div class="period-toggle" role="group" aria-label="Selecionar período do plano Pro">
+            <button type="button" class="toggle-btn" data-period="mensal" id="btn-period-mensal">
+              Mensal
+            </button>
+            <button type="button" class="toggle-btn" data-period="trimestral" id="btn-period-trimestral">
+              Trimestral
+              <span class="toggle-discount-badge">5% off</span>
+            </button>
+            <button type="button" class="toggle-btn" data-period="semestral" id="btn-period-semestral">
+              Semestral
+              <span class="toggle-discount-badge">10% off</span>
+            </button>
+            <button type="button" class="toggle-btn active" data-period="anual" id="btn-period-anual">
+              Anual
+              <span class="toggle-discount-badge">15% off</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid Free vs Pro -->
+        <div class="pricing-grid">
+          <!-- Card Free (Estático) -->
+          <div class="pricing-card">
+            <div class="plan-title-row">
+              <h3 class="plan-name">Free</h3>
+            </div>
+            <p class="plan-description">
+              O essencial para quem quer experimentar a IA e registrar as refeições principais do dia.
+            </p>
+
+            <div class="price-box">
+              <div class="price-main">
+                R$ 0
+                <span class="price-period">/mês</span>
+              </div>
+              <div class="price-detail">Para sempre gratuito</div>
+            </div>
+
+            <ul class="plan-features-list">
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>5 registros de refeições por dia</span>
+              </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>1 edição por refeição</span>
+              </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>3 estimativas por IA por dia</span>
+              </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Histórico dos últimos 7 dias</span>
+              </li>
+              <li class="plan-feature-item">
+                <svg class="feature-icon-cross" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span style="color:var(--ink-faint);">Chat de IA personalizado</span>
+              </li>
+              <li class="plan-feature-item">
+                <svg class="feature-icon-cross" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span style="color:var(--ink-faint);">Adicionar refeição por voz</span>
+              </li>
+              <li class="plan-feature-item">
+                <svg class="feature-icon-cross" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span style="color:var(--ink-faint);">Metas personalizadas e PDF</span>
+              </li>
+            </ul>
+
+            <div class="card-footer-cta">
+              <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btn-signup-free">
+                Criar conta gratuita
+              </a>
+            </div>
+          </div>
+
+          <!-- Card Pro (Dinâmico com o seletor) -->
+          <div class="pricing-card pro-card">
+            <span class="most-popular-badge">Mais popular</span>
+
+            <div class="plan-title-row">
+              <h3 class="plan-name">Pro</h3>
+            </div>
+            <p class="plan-description">
+              Liberdade total: IA ilimitada, chat inteligente com seu histórico e relatórios completos.
+            </p>
+
+            <div class="price-box">
+              <div class="price-main" id="pro-price-display">
+                R$ 16,91
+                <span class="price-period">/mês</span>
+              </div>
+              <div class="price-detail" id="pro-billing-detail">
+                R$ 202,98 cobrados anualmente (15% de desconto do preço mensal)
+              </div>
+            </div>
+
+            <ul class="plan-features-list">
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <strong>Registro de refeições ilimitado</strong>
+              </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <strong>Edições de refeição ilimitadas</strong>
+              </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <strong>Estimativas por IA ilimitadas</strong>
+              </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <strong>Chat de IA personalizado com histórico</strong>
+              </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <strong>Adicionar refeição por voz com IA</strong>
+              </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Histórico e gráficos completos</span>
+              </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Metas personalizadas e exportação em PDF</span>
+              </li>
+            </ul>
+
+            <div class="card-footer-cta">
+              <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="btn-pro-checkout">
+                Começar 5 dias grátis
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <p class="pricing-microcopy">
+          O cartão de crédito é cadastrado no início e a cobrança acontece automaticamente ao fim do período de 5 dias. Você pode cancelar a qualquer momento antes do término sem nenhuma cobrança.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         6. PROVA SOCIAL (3 depoimentos + 3 estatísticas em destaque)
+         ============================================================ -->
+    <section id="prova-social" aria-label="Depoimentos e estatísticas de uso">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Resultados reais</span>
+          <h2 class="section-title">Quem usa, não volta para as tabelas antigas</h2>
+          <p>O que as pessoas dizem sobre a facilidade de controlar a alimentação com linguagem natural.</p>
+        </div>
+
+        <!-- 3 Depoimentos -->
+        <div class="testimonials-grid">
+          <div class="testimonial-card">
+            <p class="testimonial-quote">
+              "Eu sempre abandonava aplicativos de calorias na segunda semana porque dava preguiça de achar o alimento exato. No NutriiBase eu só escrevo o que comi e sigo o dia."
+            </p>
+            <div class="testimonial-author">
+              <div class="author-avatar">
+                <img 
+                  src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&h=150&q=85" 
+                  alt="Foto de perfil de Marina Silveira" 
+                  loading="lazy" 
+                  referrerpolicy="no-referrer"
+                  onerror="this.style.display='none'; this.parentElement.innerText='MS';"
+                />
+              </div>
+              <div>
+                <div class="author-name">Marina Silveira</div>
+                <div class="author-location">São Paulo, SP</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card">
+            <p class="testimonial-quote">
+              "A inteligência artificial entende o que o brasileiro come de verdade. Marmita, prato feito, lanche na rua. Ficou muito mais tranquilo manter a constância na dieta."
+            </p>
+            <div class="testimonial-author">
+              <div class="author-avatar">
+                <img 
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80" 
+                  alt="Foto de perfil de Carlos Eduardo" 
+                  loading="lazy" 
+                  referrerpolicy="no-referrer"
+                  onerror="this.style.display='none'; this.parentElement.innerText='CE';"
+                />
+              </div>
+              <div>
+                <div class="author-name">Carlos Eduardo</div>
+                <div class="author-location">Curitiba, PR</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-card">
+            <p class="testimonial-quote">
+              "O chat que lembra do que comi no dia é um diferencial enorme. Quando falta proteína à noite, pergunto o que comer rápido e ele resolve na hora."
+            </p>
+            <div class="testimonial-author">
+              <div class="author-avatar">
+                <img 
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&h=120&q=80" 
+                  alt="Foto de perfil de Juliana Mendes" 
+                  loading="lazy" 
+                  referrerpolicy="no-referrer"
+                  onerror="this.style.display='none'; this.parentElement.innerText='JM';"
+                />
+              </div>
+              <div>
+                <div class="author-name">Juliana Mendes</div>
+                <div class="author-location">Belo Horizonte, MG</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Estatísticas em destaque -->
+        <div class="stats-strip">
+          <div class="stat-item">
+            <div class="stat-number">30s</div>
+            <div class="stat-label">Tempo médio para descrever e registrar qualquer refeição</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">100%</div>
+            <div class="stat-label">No navegador e no celular, sem downloads pesados</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">5 dias</div>
+            <div class="stat-label">De teste gratuito para você comprovar a facilidade na rotina</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         6.5 TELAS DO APLICATIVO (Por dentro do app)
+         ============================================================ -->
+    <section id="telas-app" aria-label="Por dentro do aplicativo NutriiBase">
+      <div class="container">
+        <div class="section-header" style="text-align: center; margin: 0 auto 32px;">
+          <span class="section-tag">Por dentro do app</span>
+          <h2 class="section-title">Conheça a interface do NutriiBase</h2>
+          <p>Desenhado para ser rápido, limpo e direto ao ponto. Veja como o app funciona na prática.</p>
+        </div>
+
+        <!-- Seletor de abas interativas -->
+        <div class="app-screens-nav" role="tablist" aria-label="Navegar pelas telas do app">
+          <button type="button" class="screen-tab-btn active" role="tab" aria-selected="true" aria-controls="pane-painel" id="tab-btn-painel" data-screen="painel">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>
+            Painel do Dia
+          </button>
+          <button type="button" class="screen-tab-btn" role="tab" aria-selected="false" aria-controls="pane-registro" id="tab-btn-registro" data-screen="registro">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+            Registro por Voz &amp; IA
+          </button>
+          <button type="button" class="screen-tab-btn" role="tab" aria-selected="false" aria-controls="pane-chat" id="tab-btn-chat" data-screen="chat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"></path></svg>
+            Chat Nutricional IA
+          </button>
+          <button type="button" class="screen-tab-btn" role="tab" aria-selected="false" aria-controls="pane-evolucao" id="tab-btn-evolucao" data-screen="evolucao">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+            Evolução Semanal
+          </button>
+        </div>
+
+        <div class="screens-showcase-wrapper">
+          <!-- Tela 1: Painel do Dia -->
+          <div class="screen-tab-pane active" id="pane-painel" role="tabpanel" aria-labelledby="tab-btn-painel">
+            <div class="app-device-frame">
+              <div class="app-device-header">
+                <div class="app-device-dots">
+                  <span class="app-device-dot"></span>
+                  <span class="app-device-dot"></span>
+                  <span class="app-device-dot"></span>
+                </div>
+                <span class="app-device-title">NutriiBase Web • Segunda-feira, 14 Set</span>
+                <span class="app-device-badge">Ao vivo</span>
+              </div>
+              <div class="app-device-body">
+                <!-- Resumo diário -->
+                <div class="dash-summary-card">
+                  <div class="dash-summary-header">
+                    <div>
+                      <div class="dash-cal-total">1.480 <span style="font-size: 1rem; font-weight: normal; color: var(--ink-faint);">/ 2.000 kcal</span></div>
+                      <div class="dash-cal-target">Meta diária recomendada</div>
+                    </div>
+                    <span class="dash-cal-remaining">Restam 520 kcal</span>
+                  </div>
+                  <div class="dash-progress-track" aria-label="74% da meta calórica atingida">
+                    <div class="dash-progress-fill" style="width: 74%;"></div>
+                  </div>
+                  <div class="dash-macros-grid">
+                    <div class="dash-macro-box">
+                      <div class="dash-macro-label">Proteínas</div>
+                      <div class="dash-macro-val" style="color: #C084FC;">118g <span style="font-size:0.75rem; color:var(--ink-faint); font-weight:normal;">/140g</span></div>
+                    </div>
+                    <div class="dash-macro-box">
+                      <div class="dash-macro-label">Carboidratos</div>
+                      <div class="dash-macro-val" style="color: #60A5FA;">145g <span style="font-size:0.75rem; color:var(--ink-faint); font-weight:normal;">/190g</span></div>
+                    </div>
+                    <div class="dash-macro-box">
+                      <div class="dash-macro-label">Gorduras</div>
+                      <div class="dash-macro-val" style="color: #FBBF24;">42g <span style="font-size:0.75rem; color:var(--ink-faint); font-weight:normal;">/60g</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Refeições recentes do dia -->
+                <div class="dash-meals-list">
+                  <div class="dash-meal-item">
+                    <div class="dash-meal-left">
+                      <div class="dash-meal-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+                      </div>
+                      <div>
+                        <div class="dash-meal-name">Café da Manhã • 07:45</div>
+                        <div class="dash-meal-desc">2 fatias de pão integral com 2 ovos mexidos e café sem açúcar</div>
+                      </div>
+                    </div>
+                    <div class="dash-meal-cals">340 kcal</div>
+                  </div>
+
+                  <div class="dash-meal-item">
+                    <div class="dash-meal-left">
+                      <div class="dash-meal-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                      </div>
+                      <div>
+                        <div class="dash-meal-name">Almoço • 12:30</div>
+                        <div class="dash-meal-desc">Arroz integral, feijão preto, filé de frango grelhado e vinagrete</div>
+                      </div>
+                    </div>
+                    <div class="dash-meal-cals">620 kcal</div>
+                  </div>
+
+                  <div class="dash-meal-item">
+                    <div class="dash-meal-left">
+                      <div class="dash-meal-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                      </div>
+                      <div>
+                        <div class="dash-meal-name">Lanche da Tarde • 16:15</div>
+                        <div class="dash-meal-desc">1 pote de iogurte grego natural desnatado com castanhas</div>
+                      </div>
+                    </div>
+                    <div class="dash-meal-cals">210 kcal</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detalhes da tela -->
+            <div class="screen-details-card">
+              <span class="screen-details-tag">Visão Geral do Dia</span>
+              <h3 class="screen-details-title">Tudo o que importa sem poluição visual</h3>
+              <p class="screen-details-desc">
+                Abra o app e veja instantaneamente como está seu consumo no dia. Sem anúncios, sem pop-ups incômodos e sem telas intermediárias lentas.
+              </p>
+              <ul class="screen-feature-list">
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Progresso em tempo real:</strong> saiba na hora quantas calorias e gramas de proteína ainda faltam para o seu objetivo.</span>
+                </li>
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Divisão por refeições:</strong> histórico organizado com horários e detalhamento individual dos pratos.</span>
+                </li>
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Disponível onde você estiver:</strong> funciona perfeitamente no celular ou computador sem downloads pesados.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Tela 2: Registro por Voz & IA -->
+          <div class="screen-tab-pane" id="pane-registro" role="tabpanel" aria-labelledby="tab-btn-registro">
+            <div class="app-device-frame">
+              <div class="app-device-header">
+                <div class="app-device-dots">
+                  <span class="app-device-dot"></span>
+                  <span class="app-device-dot"></span>
+                  <span class="app-device-dot"></span>
+                </div>
+                <span class="app-device-title">Registro com IA • Entrada por Linguagem Natural</span>
+                <span class="app-device-badge">IA Ativa</span>
+              </div>
+              <div class="app-device-body">
+                <div class="input-flow-mockup">
+                  <!-- Caixa de áudio e fala -->
+                  <div class="input-speech-card">
+                    <div class="speech-badge-row">
+                      <span class="speech-badge-active">
+                        <span class="pulse-dot"></span>
+                        Áudio gravado &bull; 0:04s
+                      </span>
+                      <span style="font-size:0.75rem; color:var(--ink-faint);">Transcrição instantânea</span>
+                    </div>
+                    <div class="speech-text-transcript">
+                      "Comi uma marmita com 4 colheres de arroz, 1 concha de feijão carioca, filé de sobrecoxa grelhado sem pele e vinagrete."
+                    </div>
+                  </div>
+
+                  <!-- Tabela de decomposição TACO / IBGE -->
+                  <div class="speech-decomposition-table">
+                    <div class="decomp-header">
+                      <span>ALIMENTO IDENTIFICADO</span>
+                      <span>MACROS (TACO/IBGE)</span>
+                    </div>
+                    <div class="decomp-items">
+                      <div class="decomp-row">
+                        <span class="decomp-food-name">Arroz branco cozido (~140g)</span>
+                        <span class="decomp-food-macros">180 kcal &bull; 3.5g P &bull; 39g C</span>
+                      </div>
+                      <div class="decomp-row">
+                        <span class="decomp-food-name">Feijão carioca cozido (~100g)</span>
+                        <span class="decomp-food-macros">76 kcal &bull; 4.8g P &bull; 13.6g C</span>
+                      </div>
+                      <div class="decomp-row">
+                        <span class="decomp-food-name">Sobrecoxa grelhada s/ pele (~130g)</span>
+                        <span class="decomp-food-macros">285 kcal &bull; 32.5g P &bull; 16.2g G</span>
+                      </div>
+                      <div class="decomp-row">
+                        <span class="decomp-food-name">Vinagrete com azeite de oliva (~50g)</span>
+                        <span class="decomp-food-macros">55 kcal &bull; 0.6g P &bull; 4.5g G</span>
+                      </div>
+                    </div>
+                    <div class="decomp-total-bar">
+                      <span class="decomp-total-label">Total calculado da refeição:</span>
+                      <span class="decomp-total-macros">596 kcal &bull; 41.4g P &bull; 55.8g C &bull; 21.5g G</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detalhes da tela -->
+            <div class="screen-details-card">
+              <span class="screen-details-tag">Agilidade Incomparável</span>
+              <h3 class="screen-details-title">Sem balança e sem busca manual em tabelas</h3>
+              <p class="screen-details-desc">
+                Descreva ou fale seu prato do jeito que você conversa no dia a dia. A inteligência artificial decompõe cada item com base na Tabela Oficial TACO/IBGE.
+              </p>
+              <ul class="screen-feature-list">
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Compreensão de medidas caseiras:</strong> colheres, conchas, fatias, marmitas e porções típicas do prato brasileiro.</span>
+                </li>
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Decomposição transparente:</strong> você visualiza a estimativa de cada alimento separadamente e pode ajustar se quiser.</span>
+                </li>
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>30 segundos para registrar:</strong> rapidez para não esquecer de anotar e manter a constância diária sem cansaço.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Tela 3: Chat Nutricional IA -->
+          <div class="screen-tab-pane" id="pane-chat" role="tabpanel" aria-labelledby="tab-btn-chat">
+            <div class="app-device-frame">
+              <div class="app-device-header">
+                <div class="app-device-dots">
+                  <span class="app-device-dot"></span>
+                  <span class="app-device-dot"></span>
+                  <span class="app-device-dot"></span>
+                </div>
+                <span class="app-device-title">Nutrii IA • Assistente Nutricional com Memória</span>
+                <span class="app-device-badge" style="color:var(--gold); background:rgba(224,178,85,0.15);">Exclusivo Pro</span>
+              </div>
+              <div class="app-device-body">
+                <div class="chat-app-mockup">
+                  <div class="chat-app-messages">
+                    <div class="chat-msg-user">
+                      Cheguei do treino agora à noite. Já bati 1.620 kcal hoje, mas ainda faltam 28g de proteína para fechar minha meta de 140g. O que comer que seja leve e rápido?
+                    </div>
+                    <div class="chat-msg-assistant">
+                      Ótimo treino! Olhando seu diário de hoje, você ainda tem <strong>380 kcal de margem</strong>. Aqui estão duas opções práticas de menos de 5 minutos:
+                      <br><br>
+                      &bull; <strong>Opção 1:</strong> 1 pote de iogurte grego desnatado (160g) com 1 scoop de whey protein. Fornece <strong>32g de proteína</strong> e apenas <strong>215 kcal</strong>.
+                      <br><br>
+                      &bull; <strong>Opção 2:</strong> Omelete de 3 claras e 1 ovo inteiro com 1 fatia de queijo minas (30g). Fornece <strong>26g de proteína</strong> e cerca de <strong>200 kcal</strong>.
+                      <br><br>
+                      Ambas te deixam perfeitamente na meta sem sobrecarregar o estômago antes de dormir!
+                    </div>
+                  </div>
+
+                  <div class="chat-suggestions-chips">
+                    <span class="chat-chip-btn">+ Registrar Opção 1</span>
+                    <span class="chat-chip-btn">+ Registrar Opção 2</span>
+                    <span class="chat-chip-btn">Opção sem lactose</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detalhes da tela -->
+            <div class="screen-details-card">
+              <span class="screen-details-tag">Assistente Proativo</span>
+              <h3 class="screen-details-title">Uma IA que lembra do seu dia antes de responder</h3>
+              <p class="screen-details-desc">
+                Chega de respostas genéricas. O chat do NutriiBase tem acesso seguro ao que você já registrou hoje para dar conselhos exatos e aplicáveis à sua despensa.
+              </p>
+              <ul class="screen-feature-list">
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Memória contextual do dia:</strong> a IA sabe quanto você já comeu de carboidrato, gordura e proteína antes de sugerir nada.</span>
+                </li>
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Respostas práticas para a vida real:</strong> sem receitas mirabolantes ou ingredientes difíceis de encontrar no mercado.</span>
+                </li>
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Ajustes pós-treino ou refeição livre:</strong> saiba exatamente como compensar sem neurose ou restrições severas.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Tela 4: Evolução Semanal -->
+          <div class="screen-tab-pane" id="pane-evolucao" role="tabpanel" aria-labelledby="tab-btn-evolucao">
+            <div class="app-device-frame">
+              <div class="app-device-header">
+                <div class="app-device-dots">
+                  <span class="app-device-dot"></span>
+                  <span class="app-device-dot"></span>
+                  <span class="app-device-dot"></span>
+                </div>
+                <span class="app-device-title">Evolução &amp; Histórico • Últimos 7 dias</span>
+                <span class="app-device-badge">Constância 86%</span>
+              </div>
+              <div class="app-device-body">
+                <div class="evol-app-mockup">
+                  <div class="evol-stats-banner">
+                    <div>
+                      <div class="evol-banner-title">Média calórica semanal</div>
+                      <div class="evol-banner-val">1.940 kcal <span style="font-size:0.85rem; font-weight:normal; color:var(--ink-faint);">/dia</span></div>
+                    </div>
+                    <span class="evol-badge-success">6 de 7 dias na meta</span>
+                  </div>
+
+                  <div class="evol-chart-card">
+                    <div class="evol-chart-headline">
+                      <span>Consumo diário vs. Meta de 2.000 kcal</span>
+                      <span style="color: #4ADE80; font-size: 0.78rem;">Consistência alta</span>
+                    </div>
+
+                    <div class="evol-bars-container" aria-label="Gráfico de barras da semana">
+                      <div class="evol-target-line" title="Linha de meta 2.000 kcal"></div>
+                      <div class="evol-bar-col">
+                        <div class="evol-bar-fill target-ok" style="height: 82%;" title="Seg: 1.950 kcal"></div>
+                        <span class="evol-bar-label">Seg</span>
+                      </div>
+                      <div class="evol-bar-col">
+                        <div class="evol-bar-fill target-ok" style="height: 78%;" title="Ter: 1.880 kcal"></div>
+                        <span class="evol-bar-label">Ter</span>
+                      </div>
+                      <div class="evol-bar-col">
+                        <div class="evol-bar-fill target-ok" style="height: 85%;" title="Qua: 2.010 kcal"></div>
+                        <span class="evol-bar-label">Qua</span>
+                      </div>
+                      <div class="evol-bar-col">
+                        <div class="evol-bar-fill target-ok" style="height: 80%;" title="Qui: 1.920 kcal"></div>
+                        <span class="evol-bar-label">Qui</span>
+                      </div>
+                      <div class="evol-bar-col">
+                        <div class="evol-bar-fill target-ok" style="height: 84%;" title="Sex: 1.990 kcal"></div>
+                        <span class="evol-bar-label">Sex</span>
+                      </div>
+                      <div class="evol-bar-col">
+                        <div class="evol-bar-fill" style="height: 95%;" title="Sáb: 2.250 kcal"></div>
+                        <span class="evol-bar-label">Sáb</span>
+                      </div>
+                      <div class="evol-bar-col">
+                        <div class="evol-bar-fill target-ok" style="height: 76%;" title="Dom: 1.820 kcal"></div>
+                        <span class="evol-bar-label">Dom</span>
+                      </div>
+                    </div>
+
+                    <div class="evol-chart-legend">
+                      <span>Meta de déficit mantida com equilíbrio</span>
+                      <span style="color:var(--purple-accent); font-weight:600;">Proteínas: 98% da meta</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detalhes da tela -->
+            <div class="screen-details-card">
+              <span class="screen-details-tag">Constância Sem Culpa</span>
+              <h3 class="screen-details-title">Acompanhe seu hábito sem obsessão por números</h3>
+              <p class="screen-details-desc">
+                Resultados sustentáveis vêm do padrão mantido ao longo das semanas, e não de um único dia perfeito. O NutriiBase mostra seu histórico com foco no progresso real.
+              </p>
+              <ul class="screen-feature-list">
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Visão consolidada da semana:</strong> descubra seus dias de maior consumo e aprenda a modular os fins de semana com facilidade.</span>
+                </li>
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Média real de macronutrientes:</strong> acompanhe a ingestão proteica semanal sem precisar acertar na grama exata todo dia.</span>
+                </li>
+                <li class="screen-feature-item">
+                  <span class="screen-feature-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span><strong>Sem punição ou alertas vermelhos:</strong> interface criada com psicologia positiva para encorajar a continuidade do hábito.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         7. FAQ (details / summary nativo + botão ver mais)
+         ============================================================ -->
+    <section id="faq" aria-label="Perguntas frequentes">
+      <div class="container faq-container">
+        <div class="section-header" style="text-align: center; margin: 0 auto 48px;">
+          <span class="section-tag">Dúvidas comuns</span>
+          <h2 class="section-title">Perguntas frequentes</h2>
+          <p>Tudo o que você precisa saber sobre o funcionamento do NutriiBase e dos planos.</p>
+        </div>
+
+        <div class="faq-list">
+          <!-- Pergunta 1 -->
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>O NutriiBase é realmente gratuito?</span>
+              <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              Sim. Você pode usar a versão gratuita para registrar até 5 refeições por dia e realizar até 3 estimativas com inteligência artificial diariamente, com histórico dos últimos 7 dias, sem pagar nada.
+            </div>
+          </details>
+
+          <!-- Pergunta 2 -->
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Como funciona o trial de 5 dias do plano Pro?</span>
+              <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              Você escolhe qualquer um dos períodos do plano Pro (mensal, trimestral ou semestral) e tem 5 dias completos para testar todos os recursos ilimitados. O cartão de crédito é cadastrado no início e a cobrança só acontece após o fim do período de teste.
+            </div>
+          </details>
+
+          <!-- Pergunta 3 -->
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Como faço para cancelar antes de ser cobrado?</span>
+              <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              O cancelamento pode ser feito em poucos cliques direto nas configurações da sua conta a qualquer momento antes do término dos 5 dias. Nenhuma cobrança será realizada se você cancelar dentro do período de trial.
+            </div>
+          </details>
+
+          <!-- Pergunta 4 -->
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Meus dados e registros alimentares estão seguros?</span>
+              <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="faq-answer">
+              Sim. Suas informações e seu histórico alimentar são confidenciais, protegidos com criptografia e utilizados unicamente para gerar suas estimativas nutricionais personalizadas. Não vendemos nem compartilhamos seus dados com terceiros.
+            </div>
+          </details>
+
+          <!-- Perguntas secundárias (Reveladas com 'Ver mais perguntas') -->
+          <div class="faq-secondary-group" id="faq-secondary-group">
+            <!-- Pergunta 5 -->
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span>Posso mudar de plano a qualquer momento?</span>
+                <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </summary>
+              <div class="faq-answer">
+                Sim. Você pode alterar a periodicidade (mensal, trimestral, semestral ou anual) ou alternar entre a versão gratuita e a versão Pro quando desejar pelo painel de controle.
+              </div>
+            </details>
+
+            <!-- Pergunta 6 -->
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span>Como funciona a adição de refeição por voz?</span>
+                <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </summary>
+              <div class="faq-answer">
+                Disponível com exclusividade para assinantes do plano Pro, o recurso de voz permite que você apenas aperte o microfone e dite o que comeu com a maior naturalidade (ex: "um prato feito com arroz, feijão, frango grelhado e tomate"). A IA reconhece o áudio, transcreve em segundos e calcula todos os macronutrientes automaticamente, poupando tempo na sua rotina.
+              </div>
+            </details>
+
+            <!-- Pergunta 7 -->
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span>O NutriiBase funciona bem no celular?</span>
+                <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </summary>
+              <div class="faq-answer">
+                Com certeza. Toda a plataforma é otimizada para navegadores mobile tanto no iOS quanto no Android. Você pode inclusive adicionar o atalho à tela inicial do seu celular para abrir com um toque.
+              </div>
+            </details>
+
+            <!-- Pergunta 7 -->
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span>Como a inteligência artificial calcula calorias e macros?</span>
+                <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </summary>
+              <div class="faq-answer">
+                Nossa IA processa a linguagem natural da sua frase, identifica os ingredientes e seus pesos médios usuais no Brasil, cruzando com referências de tabelas nutricionais consolidadas para compor os valores de calorias, proteínas, carboidratos e gorduras.
+              </div>
+            </details>
+
+            <!-- Pergunta 8 -->
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span>O NutriiBase substitui um nutricionista?</span>
+                <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </summary>
+              <div class="faq-answer">
+                Não. O NutriiBase é uma ferramenta prática de estimativa e monitoramento do seu dia a dia. Ele não substitui avaliações clínicas, planos alimentares personalizados de tratamento ou orientações médicas especializadas.
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="faq-more-btn-wrapper">
+          <button type="button" class="btn btn-subtle" id="btn-toggle-faq">
+            Ver mais perguntas
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         8. CTA FINAL (Bloco destacado, título + subtítulo + botão)
+         ============================================================ -->
+    <section id="cta-final" aria-label="Chamada para ação final">
+      <div class="container">
+        <div class="cta-card">
+          <h2 class="cta-title">Comece a cuidar da sua alimentação sem a chatice de contar calorias</h2>
+          <p class="cta-subtitle">
+            Crie sua conta em menos de um minuto e teste a inteligência artificial na sua próxima refeição.
+          </p>
+          <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary cta-btn-large">
+            Começar agora, é grátis
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================
+       9. FOOTER (Logo, links, aviso de estimativa e copyright)
+       ============================================================ -->
+  <footer id="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img 
+            src="Logo%20Branca%20SF.png" 
+            alt="NutriiBase Logo" 
+            class="footer-logo"
+            onerror="this.src='logo-nutriibase.png';"
+          />
+          <p class="footer-brand-desc">
+            Controle calórico e evolução física através de inteligência artificial simples, feita para a realidade brasileira.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Navegação</h4>
+          <ul class="footer-links">
+            <li><a href="#como-funciona" class="footer-link">Como funciona</a></li>
+            <li><a href="#recursos" class="footer-link">Recursos</a></li>
+            <li><a href="#planos" class="footer-link">Planos e preços</a></li>
+            <li><a href="#faq" class="footer-link">Perguntas frequentes</a></li>
+            <li><a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="footer-link" id="footer-ja-sou-cliente">Já sou cliente</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Legal e Suporte</h4>
+          <ul class="footer-links">
+            <li><a href="/privacidade.html" class="footer-link">Privacidade</a></li>
+            <li><a href="/termos.html" class="footer-link">Termos de uso</a></li>
+            <li><a href="/suporte.html" class="footer-link">Suporte</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="health-disclaimer">
+          A inteligência artificial do NutriiBase fornece estimativas nutricionais aproximadas para auxiliar no seu acompanhamento diário e não substitui o diagnóstico, prescrição ou acompanhamento individualizado de um nutricionista ou médico.
+        </p>
+        <p class="copyright">
+          © 2026 NutriiBase. Todos os direitos reservados.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast de aviso para links em aberto / placeholders -->
+  <div class="site-toast" id="site-toast" role="status" aria-live="polite"></div>
+
+  <!-- ============================================================
+       JAVASCRIPT VANILLA PURO (Sem libs externas)
+       - Toggle de planos (Mensal / Trimestral / Semestral / Anual)
+       - Gráfico de evolução histórico com seleção livre de período
+       - Menu hambúrguer funcional
+       - Revelação de perguntas secundárias do FAQ
+       - Fechamento suave do menu mobile ao clicar em links
+       ============================================================ -->
+  <script>
+    (function () {
+      // 1. Dados dos planos Pro (Mensal, Trimestral, Semestral, Anual 15% off)
+      // Redirecionamento unificado para o site matriz
+      var CHECKOUT_BASE_URL = "https://nutriibase.com.br";
+
+      var planData = {
+        mensal: {
+          priceMain: "R$ 19,90",
+          period: "/mês",
+          billingDetail: "Cobrança recorrente mensal (sem fidelidade)",
+          checkoutUrl: CHECKOUT_BASE_URL
+        },
+        trimestral: {
+          priceMain: "R$ 18,90",
+          period: "/mês",
+          billingDetail: "R$ 56,72 cobrados a cada 3 meses (5% de desconto)",
+          checkoutUrl: CHECKOUT_BASE_URL
+        },
+        semestral: {
+          priceMain: "R$ 17,91",
+          period: "/mês",
+          billingDetail: "R$ 107,46 cobrados a cada 6 meses (10% de desconto)",
+          checkoutUrl: CHECKOUT_BASE_URL
+        },
+        anual: {
+          priceMain: "R$ 16,91",
+          period: "/mês",
+          billingDetail: "R$ 202,98 cobrados anualmente (15% de desconto do preço mensal)",
+          checkoutUrl: CHECKOUT_BASE_URL
+        }
+      };
+
+      // 2. Seletor de período do plano Pro
+      var toggleButtons = document.querySelectorAll(".toggle-btn");
+      var priceDisplay = document.getElementById("pro-price-display");
+      var billingDetail = document.getElementById("pro-billing-detail");
+      var proCheckoutBtn = document.getElementById("btn-pro-checkout");
+
+      toggleButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var period = btn.getAttribute("data-period");
+          if (!planData[period]) return;
+
+          // Atualizar classe ativa dos botões
+          toggleButtons.forEach(function (b) { b.classList.remove("active"); });
+          btn.classList.add("active");
+
+          // Atualizar texto de preço e parcelamento
+          var data = planData[period];
+          priceDisplay.innerHTML = data.priceMain + ' <span class="price-period">' + data.period + '</span>';
+          billingDetail.textContent = data.billingDetail;
+
+          // Atualiza o link do checkout conforme o período selecionado
+          if (proCheckoutBtn) {
+            proCheckoutBtn.setAttribute("href", data.checkoutUrl);
+            proCheckoutBtn.setAttribute("target", "_blank");
+            proCheckoutBtn.setAttribute("rel", "noopener noreferrer");
+          }
+        });
+      });
+
+      // 3. Menu mobile (hambúrguer)
+      var menuBtn = document.getElementById("menu-toggle-btn");
+      var mobileMenu = document.getElementById("mobile-menu");
+      if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener("click", function () {
+          var isOpen = mobileMenu.classList.toggle("open");
+          menuBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        // Fechar ao clicar em qualquer link interno
+        var mobileLinks = mobileMenu.querySelectorAll("a");
+        mobileLinks.forEach(function (link) {
+          link.addEventListener("click", function () {
+            mobileMenu.classList.remove("open");
+            menuBtn.setAttribute("aria-expanded", "false");
+          });
+        });
+      }
+
+      // 3.5. Navegação das telas do app (Seção Telas do Aplicativo)
+      var screenTabBtns = document.querySelectorAll(".screen-tab-btn");
+      var screenPanes = document.querySelectorAll(".screen-tab-pane");
+
+      screenTabBtns.forEach(function (tabBtn) {
+        tabBtn.addEventListener("click", function () {
+          var screenKey = tabBtn.getAttribute("data-screen");
+          if (!screenKey) return;
+
+          // Atualizar estado ativo dos botões
+          screenTabBtns.forEach(function (btn) {
+            btn.classList.remove("active");
+            btn.setAttribute("aria-selected", "false");
+          });
+          tabBtn.classList.add("active");
+          tabBtn.setAttribute("aria-selected", "true");
+
+          // Atualizar painéis
+          screenPanes.forEach(function (pane) {
+            pane.classList.remove("active");
+          });
+          var targetPane = document.getElementById("pane-" + screenKey);
+          if (targetPane) {
+            targetPane.classList.add("active");
+          }
+        });
+      });
+
+      // 4. FAQ: Revelar perguntas secundárias
+      var toggleFaqBtn = document.getElementById("btn-toggle-faq");
+      var secondaryFaqGroup = document.getElementById("faq-secondary-group");
+      if (toggleFaqBtn && secondaryFaqGroup) {
+        toggleFaqBtn.addEventListener("click", function () {
+          var isRevealed = secondaryFaqGroup.classList.toggle("revealed");
+          if (isRevealed) {
+            toggleFaqBtn.textContent = "Ver menos perguntas";
+          } else {
+            toggleFaqBtn.textContent = "Ver mais perguntas";
+          }
+        });
+      }
+
+      // 5. Toast para links placeholders (login, termos, etc.)
+      var toast = document.getElementById("site-toast");
+      var toastTimer = null;
+      var placeholderLinks = document.querySelectorAll(".js-placeholder-link");
+      
+      placeholderLinks.forEach(function (link) {
+        link.addEventListener("click", function (e) {
+          var msg = link.getAttribute("data-msg");
+          if (msg) {
+            e.preventDefault();
+            showToast(msg);
+          }
+        });
+      });
+
+      function showToast(text) {
+        if (!toast) return;
+        toast.textContent = text;
+        toast.classList.add("show");
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toast.classList.remove("show");
+        }, 3600);
+      }
+    })();
+  </script>
+</body>
+</html>
