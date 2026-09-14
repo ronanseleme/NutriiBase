@@ -170,7 +170,19 @@ export function MealAiModal({ mealLabel, access, onAddMany, onClose }: Props) {
           </button>
         </div>
         {recorder.status === 'recording' && (
-          <p className="mb-2 text-[0.78rem] font-semibold text-[var(--coral)]">Gravando… toque de novo pra parar.</p>
+          <div className="mb-2 flex items-center gap-2 rounded-[10px] bg-[color-mix(in_srgb,var(--coral)_8%,var(--surface))] px-3 py-2">
+            <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[var(--coral)]" />
+            <div className="flex h-6 flex-1 items-center gap-[2px]" aria-hidden="true">
+              {recorder.levels.map((v, i) => (
+                <span
+                  key={i}
+                  className="w-[3px] shrink-0 rounded-full bg-[var(--coral)]"
+                  style={{ height: `${Math.max(3, Math.round(v * 24))}px`, transition: 'height 80ms linear' }}
+                />
+              ))}
+            </div>
+            <span className="shrink-0 text-[0.72rem] font-semibold text-[var(--coral)]">Gravando…</span>
+          </div>
         )}
         {transcribing && <p className="mb-2 text-[0.78rem] text-[var(--text-soft)]">Transcrevendo áudio…</p>}
         <button

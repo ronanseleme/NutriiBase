@@ -60,6 +60,7 @@ export interface Profile {
   bodyFatTargetPct: number | null
   targetDate: string | null
   weeklyWorkoutGoal: number | null
+  metaDescricao: string
   restrictions: Restrictions
   macroOverride: MacroOverride | null
   targets: Targets

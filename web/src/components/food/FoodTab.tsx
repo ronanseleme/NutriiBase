@@ -6,6 +6,9 @@ import { formatShortDate, monthLabel, pad, parseISODate } from '../../lib/dateUt
 import { useRangeLogs } from '../../hooks/useRangeLogs'
 import { MealSummary } from './MealSummary'
 import { MealDetail } from './MealDetail'
+import { AddMealPicker } from './AddMealPicker'
+import { AddFoodModal } from './AddFoodModal'
+import { GeralIcon, MEAL_ICONS } from './mealIcons'
 import type { ViewMode } from '../ViewModeToggle'
 import type { AiAccess, DateRange, DayLog, FoodItem, MealKey, Targets } from '../../types'
 
@@ -47,6 +50,8 @@ export function FoodTab({
   onUpdateSaved,
 }: Props) {
   const [active, setActive] = useState<MealKey | 'geral'>('geral')
+  const [pickingMeal, setPickingMeal] = useState(false)
+  const [addFlowMeal, setAddFlowMeal] = useState<MealKey | null>(null)
   const dayTotals = dayFoodTotals(log.meals)
 
   const selected = parseISODate(dateIso)
@@ -129,14 +134,24 @@ export function FoodTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-1.5 overflow-x-auto pb-1">
-        <MealChip label={`Geral ${fmtNum(dayTotals.kcal)}`} active={active === 'geral'} onClick={() => setActive('geral')} />
+      <button
+        type="button"
+        onClick={() => setPickingMeal(true)}
+        className="nb-btn nb-btn-primary w-full py-2.5"
+      >
+        + Adicionar refeição
+      </button>
+
+      <div className="grid grid-cols-4 gap-1.5">
+        <MealTile label="Geral" sub={fmtNum(dayTotals.kcal)} Icon={GeralIcon} active={active === 'geral'} onClick={() => setActive('geral')} />
         {MEALS.map((m) => {
           const t = mealTotals(log.meals[m.key])
           return (
-            <MealChip
+            <MealTile
               key={m.key}
-              label={`${m.label} ${fmtNum(t.kcal)}`}
+              label={m.label}
+              sub={fmtNum(t.kcal)}
+              Icon={MEAL_ICONS[m.key]}
               active={active === m.key}
               onClick={() => setActive(m.key)}
             />
@@ -161,22 +176,60 @@ export function FoodTab({
           onUpdateSaved={(item) => onUpdateSaved(active, item)}
         />
       )}
+
+      {pickingMeal && (
+        <AddMealPicker
+          onPick={(mealKey) => {
+            setPickingMeal(false)
+            setAddFlowMeal(mealKey)
+          }}
+          onClose={() => setPickingMeal(false)}
+        />
+      )}
+      {addFlowMeal && (
+        <AddFoodModal
+          mealLabel={MEALS.find((m) => m.key === addFlowMeal)!.label}
+          editItem={null}
+          draftCount={draft[addFlowMeal].length}
+          access={access}
+          onAdd={(item) => onAddToDraft(addFlowMeal, item)}
+          onUpdate={async () => ({ error: null })}
+          onClose={() => {
+            setActive(addFlowMeal)
+            setAddFlowMeal(null)
+          }}
+        />
+      )}
     </div>
   )
 }
 
-function MealChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function MealTile({
+  label,
+  sub,
+  Icon,
+  active,
+  onClick,
+}: {
+  label: string
+  sub: string
+  Icon: () => React.ReactElement
+  active: boolean
+  onClick: () => void
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 rounded-full border px-3.5 py-2 text-[0.82rem] font-semibold whitespace-nowrap transition-all ${
+      className={`flex flex-col items-center gap-0.5 rounded-2xl py-2 text-[0.62rem] font-semibold transition-all ${
         active
-          ? 'border-transparent bg-[image:var(--blue-gradient)] text-white shadow-[0_6px_14px_-6px_rgba(47,111,237,.5)]'
-          : 'border-[var(--line-strong)] bg-[var(--surface)]'
+          ? 'bg-[image:var(--brand-gradient)] text-white shadow-[0_6px_14px_-6px_rgba(47,111,237,.55)]'
+          : 'bg-[var(--surface)] text-[var(--text-soft)] hover:bg-[var(--bg)]'
       }`}
     >
-      {label}
+      <Icon />
+      <span className="text-center leading-tight">{label}</span>
+      <span className={`text-[0.6rem] ${active ? 'text-white/80' : 'text-[var(--text-soft)]'}`}>{sub}</span>
     </button>
   )
 }

@@ -17,6 +17,7 @@ export function newProfile(userId: string | null): Profile {
     bodyFatTargetPct: null,
     targetDate: null,
     weeklyWorkoutGoal: null,
+    metaDescricao: '',
     restrictions: { tags: [], note: '' },
     macroOverride: null,
     role: 'free',

@@ -51,8 +51,21 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, userId, onSav
   const weeklyGoal = profile.weeklyWorkoutGoal
   const weeklyPct = weeklyGoal ? Math.round((weekWorkoutCount / weeklyGoal) * 100) : 0
 
+  const hasOwnGoalText = !!profile.metaDescricao?.trim()
+  const goalText =
+    profile.metaDescricao?.trim() ||
+    'Objetivo: emagrecer e perder gordura corporal, mantendo a massa muscular através de uma dieta consistente e treino de força regular.'
+
   return (
     <div className="flex flex-col gap-4">
+      <div className="nb-card text-white" style={{ background: 'var(--accent-gradient)' }}>
+        <div className="mb-1.5 text-[0.68rem] font-extrabold uppercase tracking-wide text-white/75">Seu objetivo</div>
+        <p className="text-[1.05rem] font-semibold leading-snug">{goalText}</p>
+        {!hasOwnGoalText && (
+          <p className="mt-2 text-[0.75rem] italic text-white/70">Exemplo — escreva o seu logo abaixo, em "Seu objetivo".</p>
+        )}
+      </div>
+
       <div className="nb-card">
         <div className="mb-3 font-[Space_Grotesk] font-bold">Meta de peso e composição corporal</div>
         <WeightBodyFatKpi profile={profile} />

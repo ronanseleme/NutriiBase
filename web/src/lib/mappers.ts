@@ -40,6 +40,7 @@ export interface ProfileRow {
   percentual_gordura_meta: number | null
   data_meta: string | null
   meta_treinos_semanais: number | null
+  meta_descricao: string | null
   restricoes_alimentares: string | null
   meta_calorica_diaria: number | null
   meta_proteina_g: number | null
@@ -77,6 +78,7 @@ export function profileToDbRow(p: Profile, userId: string) {
     percentual_gordura_meta: p.bodyFatTargetPct ?? null,
     data_meta: p.targetDate || null,
     meta_treinos_semanais: p.weeklyWorkoutGoal ?? null,
+    meta_descricao: p.metaDescricao?.trim() || null,
     restricoes_alimentares: restrText || null,
     meta_calorica_diaria: p.targets?.kcal ?? null,
     meta_proteina_g: p.targets?.protein ?? null,
@@ -103,6 +105,7 @@ export function dbProfileToLocal(row: ProfileRow): Omit<Profile, 'targets'> {
     bodyFatTargetPct: row.percentual_gordura_meta ?? null,
     targetDate: row.data_meta || null,
     weeklyWorkoutGoal: row.meta_treinos_semanais ?? null,
+    metaDescricao: row.meta_descricao || '',
     restrictions: { tags: [], note: row.restricoes_alimentares || '' },
     macroOverride:
       row.override_proteina_g != null || row.override_gordura_g != null

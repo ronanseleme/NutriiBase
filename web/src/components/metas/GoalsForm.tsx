@@ -13,6 +13,7 @@ export function GoalsForm({ profile, onSave }: Props) {
   const [bodyFatTargetPct, setBodyFatTargetPct] = useState(profile.bodyFatTargetPct != null ? String(profile.bodyFatTargetPct) : '')
   const [targetDate, setTargetDate] = useState(profile.targetDate || '')
   const [weeklyWorkoutGoal, setWeeklyWorkoutGoal] = useState(profile.weeklyWorkoutGoal != null ? String(profile.weeklyWorkoutGoal) : '')
+  const [metaDescricao, setMetaDescricao] = useState(profile.metaDescricao || '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,6 +26,7 @@ export function GoalsForm({ profile, onSave }: Props) {
       bodyFatTargetPct: bodyFatTargetPct ? +bodyFatTargetPct : null,
       targetDate: targetDate || null,
       weeklyWorkoutGoal: weeklyWorkoutGoal ? +weeklyWorkoutGoal : null,
+      metaDescricao: metaDescricao.trim(),
     })
     setSaving(false)
     if (saveError) {
@@ -37,6 +39,17 @@ export function GoalsForm({ profile, onSave }: Props) {
 
   return (
     <div>
+      <label className="mb-3 flex flex-col gap-1.5">
+        <span className="text-[0.8rem] font-bold text-[var(--text-soft)]">Seu objetivo, com suas palavras</span>
+        <textarea
+          placeholder="Ex: Objetivo: emagrecer e perder gordura corporal, mantendo a massa muscular através de dieta consistente e treino de força regular."
+          value={metaDescricao}
+          onChange={(e) => setMetaDescricao(e.target.value)}
+          maxLength={280}
+          className="nb-input min-h-16"
+        />
+        <span className="text-[0.72rem] text-[var(--text-soft)]">Aparece em destaque no topo desta aba.</span>
+      </label>
       <div className="mb-3 grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1.5">
           <span className="text-[0.8rem] font-bold text-[var(--text-soft)]">Peso-meta (kg)</span>

@@ -201,6 +201,13 @@ alter table public.profiles
   add column if not exists override_proteina_g int,
   add column if not exists override_gordura_g int;
 
+-- Descrição livre do objetivo da pessoa (ex: "emagrecer e perder gordura
+-- corporal mantendo a massa muscular"), editável na aba Metas — mostrada
+-- em destaque no topo daquela aba. Diferente de `objetivo` (enum de 3
+-- valores usado no cálculo de kcal/macros), esta é só texto livre.
+alter table public.profiles
+  add column if not exists meta_descricao text;
+
 -- ========== refeicoes ==========
 create table if not exists public.refeicoes (
   id uuid primary key default gen_random_uuid(),
