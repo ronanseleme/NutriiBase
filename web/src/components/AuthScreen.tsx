@@ -119,7 +119,7 @@ export function AuthScreen() {
       />
       <div
         className="pointer-events-none absolute right-1/3 top-1/4 h-64 w-64 rounded-full opacity-20 blur-3xl"
-        style={{ background: 'var(--green)' }}
+        style={{ background: 'var(--lilac)' }}
       />
       <div className="nb-modal relative w-full max-w-sm p-7">
         <div className="mb-6">

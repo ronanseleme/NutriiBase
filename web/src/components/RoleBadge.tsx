@@ -2,7 +2,7 @@ import type { AccessRole } from '../types'
 
 const ROLE_STYLE: Record<AccessRole, { label: string; color: string }> = {
   admin: { label: 'Admin', color: 'var(--coral)' },
-  pro: { label: 'Pro', color: 'var(--blue)' },
+  pro: { label: 'Pro', color: 'var(--gold)' },
   free: { label: 'Free', color: 'var(--text-soft)' },
 }
 
