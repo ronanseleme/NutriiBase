@@ -5,10 +5,12 @@ interface Props {
 }
 
 // Marca real do NutriiBase (arquivos em web/public/brand/), fornecida pelo
-// usuário: anel azul incompleto, folha verde, brilho laranja de 4 pontas,
-// e o wordmark "Nutrii" (azul) + "Base" (verde).
+// usuário. logo-full.png é a versão nova (coração + haltere + folha, roxo/
+// lavanda) do rebrand 2026; logo-mark.png/logo-wordmark.png ainda são a
+// marca antiga (anel azul/folha verde) — só a "full" tem substituto novo
+// até o momento, e é a única usada hoje (topbar + AuthScreen).
 const MARK_RATIO = 1563 / 1606 // largura/altura de logo-mark.png
-const FULL_RATIO = 1748 / 379 // largura/altura de logo-full.png
+const FULL_RATIO = 850 / 359 // largura/altura de logo-full.png
 const WORDMARK_RATIO = 1415 / 217 // largura/altura de logo-wordmark.png
 const BRAND_URL = `${import.meta.env.BASE_URL}brand/`
 
