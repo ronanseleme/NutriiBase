@@ -14,6 +14,7 @@ import { useRangeLogs } from '../hooks/useRangeLogs'
 import { useYearLogs } from '../hooks/useYearLogs'
 import { WeightBodyFatKpi } from './WeightBodyFatKpi'
 import { BalanceBarChart, type BalanceBar } from './BalanceBarChart'
+import { navigateToProfile } from '../lib/tabNav'
 import type { ViewMode } from './ViewModeToggle'
 import type { DateRange, DayLog, Profile } from '../types'
 
@@ -98,6 +99,23 @@ export function Dashboard({ profile, log, userId, dateIso, viewMode, customRange
           {goalSignal.icon} {goalSignal.text}
         </p>
       </div>
+
+      {profile.role === 'free' && (
+        <button
+          type="button"
+          onClick={navigateToProfile}
+          className="flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-white"
+          style={{ background: 'var(--accent-gradient)' }}
+        >
+          <span className="text-xl">✨</span>
+          <span className="flex-1 text-[0.84rem] font-semibold leading-snug">
+            Assine o Pro e desbloqueie IA (texto e voz), chat nutricional e insights personalizados.
+          </span>
+          <span className="shrink-0 rounded-full bg-white/20 px-3 py-1.5 text-[0.78rem] font-bold whitespace-nowrap">
+            Assinar Pro
+          </span>
+        </button>
+      )}
 
       <Card>
         <CardTitle>{isMonthly ? 'Balanço do mês' : 'Balanço do dia'}</CardTitle>
