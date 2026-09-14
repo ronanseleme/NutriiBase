@@ -1,62 +1,12 @@
 @import "tailwindcss";
 
+/* Tema claro (padrão) — fundo branco, texto e acentos em roxo escuro. É o
+   tema inicial de todo mundo; o usuário pode trocar pro escuro em Editar
+   perfil (ver hooks/useTheme.ts), o que aplica data-theme="dark" em
+   <html>. Os tons "claros" da marca (lavanda/lilás) são escurecidos aqui
+   em relação ao tema escuro — usados como texto sobre fundo branco, o
+   lilás bem claro do brand book ficaria ilegível. */
 :root {
-  color-scheme: dark;
-
-  /* Superfícies (Dark Canvas) — Brand Book 2026 */
-  --bg: #0f0c1b;
-  --bg-2: #161226;
-  --surface: #1e1833;
-  --surface-2: #282044;
-
-  /* Tipografia */
-  --text: #f8f6fd;
-  --text-soft: #cac2df;
-  --text-meta: #8d82aa;
-
-  /* Bordas / divisores — Ardósia Orquídea */
-  --line: rgba(56, 45, 92, 0.55);
-  --line-strong: #382d5c;
-
-  /* Cores de marca */
-  --purple: #7c3aed;
-  --purple-hover: #6d28d9;
-  --lavender: #b388ff;
-  --lilac: #e9d5ff;
-  --gold: #f59e0b;
-
-  /* Tokens legados (nomes antigos usados em todo o app, papel redefinido
-     pela nova paleta — mantidos para não precisar tocar componente por
-     componente): --blue/--protein viram o roxo primário, --teal/--coral
-     seguem como cores semânticas de status (dentro/fora da meta). */
-  --orange: var(--gold);
-  --orange-light: #fbbf5d;
-  --blue: var(--purple);
-  --blue-light: var(--lavender);
-  --blue-deep: #4c1d95;
-  --green: #34d399;
-  --green-light: #6ee7b7;
-  --coral: #f87171;
-  --teal: #34d399;
-
-  --protein: var(--purple);
-  --carb: var(--lavender);
-  --fat: var(--lilac);
-
-  --on-accent: #ffffff;
-  --brand-gradient: linear-gradient(135deg, var(--lilac) 0%, var(--lavender) 50%, var(--purple) 100%);
-  --accent-gradient: linear-gradient(135deg, var(--purple), var(--purple-hover));
-  --blue-gradient: linear-gradient(135deg, var(--purple), var(--lavender));
-  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 18px 34px -22px rgba(0, 0, 0, 0.6);
-  --modal-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
-}
-
-/* Tema claro — fundo branco, texto e acentos em roxo escuro. Ativado via
-   data-theme="light" em <html> (ver hooks/useTheme.ts), escolhido pelo
-   usuário em Editar perfil. Os tons "claros" da marca (lavanda/lilás) são
-   escurecidos aqui em relação ao tema escuro — usados como texto sobre
-   fundo branco, o lilás bem claro do brand book ficaria ilegível. */
-:root[data-theme='light'] {
   color-scheme: light;
 
   --bg: #faf8fc;
@@ -97,6 +47,51 @@
   --blue-gradient: linear-gradient(135deg, var(--purple), var(--lavender));
   --card-shadow: 0 1px 2px rgba(30, 24, 51, 0.06), 0 18px 34px -22px rgba(30, 24, 51, 0.18);
   --modal-shadow: 0 24px 60px -24px rgba(30, 24, 51, 0.35);
+}
+
+/* Tema escuro — Brand Book 2026 (canvas escuro). Ativado via
+   data-theme="dark" em <html>, escolhido pelo usuário em Editar perfil. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0f0c1b;
+  --bg-2: #161226;
+  --surface: #1e1833;
+  --surface-2: #282044;
+
+  --text: #f8f6fd;
+  --text-soft: #cac2df;
+  --text-meta: #8d82aa;
+
+  --line: rgba(56, 45, 92, 0.55);
+  --line-strong: #382d5c;
+
+  --purple: #7c3aed;
+  --purple-hover: #6d28d9;
+  --lavender: #b388ff;
+  --lilac: #e9d5ff;
+  --gold: #f59e0b;
+
+  --orange: var(--gold);
+  --orange-light: #fbbf5d;
+  --blue: var(--purple);
+  --blue-light: var(--lavender);
+  --blue-deep: #4c1d95;
+  --green: #34d399;
+  --green-light: #6ee7b7;
+  --coral: #f87171;
+  --teal: #34d399;
+
+  --protein: var(--purple);
+  --carb: var(--lavender);
+  --fat: var(--lilac);
+
+  --on-accent: #ffffff;
+  --brand-gradient: linear-gradient(135deg, var(--lilac) 0%, var(--lavender) 50%, var(--purple) 100%);
+  --accent-gradient: linear-gradient(135deg, var(--purple), var(--purple-hover));
+  --blue-gradient: linear-gradient(135deg, var(--purple), var(--lavender));
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 18px 34px -22px rgba(0, 0, 0, 0.6);
+  --modal-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
 }
 
 * {

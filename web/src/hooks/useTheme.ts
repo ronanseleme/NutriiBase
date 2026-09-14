@@ -6,23 +6,24 @@ const STORAGE_KEY = 'nutribase.theme'
 
 function readStoredTheme(): ThemeMode {
   try {
-    return localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark'
+    return localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
   } catch {
-    return 'dark'
+    return 'light'
   }
 }
 
 // Preferência de tema é só do dispositivo (localStorage), não da conta —
-// evita precisar de uma coluna nova no Supabase só pra isso. O <html> já
-// recebe o data-theme certo antes do primeiro paint via script inline no
-// index.html; este hook só mantém o estado em sincronia pra alternar em
-// tempo real e persistir a escolha.
+// evita precisar de uma coluna nova no Supabase só pra isso. Claro é o
+// padrão (nenhum atributo); o <html> já recebe o data-theme="dark" certo
+// antes do primeiro paint via script inline no index.html quando o usuário
+// tinha escolhido escuro antes — este hook só mantém o estado em sincronia
+// pra alternar em tempo real e persistir a escolha.
 export function useTheme() {
   const [theme, setThemeState] = useState<ThemeMode>(readStoredTheme)
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light')
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark')
     } else {
       document.documentElement.removeAttribute('data-theme')
     }

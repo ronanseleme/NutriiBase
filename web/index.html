@@ -4,11 +4,12 @@
     <meta charset="UTF-8" />
     <script>
       // Aplica o tema salvo antes do primeiro paint, pra não piscar o tema
-      // errado por um instante ao carregar (ver hooks/useTheme.ts).
+      // errado por um instante ao carregar (ver hooks/useTheme.ts). Claro é
+      // o padrão (nenhum atributo); só escuro precisa marcar o <html>.
       (function () {
         try {
-          if (localStorage.getItem('nutribase.theme') === 'light') {
-            document.documentElement.setAttribute('data-theme', 'light')
+          if (localStorage.getItem('nutribase.theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark')
           }
         } catch (e) {}
       })()
