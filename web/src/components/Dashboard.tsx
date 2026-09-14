@@ -166,7 +166,7 @@ export function Dashboard({ profile, log, userId, dateIso, viewMode, customRange
           </div>
           <div className="min-w-0">
             <div className="mb-2 text-[0.85rem] font-bold">
-              % de gordura do dia <span className="text-[0.72rem] font-medium text-[var(--text-soft)]">(opcional)</span>
+              % gordura dia <span className="text-[0.72rem] font-medium text-[var(--text-soft)]">(opcional)</span>
             </div>
             <WeightInput value={log.bodyFatPct} placeholder="%" onSave={onSaveBodyFat} />
           </div>
