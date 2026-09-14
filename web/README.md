@@ -22,8 +22,9 @@ npm run dev
 | `VITE_SUPABASE_URL` | Project URL do Supabase |
 | `VITE_SUPABASE_ANON_KEY` | Publishable/anon key do Supabase |
 
-Nunca a Secret Key do Supabase, nem a chave da Anthropic — essas ficam
-só no lado do servidor (Supabase Edge Function `describe-meal`).
+Nunca a Secret Key do Supabase, nem a chave da IA (Gemini) — essas ficam
+só no lado do servidor (Supabase Edge Functions `describe-meal`,
+`chat-assistant` e `transcribe-audio`).
 
 ## Status
 
@@ -55,8 +56,8 @@ treino do app original ainda não foi portado (fica para uma passada futura).
 ### Chat IA / Insights
 
 Usa uma nova Edge Function, `chat-assistant` (mesmo padrão do
-`describe-meal`: autentica o usuário via Supabase e chama a Anthropic
-server-side com a secret `ANTHROPIC_API_KEY`, nunca exposta no frontend).
+`describe-meal`: autentica o usuário via Supabase e chama o Gemini
+server-side com a secret `GEMINI_API_KEY`, nunca exposta no frontend).
 O contexto (perfil, metas e histórico recente) é montado no cliente a
 partir dos dados já carregados e enviado como texto para a função, que
 devolve:
@@ -68,7 +69,7 @@ consistência/streak, pontos de atenção) são calculadas localmente a partir
 de `refeicoes`/`treinos`/`registros_peso`, sem IA — iguais ao app original.
 
 Deploy da função: `supabase functions deploy chat-assistant` (a secret
-`ANTHROPIC_API_KEY` já configurada para o `describe-meal` é reaproveitada).
+`GEMINI_API_KEY` já configurada para o `describe-meal` é reaproveitada).
 
 ### Marca e design system
 

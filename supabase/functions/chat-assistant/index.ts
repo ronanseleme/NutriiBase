@@ -2,13 +2,14 @@
 //
 // Serve o Chat IA e as recomendações de Insights. Recebe do frontend um
 // resumo em texto do perfil/histórico do usuário (já montado no cliente a
-// partir dos dados que ele já tem carregados) e chama a API da Anthropic
-// (Claude) server-side, nunca expondo a chave no frontend.
+// partir dos dados que ele já tem carregados) e chama o Gemini server-side,
+// nunca expondo a chave no frontend.
 //
 // Deploy: supabase functions deploy chat-assistant
-// Secret: supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+// Secret: supabase secrets set GEMINI_API_KEY=AIza...
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callGemini, extractGeminiText } from "../_shared/gemini.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -32,29 +33,20 @@ interface ChatTurn {
   content: string;
 }
 
-async function callAnthropic(anthropicKey: string, systemPrompt: string, userPrompt: string) {
-  return await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": anthropicKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    }),
-  });
-}
+const TIPS_SCHEMA = {
+  type: "OBJECT",
+  properties: { tips: { type: "ARRAY", items: { type: "STRING" } } },
+  required: ["tips"],
+};
 
-function extractText(anthropicJson: any): string {
-  return ((anthropicJson?.content || []) as { type: string; text?: string }[])
-    .map((block) => (block.type === "text" ? block.text : ""))
-    .join("")
-    .trim();
-}
+const CHAT_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    reply: { type: "STRING" },
+    chips: { type: "ARRAY", items: { type: "STRING" } },
+  },
+  required: ["reply", "chips"],
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -126,37 +118,35 @@ Deno.serve(async (req) => {
     return errorResponse("bad_request", "Contexto do usuário ausente.", 400);
   }
 
-  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!anthropicKey) {
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!geminiKey) {
     return errorResponse("upstream_error", "IA não configurada no servidor.", 500);
   }
 
   if (mode === "insights") {
     const prompt =
+      "Você é um nutricionista esportivo experiente e direto.\n\n" +
       context +
       "\n\nCom base nesses dados, escreva de 3 a 4 recomendações curtas e práticas para este usuário, focadas em " +
-      "ações concretas para os próximos dias — não repita os números já listados acima. Responda APENAS com um " +
-      'JSON válido, sem markdown, sem texto antes ou depois, no formato exato: {"tips": [string, string, ...]}.';
+      "ações concretas para os próximos dias — não repita os números já listados acima.";
 
-    let anthropicRes: Response;
+    let geminiRes: Response;
     try {
-      anthropicRes = await callAnthropic(anthropicKey, "Você é um nutricionista esportivo experiente e direto.", prompt);
+      geminiRes = await callGemini({ apiKey: geminiKey, prompt, responseSchema: TIPS_SCHEMA });
     } catch {
       return errorResponse("upstream_error", "Não foi possível consultar a IA agora.", 502);
     }
-    if (anthropicRes.status === 429) {
+    if (geminiRes.status === 429) {
       return errorResponse("rate_limited", "Muitas solicitações — aguarde um instante.", 429);
     }
-    if (!anthropicRes.ok) {
+    if (!geminiRes.ok) {
       return errorResponse("upstream_error", "A IA não respondeu corretamente.", 502);
     }
 
-    const text = extractText(await anthropicRes.json());
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return errorResponse("invalid_json", "A IA não retornou um resultado utilizável.", 422);
+    const text = extractGeminiText(await geminiRes.json());
     let parsed: unknown;
     try {
-      parsed = JSON.parse(match[0]);
+      parsed = JSON.parse(text);
     } catch {
       return errorResponse("invalid_json", "A IA não retornou um resultado utilizável.", 422);
     }
@@ -182,33 +172,34 @@ Deno.serve(async (req) => {
     "suplementação, treino e hábitos saudáveis. Tom direto e motivador, nunca alarmista. Sempre que citar um " +
     "número, explique o que ele significa na prática.\n\n" +
     context +
-    '\n\nResponda APENAS com um JSON válido, sem markdown, sem texto antes ou depois, no formato exato: ' +
-    '{"reply": string, "chips": [string, string, string]}. "reply" é sua resposta direta ao usuário. "chips" são ' +
-    "até 3 sugestões curtas (até 6 palavras cada) de continuação da conversa, relevantes ao que foi discutido.";
+    '\n\n"chips" na resposta são até 3 sugestões curtas (até 6 palavras cada) de continuação da conversa, ' +
+    "relevantes ao que foi discutido.";
 
   const conversationText = messages
     .map((m) => `${m.role === "user" ? "Usuário" : "Assistente"}: ${m.content}`)
     .join("\n\n");
 
-  let anthropicRes: Response;
+  let geminiRes: Response;
   try {
-    anthropicRes = await callAnthropic(anthropicKey, systemPrompt, conversationText);
+    geminiRes = await callGemini({
+      apiKey: geminiKey,
+      prompt: `${systemPrompt}\n\n${conversationText}`,
+      responseSchema: CHAT_SCHEMA,
+    });
   } catch {
     return errorResponse("upstream_error", "Não foi possível consultar a IA agora.", 502);
   }
-  if (anthropicRes.status === 429) {
+  if (geminiRes.status === 429) {
     return errorResponse("rate_limited", "Muitas solicitações — aguarde um instante.", 429);
   }
-  if (!anthropicRes.ok) {
+  if (!geminiRes.ok) {
     return errorResponse("upstream_error", "A IA não respondeu corretamente.", 502);
   }
 
-  const text = extractText(await anthropicRes.json());
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) return errorResponse("invalid_json", "A IA não retornou um resultado utilizável.", 422);
+  const text = extractGeminiText(await geminiRes.json());
   let parsed: unknown;
   try {
-    parsed = JSON.parse(match[0]);
+    parsed = JSON.parse(text);
   } catch {
     return errorResponse("invalid_json", "A IA não retornou um resultado utilizável.", 422);
   }

@@ -11,6 +11,7 @@
 // Secret: supabase secrets set GEMINI_API_KEY=AIza...
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callGemini, extractGeminiText } from "../_shared/gemini.ts";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -96,29 +97,15 @@ Deno.serve(async (req) => {
 
   let geminiRes: Response;
   try {
-    geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text:
-                    "Transcreva o áudio a seguir literalmente, em português do Brasil. " +
-                    "Responda APENAS com o texto transcrito, sem comentários, sem markdown, " +
-                    "sem aspas envolvendo o texto. Se o áudio estiver em silêncio ou incompreensível, responda com uma string vazia.",
-                },
-                { inline_data: { mime_type: mimeType, data: audioBase64 } },
-              ],
-            },
-          ],
-          generationConfig: { temperature: 0 },
-        }),
-      },
-    );
+    geminiRes = await callGemini({
+      apiKey: geminiKey,
+      prompt:
+        "Transcreva o áudio a seguir literalmente, em português do Brasil. " +
+        "Responda APENAS com o texto transcrito, sem comentários, sem markdown, " +
+        "sem aspas envolvendo o texto. Se o áudio estiver em silêncio ou incompreensível, responda com uma string vazia.",
+      parts: [{ inline_data: { mime_type: mimeType, data: audioBase64 } }],
+      temperature: 0,
+    });
   } catch {
     return errorResponse("upstream_error", "Não foi possível consultar a IA agora.", 502);
   }
@@ -130,11 +117,7 @@ Deno.serve(async (req) => {
     return errorResponse("upstream_error", "A IA não respondeu corretamente.", 502);
   }
 
-  const geminiJson = await geminiRes.json();
-  const text: string = (geminiJson?.candidates?.[0]?.content?.parts || [])
-    .map((part: { text?: string }) => part?.text || "")
-    .join("")
-    .trim();
+  const text = extractGeminiText(await geminiRes.json());
 
   return jsonResponse({ text });
 });

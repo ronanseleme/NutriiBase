@@ -1,14 +1,32 @@
 // Supabase Edge Function: describe-meal
 //
-// Recebe a descrição em texto livre de uma refeição, chama a API da Anthropic
-// (Claude) para separar os alimentos e estimar kcal/macros de cada um, e
-// devolve um array estruturado. A chave da IA fica só aqui (variável de
-// ambiente da função, nunca no frontend).
+// Recebe a descrição em texto livre de uma refeição, chama o Gemini para
+// separar os alimentos e estimar kcal/macros de cada um, e devolve um array
+// estruturado. A chave da IA fica só aqui (variável de ambiente da função,
+// nunca no frontend). Usa responseSchema do Gemini pra forçar o formato de
+// saída no próprio servidor da IA, em vez de caçar JSON no meio do texto.
 //
 // Deploy: supabase functions deploy describe-meal
-// Secret: supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+// Secret: supabase secrets set GEMINI_API_KEY=AIza...
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callGemini, extractGeminiText } from "../_shared/gemini.ts";
+
+const ITEMS_SCHEMA = {
+  type: "ARRAY",
+  items: {
+    type: "OBJECT",
+    properties: {
+      name: { type: "STRING" },
+      grams: { type: "NUMBER" },
+      kcal: { type: "NUMBER" },
+      protein: { type: "NUMBER" },
+      carbs: { type: "NUMBER" },
+      fat: { type: "NUMBER" },
+    },
+    required: ["name", "grams", "kcal", "protein", "carbs", "fat"],
+  },
+};
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -95,62 +113,39 @@ Deno.serve(async (req) => {
     return errorResponse("bad_request", "Descreva o que foi comido.", 400);
   }
 
-  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!anthropicKey) {
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!geminiKey) {
     return errorResponse("upstream_error", "IA não configurada no servidor.", 500);
   }
 
   const prompt =
-    "O usuário vai descrever, em português do Brasil, tudo que comeu em uma única refeição, " +
-    "podendo ter vários alimentos. Separe a descrição em itens individuais. Para cada item, " +
-    "estime a quantidade em GRAMAS da porção (peso da porção descrita, ex: '176 gramas de sobrecoxa assada' -> grams=176; " +
-    "se a porção não tiver peso explícito, estime um peso razoável) e as informações nutricionais " +
-    "TOTAIS para essa quantidade (não por 100g). Responda APENAS com um array JSON válido, sem " +
-    "markdown, sem texto antes ou depois, no formato exato: " +
-    '[{"name": string, "grams": number, "kcal": number, "protein": number, "carbs": number, "fat": number}, ...] ' +
-    "(protein/carbs/fat em gramas, um objeto por item identificado).\n\nRefeição descrita: " +
+    "Você é um nutricionista esportivo especializado em estimativa de macros. O usuário vai descrever, " +
+    "em português do Brasil, tudo que comeu em uma única refeição, podendo ter vários alimentos. Separe a " +
+    "descrição em itens individuais. Para cada item, estime a quantidade em GRAMAS da porção (peso da " +
+    "porção descrita, ex: '176 gramas de sobrecoxa assada' -> grams=176; se a porção não tiver peso " +
+    "explícito, estime um peso razoável a partir de medidas caseiras) e as informações nutricionais TOTAIS " +
+    "para essa quantidade (não por 100g), baseadas em tabelas nutricionais reais (TACO/USDA).\n\n" +
+    "Refeição descrita: " +
     descricao;
 
-  let anthropicRes: Response;
+  let geminiRes: Response;
   try {
-    anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": anthropicKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+    geminiRes = await callGemini({ apiKey: geminiKey, prompt, responseSchema: ITEMS_SCHEMA });
   } catch {
     return errorResponse("upstream_error", "Não foi possível consultar a IA agora.", 502);
   }
 
-  if (anthropicRes.status === 429) {
+  if (geminiRes.status === 429) {
     return errorResponse("rate_limited", "Muitas solicitações — aguarde um instante.", 429);
   }
-  if (!anthropicRes.ok) {
+  if (!geminiRes.ok) {
     return errorResponse("upstream_error", "A IA não respondeu corretamente.", 502);
   }
 
-  const anthropicJson = await anthropicRes.json();
-  const text: string = (anthropicJson?.content || [])
-    .map((block: { type: string; text?: string }) => (block.type === "text" ? block.text : ""))
-    .join("")
-    .trim();
-
-  const match = text.match(/\[[\s\S]*\]/);
-  if (!match) {
-    return errorResponse("invalid_json", "A IA não retornou um resultado utilizável.", 422);
-  }
-
+  const text = extractGeminiText(await geminiRes.json());
   let items: unknown;
   try {
-    items = JSON.parse(match[0]);
+    items = JSON.parse(text);
   } catch {
     return errorResponse("invalid_json", "A IA não retornou um resultado utilizável.", 422);
   }
