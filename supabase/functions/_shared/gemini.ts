@@ -22,6 +22,15 @@ export interface GeminiCallOptions {
   thinking?: boolean;
 }
 
+// Só nos 503 ("model overloaded/high demand") — instabilidade temporária do
+// lado do Google, não um erro da nossa chamada. 429 (limite de uso) e outros
+// erros não são re-tentados aqui: já têm tratamento específico em quem chama.
+const OVERLOAD_RETRY_DELAYS_MS = [800, 1600];
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function callGemini(opts: GeminiCallOptions): Promise<Response> {
   const parts: unknown[] = [{ text: opts.prompt }, ...(opts.parts || [])];
   const generationConfig: Record<string, unknown> = {
@@ -32,14 +41,16 @@ export async function callGemini(opts: GeminiCallOptions): Promise<Response> {
     generationConfig.responseMimeType = "application/json";
     generationConfig.responseSchema = opts.responseSchema;
   }
-  return await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${opts.apiKey}`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts }], generationConfig }),
-    },
-  );
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${opts.apiKey}`;
+  const body = JSON.stringify({ contents: [{ parts }], generationConfig });
+
+  let res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body });
+  for (const delay of OVERLOAD_RETRY_DELAYS_MS) {
+    if (res.status !== 503) break;
+    await sleep(delay);
+    res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body });
+  }
+  return res;
 }
 
 export function extractGeminiText(geminiJson: any): string {
