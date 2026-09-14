@@ -1,3 +1,5 @@
+import { navigateToProfile } from '../lib/tabNav'
+
 interface Props {
   title?: string
   description?: string
@@ -14,8 +16,8 @@ export function UpgradeGate({
       </div>
       <div className="nb-card-title mb-1">{title}</div>
       <p className="mb-4 text-[0.86rem] text-[var(--text-soft)]">{description}</p>
-      <button type="button" disabled className="nb-btn nb-btn-primary w-full px-4 py-2.5">
-        Torne-se Pro (em breve)
+      <button type="button" onClick={navigateToProfile} className="nb-btn nb-btn-primary w-full px-4 py-2.5">
+        Assinar Pro
       </button>
     </div>
   )

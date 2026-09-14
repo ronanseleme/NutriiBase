@@ -178,8 +178,9 @@ begin
      or new.creditos_mensais is distinct from old.creditos_mensais
      or new.data_inicio_pro is distinct from old.data_inicio_pro
      or new.data_proxima_renovacao is distinct from old.data_proxima_renovacao
+     or new.stripe_customer_id is distinct from old.stripe_customer_id
   then
-    raise exception 'Não é permitido alterar role ou créditos diretamente.';
+    raise exception 'Não é permitido alterar role, créditos ou dados de cobrança diretamente.';
   end if;
   return new;
 end;
@@ -510,6 +511,85 @@ begin
   if v_creditos_antigos <> 0 then
     insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
     values (target_user, 'ajuste_admin', -v_creditos_antigos, 'Rebaixamento para Free — créditos zerados');
+  end if;
+end;
+$$;
+
+-- ========== cobrança via Stripe (Checkout + Portal + webhook) ==========
+-- stripe_customer_id liga o profile ao Cliente no Stripe. Fica protegido
+-- igual role/créditos (trigger acima) — se um usuário pudesse setar esse
+-- campo livremente, poderia apontar pra um Cliente de outra pessoa e abrir
+-- o Portal de faturamento dela.
+alter table public.profiles
+  add column if not exists stripe_customer_id text;
+
+create unique index if not exists profiles_stripe_customer_id_idx
+  on public.profiles (stripe_customer_id) where stripe_customer_id is not null;
+
+-- stripe_activate_pro / stripe_deactivate_pro são o equivalente de
+-- promote_user_to_pro / demote_user_to_free, mas chamadas pela Edge
+-- Function stripe-webhook (Stripe → nosso servidor), que não tem usuário
+-- logado — só a Service Role Key. Por isso checam auth.role() =
+-- 'service_role' em vez de is_admin(auth.uid()).
+create or replace function public.stripe_activate_pro(target_user uuid, p_stripe_customer_id text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_creditos_mensais int;
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'stripe_activate_pro só pode ser chamada pelo webhook do Stripe.';
+  end if;
+
+  update public.profiles
+  set role = 'pro',
+      stripe_customer_id = p_stripe_customer_id,
+      data_inicio_pro = coalesce(data_inicio_pro, now()),
+      data_proxima_renovacao = now() + interval '30 days',
+      creditos_ia = creditos_mensais
+  where id = target_user
+  returning creditos_mensais into v_creditos_mensais;
+
+  if not found then
+    raise exception 'Usuário não encontrado.';
+  end if;
+
+  insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
+  values (target_user, 'ajuste_admin', v_creditos_mensais, 'Assinatura Stripe ativada — carga inicial de créditos');
+end;
+$$;
+
+create or replace function public.stripe_deactivate_pro(target_user uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_creditos_antigos int;
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'stripe_deactivate_pro só pode ser chamada pelo webhook do Stripe.';
+  end if;
+
+  select creditos_ia into v_creditos_antigos from public.profiles where id = target_user;
+  if not found then
+    raise exception 'Usuário não encontrado.';
+  end if;
+
+  update public.profiles
+  set role = 'free',
+      creditos_ia = 0,
+      data_inicio_pro = null,
+      data_proxima_renovacao = null
+  where id = target_user;
+
+  if v_creditos_antigos <> 0 then
+    insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
+    values (target_user, 'ajuste_admin', -v_creditos_antigos, 'Assinatura Stripe cancelada — créditos zerados');
   end if;
 end;
 $$;

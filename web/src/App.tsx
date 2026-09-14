@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useProfile } from './hooks/useProfile'
 import { useDayLog } from './hooks/useDayLog'
@@ -21,6 +21,7 @@ import { RoleBadge } from './components/RoleBadge'
 import { ViewModeToggle, type ViewMode } from './components/ViewModeToggle'
 import { todayISO } from './lib/dateUtils'
 import { getInitials } from './lib/initials'
+import { registerGoToProfile } from './lib/tabNav'
 import type { DateRange } from './types'
 
 function App() {
@@ -30,6 +31,10 @@ function App() {
   const [tab, setTab] = useState<TabKey>('dashboard')
   const [viewMode, setViewMode] = useState<ViewMode>('daily')
   const [customRange, setCustomRange] = useState<DateRange | null>(null)
+
+  useEffect(() => {
+    registerGoToProfile(() => setTab('profile'))
+  }, [])
 
   function handleDateChange(iso: string) {
     setCustomRange(null)

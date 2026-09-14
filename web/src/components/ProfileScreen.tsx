@@ -2,6 +2,7 @@ import { ACTIVITY, GOALS, PACES } from '../lib/constants'
 import { parseISODate } from '../lib/dateUtils'
 import { getInitials } from '../lib/initials'
 import { RoleBadge } from './RoleBadge'
+import { SubscriptionCard } from './SubscriptionCard'
 import type { Profile } from '../types'
 
 interface Props {
@@ -45,6 +46,8 @@ export function ProfileScreen({ profile, onEditProfile }: Props) {
           </p>
         )}
       </Card>
+
+      <SubscriptionCard profile={profile} />
 
       <Card>
         <CardTitle>Dados pessoais</CardTitle>
