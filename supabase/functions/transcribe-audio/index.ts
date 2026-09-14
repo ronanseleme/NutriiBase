@@ -92,6 +92,7 @@ Deno.serve(async (req) => {
 
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   if (!geminiKey) {
+    console.error("transcribe-audio: GEMINI_API_KEY não está configurada nas secrets da função");
     return errorResponse("upstream_error", "Transcrição por voz não configurada no servidor.", 500);
   }
 

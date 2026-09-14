@@ -120,6 +120,7 @@ Deno.serve(async (req) => {
 
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   if (!geminiKey) {
+    console.error("chat-assistant: GEMINI_API_KEY não está configurada nas secrets da função");
     return errorResponse("upstream_error", "IA não configurada no servidor.", 500);
   }
 
