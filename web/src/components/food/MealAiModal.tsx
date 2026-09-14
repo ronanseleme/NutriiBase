@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { callDescribeMealAI, mapAIErrorCode, DescribeMealAIError, type AiFoodItem } from '../../lib/describeMealAI'
+import { callTranscribeAudio, TranscribeAudioError } from '../../lib/transcribeAudio'
+import { useAudioRecorder } from '../../hooks/useAudioRecorder'
 import { uid } from '../../lib/uid'
 import { CreditsBadge } from '../CreditsBadge'
 import type { AiAccess, FoodItem } from '../../types'
@@ -41,6 +43,33 @@ export function MealAiModal({ mealLabel, access, onAddMany, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [items, setItems] = useState<ParsedItem[]>([])
+  const [transcribing, setTranscribing] = useState(false)
+  const recorder = useAudioRecorder()
+
+  useEffect(() => () => recorder.cancel(), [recorder.cancel])
+
+  async function toggleRecording() {
+    setError(null)
+    if (recorder.status === 'recording') {
+      const audio = await recorder.stop()
+      if (!audio) return
+      setTranscribing(true)
+      try {
+        const text = await callTranscribeAudio(audio)
+        if (text.trim()) {
+          setDesc((prev) => (prev.trim() ? `${prev.trim()} ${text.trim()}` : text.trim()))
+        } else {
+          setError('Não consegui entender o áudio. Tente falar de novo, mais perto do microfone.')
+        }
+      } catch (err) {
+        setError(err instanceof TranscribeAudioError ? mapAIErrorCode(err.code, err.message) : mapAIErrorCode('upstream_error'))
+      } finally {
+        setTranscribing(false)
+      }
+      return
+    }
+    await recorder.start()
+  }
 
   async function ask() {
     const text = desc.trim()
@@ -112,12 +141,38 @@ export function MealAiModal({ mealLabel, access, onAddMany, onClose }: Props) {
         <p className="mb-2 text-[0.84rem] text-[var(--text-soft)]">Descrevendo para: {mealLabel}</p>
         <CreditsBadge access={access} />
 
-        <textarea
-          placeholder="Descreva tudo que você comeu nesta refeição. Ex: 2 ovos mexidos, uma fatia de pão integral, café com leite e uma banana"
-          value={desc}
-          onChange={(e) => setDesc(e.target.value)}
-          className="nb-input mb-2 min-h-14"
-        />
+        <div className="relative mb-1">
+          <textarea
+            placeholder="Descreva tudo que você comeu nesta refeição, ou toque no microfone e fale. Ex: 2 ovos mexidos, uma fatia de pão integral, café com leite e uma banana"
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            className="nb-input min-h-14 pr-11"
+          />
+          <button
+            type="button"
+            onClick={toggleRecording}
+            disabled={transcribing}
+            aria-label={recorder.status === 'recording' ? 'Parar gravação' : 'Falar em vez de digitar'}
+            title={recorder.status === 'recording' ? 'Parar gravação' : 'Falar em vez de digitar'}
+            className={`absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
+              recorder.status === 'recording'
+                ? 'animate-pulse bg-[var(--coral)] text-white'
+                : 'text-[var(--text-soft)] hover:bg-[var(--surface)] hover:text-[var(--purple)]'
+            }`}
+          >
+            {transcribing ? (
+              <MicSpinnerIcon />
+            ) : recorder.status === 'recording' ? (
+              <StopIcon />
+            ) : (
+              <MicIcon />
+            )}
+          </button>
+        </div>
+        {recorder.status === 'recording' && (
+          <p className="mb-2 text-[0.78rem] font-semibold text-[var(--coral)]">Gravando… toque de novo pra parar.</p>
+        )}
+        {transcribing && <p className="mb-2 text-[0.78rem] text-[var(--text-soft)]">Transcrevendo áudio…</p>}
         <button
           type="button"
           onClick={ask}
@@ -127,9 +182,9 @@ export function MealAiModal({ mealLabel, access, onAddMany, onClose }: Props) {
           {loading ? 'Consultando IA…' : 'Perguntar à IA'}
         </button>
 
-        {error && (
+        {(error || recorder.errorMessage) && (
           <div className="mb-3 rounded-[10px] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface))] p-2.5 text-[0.82rem] text-[var(--coral)]">
-            {error}
+            {error || recorder.errorMessage}
           </div>
         )}
 
@@ -205,5 +260,36 @@ function MiniField({ label, value, onChange }: { label: string; value: number; o
         className="rounded-[7px] border border-[var(--line-strong)] bg-[var(--surface)] px-2 py-1.5 text-[0.82rem]"
       />
     </label>
+  )
+}
+
+function MicIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x={7} y={2} width={6} height={10} rx={3} stroke="currentColor" strokeWidth={1.5} />
+      <path
+        d="M4 9.5a6 6 0 0 0 12 0M10 15.5v2.5m-3 0h6"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function StopIcon() {
+  return (
+    <svg width={14} height={14} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x={3} y={3} width={14} height={14} rx={2.5} fill="currentColor" />
+    </svg>
+  )
+}
+
+function MicSpinnerIcon() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 20 20" fill="none" aria-hidden="true" className="animate-spin">
+      <circle cx={10} cy={10} r={7} stroke="currentColor" strokeOpacity={0.25} strokeWidth={2} />
+      <path d="M17 10a7 7 0 0 0-7-7" stroke="currentColor" strokeWidth={2} strokeLinecap="round" />
+    </svg>
   )
 }
