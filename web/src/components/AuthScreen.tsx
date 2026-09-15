@@ -42,9 +42,25 @@ function GoogleIcon() {
   )
 }
 
+// A landing page (nutriibase.com.br/lp) manda gente pra cá com
+// "?signup=1" (e opcionalmente "&plano=mensal|trimestral|semestral|anual")
+// quando o clique já era claramente uma intenção de cadastro. Persiste em
+// localStorage porque o roundtrip de confirmação de e-mail ou do OAuth do
+// Google troca a URL (perde a query string) antes da pessoa voltar aqui.
+function resolveInitialMode(): Mode {
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('signup') === '1') {
+    localStorage.setItem('nb_signup', '1')
+    const plano = params.get('plano')
+    if (plano) localStorage.setItem('nb_plano', plano)
+    return 'signup'
+  }
+  return localStorage.getItem('nb_signup') === '1' ? 'signup' : 'signin'
+}
+
 export function AuthScreen() {
   const { signIn, signUp, signInWithGoogle } = useAuth()
-  const [mode, setMode] = useState<Mode>('signin')
+  const [mode, setMode] = useState<Mode>(resolveInitialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)

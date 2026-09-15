@@ -27,6 +27,19 @@ function formatOneTimePrice(price: PriceInfo): string {
   return formatCurrency(price.unitAmount, price.currency)
 }
 
+// Dá pra chegar aqui com um plano específico já escolhido lá na landing
+// page (ex: a pessoa selecionou "Trimestral" antes de clicar em assinar).
+// A intenção fica em localStorage (não dá pra confiar na query string —
+// some no roundtrip de confirmação de e-mail / OAuth do Google).
+const PLANO_HINT_DAYS: Record<string, number> = { mensal: 30, trimestral: 90, semestral: 180, anual: 365 }
+
+function consumePlanoHintDays(): number | null {
+  const plano = localStorage.getItem('nb_plano')
+  if (!plano) return null
+  localStorage.removeItem('nb_plano')
+  return PLANO_HINT_DAYS[plano] ?? null
+}
+
 // Escolha de plano (cartão recorrente ou Pix avulso) + botões de checkout.
 // Reaproveitado tanto no card "Assinatura" do Perfil (usuário Free já
 // logado, decide assinar depois) quanto no passo 3 do onboarding (conta
@@ -43,8 +56,10 @@ export function PlanSelector({ footer }: { footer?: React.ReactNode }) {
     listPlans()
       .then((p) => {
         setPlans(p)
+        const hintDays = consumePlanoHintDays()
+        const hinted = hintDays != null ? p.find((x) => x.days === hintDays) : null
         const anual = p.find((x) => x.recurring?.intervalCount === 12 || x.recurring?.interval === 'year')
-        setSelected((anual || p[0])?.productId ?? null)
+        setSelected((hinted || anual || p[0])?.productId ?? null)
       })
       .catch(() => setLoadError(true))
   }, [])

@@ -5,6 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    base: '/lp/',
     plugins: [react(), tailwindcss()],
     build: {
       rollupOptions: {

@@ -37,6 +37,13 @@ function App() {
     registerGoToProfile(() => setTab('profile'))
   }, [])
 
+  useEffect(() => {
+    // Uma vez logado, não faz mais sentido o AuthScreen continuar abrindo
+    // em modo "Criar conta" pra esse dispositivo (ex: se a pessoa sair e
+    // entrar de novo depois).
+    if (user) localStorage.removeItem('nb_signup')
+  }, [user])
+
   function handleDateChange(iso: string) {
     setCustomRange(null)
     setDateIso(iso)

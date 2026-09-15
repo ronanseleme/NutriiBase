@@ -2191,7 +2191,7 @@
       <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="mobile-ja-sou-cliente">
         Já sou cliente
       </a>
-      <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary mobile-link">Começar agora, é grátis</a>
+      <a href="https://nutriibase.com.br/?signup=1" target="_blank" rel="noopener noreferrer" class="btn btn-primary mobile-link">Começar agora, é grátis</a>
     </div>
   </header>
 
@@ -2212,7 +2212,7 @@
         </p>
 
         <div class="hero-cta-wrapper">
-          <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary hero-cta-btn">
+          <a href="https://nutriibase.com.br/?signup=1" target="_blank" rel="noopener noreferrer" class="btn btn-primary hero-cta-btn">
             Começar agora, é grátis
           </a>
           
@@ -2551,7 +2551,7 @@
             </ul>
 
             <div class="card-footer-cta">
-              <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btn-signup-free">
+              <a href="https://nutriibase.com.br/?signup=1" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btn-signup-free">
                 Criar conta gratuita
               </a>
             </div>
@@ -2610,7 +2610,7 @@
             </ul>
 
             <div class="card-footer-cta">
-              <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="btn-pro-checkout">
+              <a href="https://nutriibase.com.br/?signup=1&amp;plano=anual" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="btn-pro-checkout">
                 Começar 5 dias grátis
               </a>
             </div>
@@ -3259,7 +3259,7 @@
           <p class="cta-subtitle">
             Crie sua conta em menos de um minuto e teste a inteligência artificial na sua próxima refeição.
           </p>
-          <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary cta-btn-large">
+          <a href="https://nutriibase.com.br/?signup=1" target="_blank" rel="noopener noreferrer" class="btn btn-primary cta-btn-large">
             Começar agora, é grátis
           </a>
         </div>
@@ -3299,9 +3299,9 @@
         <div>
           <h4 class="footer-col-title">Legal e Suporte</h4>
           <ul class="footer-links">
-            <li><a href="/privacidade.html" class="footer-link">Privacidade</a></li>
-            <li><a href="/termos.html" class="footer-link">Termos de uso</a></li>
-            <li><a href="/suporte.html" class="footer-link">Suporte</a></li>
+            <li><a href="/lp/privacidade.html" class="footer-link">Privacidade</a></li>
+            <li><a href="/lp/termos.html" class="footer-link">Termos de uso</a></li>
+            <li><a href="/lp/suporte.html" class="footer-link">Suporte</a></li>
           </ul>
         </div>
       </div>
@@ -3332,32 +3332,32 @@
     (function () {
       // 1. Dados dos planos Pro (Mensal, Trimestral, Semestral, Anual 15% off)
       // Redirecionamento unificado para o site matriz
-      var CHECKOUT_BASE_URL = "https://nutriibase.com.br";
+      var CHECKOUT_BASE_URL = "https://nutriibase.com.br/?signup=1&plano=";
 
       var planData = {
         mensal: {
           priceMain: "R$ 19,90",
           period: "/mês",
           billingDetail: "Cobrança recorrente mensal (sem fidelidade)",
-          checkoutUrl: CHECKOUT_BASE_URL
+          checkoutUrl: CHECKOUT_BASE_URL + "mensal"
         },
         trimestral: {
           priceMain: "R$ 18,90",
           period: "/mês",
           billingDetail: "R$ 56,72 cobrados a cada 3 meses (5% de desconto)",
-          checkoutUrl: CHECKOUT_BASE_URL
+          checkoutUrl: CHECKOUT_BASE_URL + "trimestral"
         },
         semestral: {
           priceMain: "R$ 17,91",
           period: "/mês",
           billingDetail: "R$ 107,46 cobrados a cada 6 meses (10% de desconto)",
-          checkoutUrl: CHECKOUT_BASE_URL
+          checkoutUrl: CHECKOUT_BASE_URL + "semestral"
         },
         anual: {
           priceMain: "R$ 16,91",
           period: "/mês",
           billingDetail: "R$ 202,98 cobrados anualmente (15% de desconto do preço mensal)",
-          checkoutUrl: CHECKOUT_BASE_URL
+          checkoutUrl: CHECKOUT_BASE_URL + "anual"
         }
       };
 
