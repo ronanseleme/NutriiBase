@@ -26,6 +26,8 @@ jobs:
           supabase functions deploy list-plans --project-ref yvsqvvjrprovcpfqmevh
           supabase functions deploy create-checkout-session --project-ref yvsqvvjrprovcpfqmevh
           supabase functions deploy create-portal-session --project-ref yvsqvvjrprovcpfqmevh
+          supabase functions deploy subscription-details --project-ref yvsqvvjrprovcpfqmevh
+          supabase functions deploy manage-subscription --project-ref yvsqvvjrprovcpfqmevh
           # --no-verify-jwt: o Stripe chama essa função sem token do Supabase —
           # a verificação de que a chamada é legítima é a assinatura HMAC do
           # corpo (STRIPE_WEBHOOK_SECRET), checada dentro do código.

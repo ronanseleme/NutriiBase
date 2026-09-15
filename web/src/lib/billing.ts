@@ -17,6 +17,28 @@ export interface Plan {
   oneTime: PriceInfo | null
 }
 
+export interface InvoiceInfo {
+  id: string
+  date: string
+  amount: number
+  currency: string
+  status: string
+  hostedInvoiceUrl: string | null
+  invoicePdf: string | null
+}
+export interface SubscriptionDetails {
+  status: string
+  planLabel: string
+  amount: number | null
+  currency: string
+  interval: string | null
+  intervalCount: number | null
+  currentPeriodEnd: string | null
+  cancelAtPeriodEnd: boolean
+  paymentMethod: { brand: string; last4: string; expMonth: number; expYear: number } | null
+  invoices: InvoiceInfo[]
+}
+
 export class BillingError extends Error {
   code: string
   constructor(message: string, code: string) {
@@ -65,7 +87,20 @@ export async function openBillingPortal(): Promise<void> {
   const data = await unwrap<{ url: string }>(
     supabase.functions.invoke('create-portal-session', { body: { returnUrl: origin } }),
   )
-  window.location.href = data.url
+  // Nova aba, não navega pra fora do app — trocar cartão ainda depende do
+  // formulário seguro hospedado pelo Stripe (não temos Stripe Elements
+  // embutido aqui), mas o site continua aberto por trás.
+  window.open(data.url, '_blank', 'noopener,noreferrer')
+}
+
+export async function getSubscriptionDetails(): Promise<SubscriptionDetails> {
+  return unwrap<SubscriptionDetails>(supabase.functions.invoke('subscription-details', { method: 'GET' }))
+}
+
+export async function manageSubscription(action: 'cancel' | 'reactivate'): Promise<{ cancelAtPeriodEnd: boolean }> {
+  return unwrap<{ cancelAtPeriodEnd: boolean }>(
+    supabase.functions.invoke('manage-subscription', { body: { action } }),
+  )
 }
 
 export function mapBillingErrorCode(code: string, serverMessage?: string): string {

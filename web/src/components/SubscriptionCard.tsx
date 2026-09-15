@@ -1,7 +1,6 @@
-import { useState } from 'react'
-import { openBillingPortal, mapBillingErrorCode, BillingError } from '../lib/billing'
 import { CreditsBadge } from './CreditsBadge'
 import { PlanSelector } from './PlanSelector'
+import { SubscriptionDetails } from './SubscriptionDetails'
 import type { Profile } from '../types'
 
 function formatDate(iso: string): string {
@@ -22,20 +21,7 @@ export function SubscriptionCard({ profile }: { profile: Profile }) {
 }
 
 function ProPlanCard({ profile }: { profile: Profile }) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const isLicencaAvulsa = !!profile.licencaAvulsaExpiraEm
-
-  async function handleManage() {
-    setLoading(true)
-    setError(null)
-    try {
-      await openBillingPortal()
-    } catch (err) {
-      setError(err instanceof BillingError ? mapBillingErrorCode(err.code, err.message) : mapBillingErrorCode('upstream_error'))
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="nb-card">
@@ -43,22 +29,12 @@ function ProPlanCard({ profile }: { profile: Profile }) {
       <CreditsBadge access={profile} />
 
       {isLicencaAvulsa ? (
-        <>
-          <p className="mb-3 text-[0.84rem] text-[var(--text-soft)]">
-            Licença avulsa (Pix) válida até <b className="text-[var(--text)]">{formatDate(profile.licencaAvulsaExpiraEm!)}</b>. Pague de
-            novo antes de vencer pra continuar com o Pro sem interrupção.
-          </p>
-        </>
+        <p className="mb-3 text-[0.84rem] text-[var(--text-soft)]">
+          Licença avulsa (Pix) válida até <b className="text-[var(--text)]">{formatDate(profile.licencaAvulsaExpiraEm!)}</b>. Pague de
+          novo antes de vencer pra continuar com o Pro sem interrupção.
+        </p>
       ) : (
-        <>
-          {error && <div className="mb-3 text-[0.8rem] text-[var(--coral)]">{error}</div>}
-          <button type="button" onClick={handleManage} disabled={loading} className="nb-btn nb-btn-secondary w-full py-2.5">
-            {loading ? 'Abrindo…' : 'Gerenciar assinatura'}
-          </button>
-          <p className="mt-2 text-[0.74rem] text-[var(--text-soft)]">
-            Trocar cartão, ver faturas ou cancelar — tudo direto com o Stripe, com segurança.
-          </p>
-        </>
+        <SubscriptionDetails />
       )}
     </div>
   )

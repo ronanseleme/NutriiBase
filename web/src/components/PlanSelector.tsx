@@ -9,7 +9,7 @@ import {
   type RecurringPriceInfo,
 } from '../lib/billing'
 
-function formatCurrency(cents: number, currency: string): string {
+export function formatCurrency(cents: number, currency: string): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency })
 }
 
