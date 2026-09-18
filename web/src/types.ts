@@ -69,6 +69,8 @@ export interface Profile {
   creditosMensais: number
   dataProximaRenovacao: string | null
   licencaAvulsaExpiraEm: string | null
+  estimativasIaFreeHoje: number
+  estimativasIaFreeData: string | null
 }
 
 // Subconjunto de Profile usado só para as regras de acesso a IA (Chat e
@@ -79,6 +81,8 @@ export interface AiAccess {
   creditosIa: number
   creditosMensais: number
   dataProximaRenovacao: string | null
+  estimativasIaFreeHoje: number
+  estimativasIaFreeData: string | null
 }
 
 export interface FoodItem {
@@ -90,6 +94,7 @@ export interface FoodItem {
   carbs: number
   fat: number
   descricaoIa?: string | null
+  edicoes?: number
 }
 
 export interface Workout {

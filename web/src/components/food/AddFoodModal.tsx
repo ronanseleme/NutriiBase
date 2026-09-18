@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FOODS, scaledFood, type FoodDbEntry } from '../../lib/foods'
 import { uid } from '../../lib/uid'
+import { CreditsBadge } from '../CreditsBadge'
 import type { AiAccess, FoodItem } from '../../types'
 
 type Mode = 'db' | 'manual'
@@ -62,6 +63,7 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
   )
   const [addedCount, setAddedCount] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const results = (() => {
     const nq = normalize(search.trim())
@@ -148,9 +150,13 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
     if (!entry) return
     if (isEdit) {
       setSaving(true)
-      const { error } = await onUpdate(entry)
+      setError(null)
+      const { error: updateError } = await onUpdate(entry)
       setSaving(false)
-      if (!error) onClose()
+      // Prefere a mensagem real do banco (ex: limite de 1 edição/item do
+      // Free) — só cai no texto genérico se não vier nenhuma.
+      if (updateError) setError(updateError.message || 'Não foi possível salvar, tente novamente.')
+      else onClose()
       return
     }
     onAdd(entry)
@@ -186,15 +192,18 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
           ))}
         </div>
 
-        {!isEdit && access.role !== 'free' && onDescribeWithAI && (
-          <button
-            type="button"
-            onClick={onDescribeWithAI}
-            className="mb-4 w-full rounded-full px-3 py-2 text-[0.82rem] font-bold text-[var(--purple)]"
-            style={{ background: 'color-mix(in srgb, var(--purple) 12%, var(--surface))' }}
-          >
-            ✨ Descrever com IA
-          </button>
+        {!isEdit && onDescribeWithAI && (
+          <>
+            <CreditsBadge access={access} />
+            <button
+              type="button"
+              onClick={onDescribeWithAI}
+              className="mb-4 w-full rounded-full px-3 py-2 text-[0.82rem] font-bold text-[var(--purple)]"
+              style={{ background: 'color-mix(in srgb, var(--purple) 12%, var(--surface))' }}
+            >
+              ✨ Descrever com IA
+            </button>
+          </>
         )}
 
         {mode === 'db' && (
@@ -243,6 +252,12 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
 
         {mode === 'manual' && (
           <ManualFields manual={manual} setManual={setManual} onGramsChange={handleGramsChange} onFieldChange={updateMacroField} />
+        )}
+
+        {error && (
+          <div className="mt-3 rounded-[10px] bg-[color-mix(in_srgb,var(--coral)_10%,var(--surface))] p-2.5 text-[0.82rem] text-[var(--coral)]">
+            {error}
+          </div>
         )}
 
         <div className="mt-4 flex justify-end gap-2.5">

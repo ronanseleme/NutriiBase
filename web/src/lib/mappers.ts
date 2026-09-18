@@ -53,6 +53,8 @@ export interface ProfileRow {
   creditos_mensais: number | null
   data_proxima_renovacao: string | null
   licenca_avulsa_expira_em: string | null
+  estimativas_ia_free_hoje: number | null
+  estimativas_ia_free_data: string | null
 }
 
 // Propositalmente NÃO inclui role/creditos_ia/creditos_mensais/
@@ -117,6 +119,8 @@ export function dbProfileToLocal(row: ProfileRow): Omit<Profile, 'targets'> {
     creditosMensais: row.creditos_mensais ?? 50,
     dataProximaRenovacao: row.data_proxima_renovacao,
     licencaAvulsaExpiraEm: row.licenca_avulsa_expira_em,
+    estimativasIaFreeHoje: row.estimativas_ia_free_hoje ?? 0,
+    estimativasIaFreeData: row.estimativas_ia_free_data,
   }
 }
 
@@ -133,6 +137,7 @@ export interface RefeicaoRow {
   carboidrato_g: number
   gordura_g: number
   descricao_ia: string | null
+  edicoes: number | null
 }
 
 export function refeicaoRowToLocal(row: RefeicaoRow): FoodItem {
@@ -145,6 +150,7 @@ export function refeicaoRowToLocal(row: RefeicaoRow): FoodItem {
     carbs: row.carboidrato_g,
     fat: row.gordura_g,
     descricaoIa: row.descricao_ia,
+    edicoes: row.edicoes ?? 0,
   }
 }
 

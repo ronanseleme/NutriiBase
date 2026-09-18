@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { ItemRow } from './ItemRow'
 import { AddFoodModal } from './AddFoodModal'
 import { MealAiModal } from './MealAiModal'
-import { UpgradeGate } from '../UpgradeGate'
 import type { AiAccess, FoodItem } from '../../types'
 
 interface Props {
@@ -34,7 +33,6 @@ export function MealDetail({
 }: Props) {
   const [showAdd, setShowAdd] = useState(false)
   const [showAi, setShowAi] = useState(false)
-  const [showAiUpgrade, setShowAiUpgrade] = useState(false)
   const [editItem, setEditItem] = useState<FoodItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,7 +42,9 @@ export function MealDetail({
     setError(null)
     const { error: saveError } = await onSaveMeal()
     setSaving(false)
-    if (saveError) setError('Não foi possível salvar, tente novamente.')
+    // Prefere a mensagem real do banco (ex: limite de 5 alimentos/dia do
+    // Free) — só cai no texto genérico se não vier nenhuma.
+    if (saveError) setError(saveError.message || 'Não foi possível salvar, tente novamente.')
   }
 
   return (
@@ -54,7 +54,7 @@ export function MealDetail({
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => (access.role === 'free' ? setShowAiUpgrade(true) : setShowAi(true))}
+            onClick={() => setShowAi(true)}
             className="rounded-full px-3 py-1.5 text-[0.78rem] font-bold text-[var(--blue)]"
             style={{ background: 'color-mix(in srgb, var(--blue) 12%, var(--surface))' }}
           >
@@ -134,20 +134,6 @@ export function MealDetail({
       )}
       {showAi && (
         <MealAiModal mealLabel={mealLabel} access={access} onAddMany={onAddManyToDraft} onClose={() => setShowAi(false)} />
-      )}
-      {showAiUpgrade && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]">
-          <div className="w-full max-w-md">
-            <UpgradeGate description="Assinantes Pro podem descrever a refeição em texto livre e deixar a IA calcular kcal e macros automaticamente." />
-            <button
-              type="button"
-              onClick={() => setShowAiUpgrade(false)}
-              className="nb-btn nb-btn-secondary mt-2.5 w-full py-2"
-            >
-              Fechar
-            </button>
-          </div>
-        </div>
       )}
     </div>
   )

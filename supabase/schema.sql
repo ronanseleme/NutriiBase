@@ -180,6 +180,8 @@ begin
      or new.data_proxima_renovacao is distinct from old.data_proxima_renovacao
      or new.stripe_customer_id is distinct from old.stripe_customer_id
      or new.licenca_avulsa_expira_em is distinct from old.licenca_avulsa_expira_em
+     or new.estimativas_ia_free_hoje is distinct from old.estimativas_ia_free_hoje
+     or new.estimativas_ia_free_data is distinct from old.estimativas_ia_free_data
   then
     raise exception 'Não é permitido alterar role, créditos ou dados de cobrança diretamente.';
   end if;
@@ -864,3 +866,163 @@ begin
   return true;
 end;
 $$;
+
+-- ========== Etapa 8 — regras de negócio Free vs Pro (limites diários) ==========
+-- Antes disso, "Free" só tinha 3 diferenças reais na prática: sem Chat de
+-- IA, sem refeição por voz, e sem nenhuma estimativa de IA (bloqueio
+-- total). O resto (registros de refeição, edições, histórico, metas
+-- personalizadas) não tinha limite nenhum, mesmo a landing page
+-- anunciando limites específicos. Este bloco fecha essas lacunas.
+
+-- 3 estimativas de IA em texto por dia pro Free ("Descrever com IA") —
+-- contador diário separado do sistema de créditos mensais do Pro (que
+-- continua intocado). Reseta sozinho no primeiro uso de cada dia, sem
+-- precisar de cron: a própria função confere se `estimativas_ia_free_data`
+-- é de hoje: se não for, zera o contador antes de checar o limite.
+alter table public.profiles
+  add column if not exists estimativas_ia_free_hoje int not null default 0,
+  add column if not exists estimativas_ia_free_data date;
+
+-- Chamada pela Edge Function describe-meal (Etapa 6) logo após uma resposta
+-- boa da IA, só para usuários Free — mesmo padrão do consumir_credito_ia
+-- (bypass da proteção de colunas, `for update` pra travar a linha contra
+-- duas chamadas simultâneas do mesmo usuário).
+create or replace function public.consumir_estimativa_ia_free()
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_role public.user_role_enum;
+  v_hoje int;
+  v_data date;
+begin
+  perform set_config('app.bypass_profile_protection', 'true', true);
+
+  select role, estimativas_ia_free_hoje, estimativas_ia_free_data
+  into v_role, v_hoje, v_data
+  from public.profiles
+  where id = auth.uid()
+  for update;
+
+  if not found or v_role <> 'free' then
+    return false;
+  end if;
+
+  if v_data is distinct from current_date then
+    v_hoje := 0;
+  end if;
+
+  if v_hoje >= 3 then
+    return false;
+  end if;
+
+  update public.profiles
+  set estimativas_ia_free_hoje = v_hoje + 1,
+      estimativas_ia_free_data = current_date
+  where id = auth.uid();
+
+  return true;
+end;
+$$;
+
+-- Máximo de 5 alimentos registrados por dia pro Free (Pro/admin sem
+-- limite). Trigger em vez de checagem só no frontend porque cobre
+-- qualquer forma de inserção (inclusive o insert em lote do "Salvar
+-- refeição", que manda vários alimentos de uma vez).
+alter table public.refeicoes
+  add column if not exists edicoes int not null default 0;
+
+create or replace function public.protect_refeicoes_free_limits()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_role public.user_role_enum;
+  v_count int;
+begin
+  select role into v_role from public.profiles where id = new.user_id;
+  if v_role <> 'free' then
+    return new;
+  end if;
+
+  select count(*) into v_count from public.refeicoes where user_id = new.user_id and data = new.data;
+  if v_count >= 5 then
+    raise exception 'Plano Free permite até 5 alimentos registrados por dia. Assine o Pro para registros ilimitados.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists refeicoes_free_insert_limit on public.refeicoes;
+create trigger refeicoes_free_insert_limit
+  before insert on public.refeicoes
+  for each row execute function public.protect_refeicoes_free_limits();
+
+-- 1 edição por alimento salvo pro Free — a coluna `edicoes` conta quantas
+-- vezes esse item específico já foi editado; o trigger nega a 2ª edição e
+-- incrementa o contador na 1ª (sobrescrevendo qualquer valor que o
+-- frontend tenha mandado, de propósito — quem manda é sempre o banco).
+create or replace function public.protect_refeicoes_free_edit_limit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_role public.user_role_enum;
+begin
+  select role into v_role from public.profiles where id = new.user_id;
+  if v_role = 'free' and old.edicoes >= 1 then
+    raise exception 'Plano Free permite 1 edição por alimento registrado. Assine o Pro para edições ilimitadas.';
+  end if;
+  new.edicoes := old.edicoes + 1;
+  return new;
+end;
+$$;
+
+drop trigger if exists refeicoes_free_edit_limit on public.refeicoes;
+create trigger refeicoes_free_edit_limit
+  before update on public.refeicoes
+  for each row execute function public.protect_refeicoes_free_edit_limit();
+
+-- Histórico de 7 dias pro Free (refeições, treinos e peso) — Pro/admin
+-- continuam vendo tudo. Precisa ser uma condição extra DENTRO da mesma
+-- policy "own" (com AND), não uma policy nova: RLS combina múltiplas
+-- policies permissivas com OR, então uma policy nova só restringiria se
+-- não houvesse nenhuma outra liberando — o que não é o caso aqui.
+create or replace function public.is_free(uid uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles p where p.id = uid and p.role = 'free'
+  );
+$$;
+
+drop policy if exists "refeicoes_select_own" on public.refeicoes;
+create policy "refeicoes_select_own" on public.refeicoes
+  for select using (
+    auth.uid() = user_id
+    and (not public.is_free(auth.uid()) or data >= (current_date - interval '7 days'))
+  );
+
+drop policy if exists "treinos_select_own" on public.treinos;
+create policy "treinos_select_own" on public.treinos
+  for select using (
+    auth.uid() = user_id
+    and (not public.is_free(auth.uid()) or data >= (current_date - interval '7 days'))
+  );
+
+drop policy if exists "registros_peso_select_own" on public.registros_peso;
+create policy "registros_peso_select_own" on public.registros_peso
+  for select using (
+    auth.uid() = user_id
+    and (not public.is_free(auth.uid()) or data >= (current_date - interval '7 days'))
+  );

@@ -80,14 +80,22 @@ Deno.serve(async (req) => {
   // que realmente impede o uso).
   const { data: profileRow, error: profileError } = await supabaseClient
     .from("profiles")
-    .select("role, creditos_ia, data_proxima_renovacao")
+    .select("role, creditos_ia, data_proxima_renovacao, estimativas_ia_free_hoje, estimativas_ia_free_data")
     .eq("id", userData.user.id)
     .single();
   if (profileError || !profileRow) {
     return errorResponse("upstream_error", "Não foi possível verificar seu acesso.", 500);
   }
+  const FREE_LIMIT_MESSAGE = "Você já usou suas 3 estimativas de IA gratuitas hoje. Assine o Pro para estimativas ilimitadas.";
   if (profileRow.role === "free") {
-    return errorResponse("forbidden_free", "Recurso exclusivo para assinantes Pro.", 403);
+    // Checagem "otimista" — evita gastar uma chamada de IA quando já dá pra
+    // saber que vai bloquear. A checagem que vale de verdade é atômica, lá
+    // embaixo (consumir_estimativa_ia_free), depois da IA responder bem.
+    const hoje = new Date().toISOString().slice(0, 10);
+    const usadasHoje = profileRow.estimativas_ia_free_data === hoje ? (profileRow.estimativas_ia_free_hoje ?? 0) : 0;
+    if (usadasHoje >= 3) {
+      return errorResponse("limit_reached", FREE_LIMIT_MESSAGE, 403);
+    }
   }
   if (profileRow.role === "pro" && (profileRow.creditos_ia ?? 0) <= 0) {
     const dias = profileRow.data_proxima_renovacao
@@ -165,14 +173,20 @@ Deno.serve(async (req) => {
     fat: Math.max(0, Math.round(Number(it?.fat) || 0)),
   }));
 
-  // Só debita o crédito depois de uma resposta boa da IA — falha da IA
-  // não deve custar crédito ao usuário. Consumo atômico (trava a linha,
-  // confere de novo o saldo) pra nunca deixar creditos_ia negativo.
-  const { data: consumed, error: consumeError } = await supabaseClient.rpc("consumir_credito_ia", {
-    descricao: "Descrever refeição com IA",
-  });
+  // Só debita o crédito/contador depois de uma resposta boa da IA — falha
+  // da IA não deve custar nada ao usuário. Consumo atômico (trava a linha,
+  // confere de novo o saldo/contador) pra nunca passar do limite mesmo com
+  // duas chamadas simultâneas do mesmo usuário.
+  const { data: consumed, error: consumeError } =
+    profileRow.role === "free"
+      ? await supabaseClient.rpc("consumir_estimativa_ia_free")
+      : await supabaseClient.rpc("consumir_credito_ia", { descricao: "Descrever refeição com IA" });
   if (consumeError || !consumed) {
-    return errorResponse("limit_reached", "Seus créditos de IA deste mês acabaram.", 403);
+    return errorResponse(
+      "limit_reached",
+      profileRow.role === "free" ? FREE_LIMIT_MESSAGE : "Seus créditos de IA deste mês acabaram.",
+      403,
+    );
   }
 
   return jsonResponse({ items: clean });

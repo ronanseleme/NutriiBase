@@ -3,6 +3,8 @@ import { WeightBodyFatKpi } from '../WeightBodyFatKpi'
 import { CalcMemoryKcal, CalcMemoryMacro, CalcMemorySaldo } from '../CalcMemory'
 import { GoalsForm } from './GoalsForm'
 import { MacroOverrideForm } from './MacroOverrideForm'
+import { UpgradeGate } from '../UpgradeGate'
+import { exportGoalsPdf } from '../../lib/exportGoalsPdf'
 import { parseISODate, todayISO } from '../../lib/dateUtils'
 import { useDayLog } from '../../hooks/useDayLog'
 import type { Profile } from '../../types'
@@ -58,6 +60,7 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, userId, onSav
 
   const weeklyGoal = profile.weeklyWorkoutGoal
   const weeklyPct = weeklyGoal ? Math.round((weekWorkoutCount / weeklyGoal) * 100) : 0
+  const isFree = profile.role === 'free'
 
   const hasOwnGoalText = !!profile.metaDescricao?.trim()
   const goalText = formatGoalText(
@@ -74,6 +77,16 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, userId, onSav
           <p className="mt-2 text-[0.75rem] italic text-white/70">Exemplo — escreva o seu logo abaixo, em "Seu objetivo".</p>
         )}
       </div>
+
+      {!isFree && (
+        <button
+          type="button"
+          onClick={() => exportGoalsPdf(profile, startWeight, weekWorkoutCount)}
+          className="nb-btn nb-btn-secondary w-full py-2.5"
+        >
+          📄 Exportar minhas metas em PDF
+        </button>
+      )}
 
       <div className="nb-card">
         <div className="mb-3 font-[Space_Grotesk] font-bold">Meta de peso e composição corporal</div>
@@ -101,7 +114,14 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, userId, onSav
         )}
 
         <div className="my-4 border-t border-[var(--line)]" />
-        <GoalsForm profile={profile} onSave={onSaveProfile} />
+        {isFree ? (
+          <UpgradeGate
+            title="Metas personalizadas são Pro"
+            description="Assinantes Pro podem definir peso-meta, %gordura-meta, data-meta, treino semanal e seu próprio texto de objetivo."
+          />
+        ) : (
+          <GoalsForm profile={profile} onSave={onSaveProfile} />
+        )}
       </div>
 
       <div className="nb-card">
@@ -138,7 +158,16 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, userId, onSav
           Memória de cálculo — macros
         </div>
         <CalcMemoryMacro p={profile} t={t} />
-        <MacroOverrideForm profile={profile} onSave={onSaveProfile} />
+        {isFree ? (
+          <div className="mt-4">
+            <UpgradeGate
+              title="Ajuste manual de macros é Pro"
+              description="Assinantes Pro podem sobrescrever proteína e gordura da meta calculada automaticamente."
+            />
+          </div>
+        ) : (
+          <MacroOverrideForm profile={profile} onSave={onSaveProfile} />
+        )}
       </div>
 
       <div className="nb-card">

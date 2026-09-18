@@ -20,7 +20,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { AdminTab } from './components/admin/AdminTab'
 import { RoleBadge } from './components/RoleBadge'
 import { ViewModeToggle, type ViewMode } from './components/ViewModeToggle'
-import { todayISO } from './lib/dateUtils'
+import { parseISODate, todayISO } from './lib/dateUtils'
 import { getInitials } from './lib/initials'
 import { registerGoToProfile, registerGoToAddMeal } from './lib/tabNav'
 import type { DateRange } from './types'
@@ -153,6 +153,19 @@ function App() {
             <div className="mb-4 -mt-2">
               <ViewModeToggle mode={viewMode} onChange={setViewMode} />
             </div>
+            {profile.role === 'free' &&
+              (() => {
+                const earliestIso = customRange?.start ?? dateIso
+                const daysAgo = Math.round(
+                  (parseISODate(todayISO()).getTime() - parseISODate(earliestIso).getTime()) / 86400000,
+                )
+                if (daysAgo <= 7) return null
+                return (
+                  <p className="mb-4 -mt-2 text-[0.78rem] text-[var(--text-soft)]">
+                    📅 Free mostra só os últimos 7 dias de histórico — assine o Pro pra ver datas mais antigas.
+                  </p>
+                )
+              })()}
           </>
         )}
 

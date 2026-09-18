@@ -143,32 +143,41 @@ export function MealAiModal({ mealLabel, access, onAddMany, onClose }: Props) {
 
         <div className="relative mb-1">
           <textarea
-            placeholder="Descreva tudo que você comeu nesta refeição, ou toque no microfone e fale. Ex: 2 ovos mexidos, uma fatia de pão integral, café com leite e uma banana"
+            placeholder={
+              access.role === 'free'
+                ? 'Descreva tudo que você comeu nesta refeição. Ex: 2 ovos mexidos, uma fatia de pão integral, café com leite e uma banana'
+                : 'Descreva tudo que você comeu nesta refeição, ou toque no microfone e fale. Ex: 2 ovos mexidos, uma fatia de pão integral, café com leite e uma banana'
+            }
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
-            className="nb-input min-h-14 pr-11"
+            className={`nb-input min-h-14 ${access.role === 'free' ? '' : 'pr-11'}`}
           />
-          <button
-            type="button"
-            onClick={toggleRecording}
-            disabled={transcribing}
-            aria-label={recorder.status === 'recording' ? 'Parar gravação' : 'Falar em vez de digitar'}
-            title={recorder.status === 'recording' ? 'Parar gravação' : 'Falar em vez de digitar'}
-            className={`absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
-              recorder.status === 'recording'
-                ? 'animate-pulse bg-[var(--coral)] text-white'
-                : 'text-[var(--text-soft)] hover:bg-[var(--surface)] hover:text-[var(--purple)]'
-            }`}
-          >
-            {transcribing ? (
-              <MicSpinnerIcon />
-            ) : recorder.status === 'recording' ? (
-              <StopIcon />
-            ) : (
-              <MicIcon />
-            )}
-          </button>
+          {access.role !== 'free' && (
+            <button
+              type="button"
+              onClick={toggleRecording}
+              disabled={transcribing}
+              aria-label={recorder.status === 'recording' ? 'Parar gravação' : 'Falar em vez de digitar'}
+              title={recorder.status === 'recording' ? 'Parar gravação' : 'Falar em vez de digitar'}
+              className={`absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
+                recorder.status === 'recording'
+                  ? 'animate-pulse bg-[var(--coral)] text-white'
+                  : 'text-[var(--text-soft)] hover:bg-[var(--surface)] hover:text-[var(--purple)]'
+              }`}
+            >
+              {transcribing ? (
+                <MicSpinnerIcon />
+              ) : recorder.status === 'recording' ? (
+                <StopIcon />
+              ) : (
+                <MicIcon />
+              )}
+            </button>
+          )}
         </div>
+        {access.role === 'free' && (
+          <p className="mb-2 text-[0.72rem] text-[var(--text-soft)]">🎙️ Adicionar por voz é exclusivo Pro.</p>
+        )}
         {recorder.status === 'recording' && (
           <div className="mb-2 flex items-center gap-2 rounded-[10px] bg-[color-mix(in_srgb,var(--coral)_8%,var(--surface))] px-3 py-2">
             <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[var(--coral)]" />

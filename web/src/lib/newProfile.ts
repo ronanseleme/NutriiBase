@@ -25,6 +25,8 @@ export function newProfile(userId: string | null): Profile {
     creditosMensais: 50,
     dataProximaRenovacao: null,
     licencaAvulsaExpiraEm: null,
+    estimativasIaFreeHoje: 0,
+    estimativasIaFreeData: null,
   }
   return { ...base, targets: computeTargets(base) }
 }
