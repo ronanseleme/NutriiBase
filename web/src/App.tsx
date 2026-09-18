@@ -22,7 +22,7 @@ import { RoleBadge } from './components/RoleBadge'
 import { ViewModeToggle, type ViewMode } from './components/ViewModeToggle'
 import { todayISO } from './lib/dateUtils'
 import { getInitials } from './lib/initials'
-import { registerGoToProfile } from './lib/tabNav'
+import { registerGoToProfile, registerGoToAddMeal } from './lib/tabNav'
 import type { DateRange } from './types'
 
 function App() {
@@ -32,9 +32,15 @@ function App() {
   const [tab, setTab] = useState<TabKey>('dashboard')
   const [viewMode, setViewMode] = useState<ViewMode>('daily')
   const [customRange, setCustomRange] = useState<DateRange | null>(null)
+  const [addMealSignal, setAddMealSignal] = useState(0)
 
   useEffect(() => {
     registerGoToProfile(() => setTab('profile'))
+    registerGoToAddMeal(() => {
+      setViewMode('daily')
+      setTab('food')
+      setAddMealSignal((n) => n + 1)
+    })
   }, [])
 
   useEffect(() => {
@@ -177,6 +183,7 @@ function App() {
             dateIso={dateIso}
             viewMode={viewMode}
             customRange={customRange}
+            openPickerSignal={addMealSignal}
             onAddToDraft={addToDraft}
             onAddManyToDraft={(mealKey, items) => items.forEach((it) => addToDraft(mealKey, it))}
             onRemoveDraft={removeDraftItem}

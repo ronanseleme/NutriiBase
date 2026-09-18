@@ -26,6 +26,7 @@ interface Props {
   dateIso: string
   viewMode: ViewMode
   customRange: DateRange | null
+  openPickerSignal?: number
   onAddToDraft: (mealKey: MealKey, item: FoodItem) => void
   onAddManyToDraft: (mealKey: MealKey, items: FoodItem[]) => void
   onRemoveDraft: (mealKey: MealKey, itemId: string) => void
@@ -43,6 +44,7 @@ export function FoodTab({
   dateIso,
   viewMode,
   customRange,
+  openPickerSignal,
   onAddToDraft,
   onAddManyToDraft,
   onRemoveDraft,
@@ -52,6 +54,13 @@ export function FoodTab({
 }: Props) {
   const [active, setActive] = useState<MealKey | 'geral'>('geral')
   const [pickingMeal, setPickingMeal] = useState(false)
+
+  // Sinal vindo de fora (ex: botão "Adicionar refeição" no Painel) pra abrir
+  // a tela de escolha de refeição direto, sem precisar clicar de novo aqui.
+  useEffect(() => {
+    if (openPickerSignal) setPickingMeal(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openPickerSignal])
   const [addFlowMeal, setAddFlowMeal] = useState<MealKey | null>(null)
   const [aiFlowMeal, setAiFlowMeal] = useState<MealKey | null>(null)
   const dayTotals = dayFoodTotals(log.meals)

@@ -14,7 +14,7 @@ import { useRangeLogs } from '../hooks/useRangeLogs'
 import { useYearLogs } from '../hooks/useYearLogs'
 import { WeightBodyFatKpi } from './WeightBodyFatKpi'
 import { BalanceBarChart, type BalanceBar } from './BalanceBarChart'
-import { navigateToProfile } from '../lib/tabNav'
+import { navigateToProfile, navigateToAddMeal } from '../lib/tabNav'
 import type { ViewMode } from './ViewModeToggle'
 import type { DateRange, DayLog, Profile } from '../types'
 
@@ -99,6 +99,10 @@ export function Dashboard({ profile, log, userId, dateIso, viewMode, customRange
           {goalSignal.icon} {goalSignal.text}
         </p>
       </div>
+
+      <button type="button" onClick={navigateToAddMeal} className="nb-btn nb-btn-primary w-full py-2.5">
+        + Adicionar refeição
+      </button>
 
       {profile.role === 'free' && (
         <button

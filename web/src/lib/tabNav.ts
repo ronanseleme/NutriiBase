@@ -3,6 +3,7 @@
 // que passar um callback de navegação por várias camadas de props. App.tsx
 // registra o setter dele uma vez; quem quiser navegar só chama a função.
 let goToProfile: (() => void) | null = null
+let goToAddMeal: (() => void) | null = null
 
 export function registerGoToProfile(fn: () => void) {
   goToProfile = fn
@@ -10,4 +11,12 @@ export function registerGoToProfile(fn: () => void) {
 
 export function navigateToProfile() {
   goToProfile?.()
+}
+
+export function registerGoToAddMeal(fn: () => void) {
+  goToAddMeal = fn
+}
+
+export function navigateToAddMeal() {
+  goToAddMeal?.()
 }

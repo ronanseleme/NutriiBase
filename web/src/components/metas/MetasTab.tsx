@@ -11,6 +11,14 @@ function fmtNum(n: number | null | undefined): string {
   return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 }
 
+// Tira um "Objetivo:" que a pessoa (ou o texto de exemplo) tenha colocado no
+// início da frase, e garante a primeira letra maiúscula — sem esse prefixo
+// repetitivo, já que o card acima já tem o rótulo "Seu objetivo".
+function formatGoalText(text: string): string {
+  const stripped = text.replace(/^objetivo\s*:\s*/i, '').trim()
+  return stripped ? stripped.charAt(0).toUpperCase() + stripped.slice(1) : stripped
+}
+
 interface Props {
   profile: Profile
   startWeight: number
@@ -52,9 +60,10 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, userId, onSav
   const weeklyPct = weeklyGoal ? Math.round((weekWorkoutCount / weeklyGoal) * 100) : 0
 
   const hasOwnGoalText = !!profile.metaDescricao?.trim()
-  const goalText =
+  const goalText = formatGoalText(
     profile.metaDescricao?.trim() ||
-    'Objetivo: emagrecer e perder gordura corporal, mantendo a massa muscular através de uma dieta consistente e treino de força regular.'
+      'emagrecer e perder gordura corporal, mantendo a massa muscular através de uma dieta consistente e treino de força regular.',
+  )
 
   return (
     <div className="flex flex-col gap-4">
