@@ -327,6 +327,121 @@
       color: var(--purple-accent);
     }
 
+    /* ============================================================
+       Header Action Buttons: JÁ SOU CLIENTE & ASSINE O PRO
+       Destaque marcante no estado padrão e no :hover
+       ============================================================ */
+    .btn-header-client {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.09);
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      border-radius: var(--radius-pill);
+      padding: 7px 15px;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-header-client svg {
+      color: rgba(255, 255, 255, 0.88);
+      transition: transform 0.22s ease, color 0.22s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-header-client:hover {
+      background: rgba(255, 255, 255, 0.22);
+      border-color: #FFFFFF;
+      color: #FFFFFF;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.28), 0 0 14px rgba(179, 136, 255, 0.4);
+    }
+
+    .btn-header-client:hover svg {
+      color: #FFFFFF;
+      transform: scale(1.15);
+    }
+
+    .btn-header-pro {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      background: linear-gradient(135deg, #7C3AED 0%, #9333EA 50%, #C026D3 100%);
+      border: 1.5px solid rgba(233, 213, 255, 0.7);
+      border-radius: var(--radius-pill);
+      padding: 7px 17px;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      box-shadow: 0 4px 16px rgba(124, 58, 237, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      position: relative;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-header-pro svg {
+      color: #FDE68A;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      flex-shrink: 0;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+    }
+
+    .btn-header-pro:hover {
+      background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #D946EF 100%);
+      border-color: #FFFFFF;
+      color: #FFFFFF;
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 8px 26px rgba(168, 85, 247, 0.75), 0 0 18px rgba(217, 70, 239, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .btn-header-pro:hover svg {
+      transform: scale(1.25) rotate(15deg);
+      color: #FFF;
+    }
+
+    .mobile-menu-drawer .btn-header-client,
+    .mobile-menu-drawer .btn-header-pro {
+      width: 100%;
+      padding: 12px 18px;
+      font-size: 0.875rem;
+      border-radius: var(--radius-sm);
+    }
+
+    @media (max-width: 1180px) and (min-width: 901px) {
+      .header-nav {
+        gap: 16px;
+      }
+      .header-actions {
+        gap: 8px;
+      }
+      .btn-header-client,
+      .btn-header-pro {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        letter-spacing: 0.02em;
+      }
+      .btn-share-header {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+      }
+    }
+
     /* Mobile Menu Toggle */
     .menu-toggle {
       display: none;
@@ -642,18 +757,18 @@
 
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
     }
 
     .feature-card {
       background-color: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius-md);
-      padding: 24px 20px;
+      padding: 24px 22px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: flex-start;
       transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
       min-width: 0;
     }
@@ -664,57 +779,12 @@
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
     }
 
-    .feature-card-footer {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    .btn-share-feature {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--ink-faint);
-      background: transparent;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-pill);
-      padding: 4px 10px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      white-space: nowrap;
-      user-select: none;
-    }
-
-    .btn-share-feature:hover {
-      color: var(--ink);
-      border-color: rgba(179, 136, 255, 0.45);
-      background: rgba(179, 136, 255, 0.08);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .btn-share-feature svg {
-      color: var(--purple-accent);
-      flex-shrink: 0;
-      transition: transform 0.2s ease;
-    }
-
-    .btn-share-feature:hover svg {
-      transform: scale(1.15);
-    }
-
-    /* Linha superior de identificação do card (sem sobreposição com títulos) */
+    /* Linha superior de identificação da categoria do card */
     .feature-top-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-      min-height: 24px;
+      margin-bottom: 12px;
+      min-height: 20px;
     }
 
     .feature-category-tag {
@@ -725,15 +795,23 @@
       letter-spacing: 0.05em;
     }
 
+    /* Badge Exclusivo Pro posicionado abaixo do título */
+    .feature-pro-badge-wrap {
+      display: flex;
+      align-items: center;
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+
     .pro-badge {
       position: relative;
       overflow: hidden;
       background: linear-gradient(135deg, rgba(224, 178, 85, 0.16) 0%, rgba(245, 208, 122, 0.28) 50%, rgba(224, 178, 85, 0.16) 100%);
       border: 1px solid rgba(224, 178, 85, 0.7);
       color: var(--gold);
-      font-size: 0.68rem;
+      font-size: 0.70rem;
       font-weight: 700;
-      padding: 3px 9px;
+      padding: 4px 10px;
       border-radius: var(--radius-pill);
       letter-spacing: 0.04em;
       display: inline-flex;
@@ -743,6 +821,20 @@
       box-shadow: 0 0 10px rgba(224, 178, 85, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25);
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
       transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .feature-free-badge {
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.32);
+      color: #C084FC;
+      font-size: 0.70rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
     }
 
     .feature-card:hover .pro-badge,
@@ -815,10 +907,10 @@
     }
 
     .feature-info h3 {
-      font-size: 1.15rem;
+      font-size: 1.22rem;
       font-weight: 600;
-      margin-bottom: 10px;
-      line-height: 1.4;
+      margin-bottom: 0;
+      line-height: 1.35;
       color: var(--ink);
     }
 
@@ -1010,7 +1102,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 0.7rem;
+      gap: 10px;
+      font-size: 0.72rem;
       color: var(--ink-muted);
       border-top: 1px solid var(--line);
       padding-top: 8px;
@@ -1235,6 +1328,60 @@
       display: inline-flex;
       align-items: center;
       white-space: nowrap;
+    }
+
+    /* Card 6 Preview: Treino & Gasto Calórico */
+    .workout-preview-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .workout-preview-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .workout-preview-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .workout-preview-badge svg {
+      color: var(--purple-accent);
+      flex-shrink: 0;
+    }
+
+    .workout-burn-pill {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #10B981;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+
+    .workout-preview-details {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--ink-faint);
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+
+    .workout-sync-tag {
+      color: var(--purple-accent);
+      font-weight: 600;
     }
 
     /* -------------------------------------------------------------
@@ -3632,8 +3779,8 @@
       <nav class="header-nav" aria-label="Navegação principal">
         <a href="#como-funciona" class="nav-link">Como funciona</a>
         <a href="#recursos" class="nav-link">Recursos</a>
-        <a href="#telas-app" class="nav-link">Por dentro</a>
         <a href="#planos" class="nav-link">Planos</a>
+        <a href="#telas-app" class="nav-link">Por dentro</a>
         <a href="#faq" class="nav-link">FAQ</a>
       </nav>
 
@@ -3649,8 +3796,18 @@
           </svg>
           <span>Compartilhar</span>
         </button>
-        <a href="https://nutriibase.com.br/app" class="btn btn-outline" id="desktop-ja-sou-cliente">
-          Já sou cliente
+        <a href="https://nutriibase.com.br/app" class="btn btn-header-client" id="desktop-ja-sou-cliente">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Já sou cliente</span>
+        </a>
+        <a href="#planos" class="btn btn-header-pro" id="desktop-assine-pro">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"></path>
+          </svg>
+          <span>Assine o Pro</span>
         </a>
         <button class="menu-toggle" id="menu-toggle-btn" aria-label="Abrir menu mobile" aria-expanded="false">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -3666,8 +3823,9 @@
     <div class="mobile-menu-drawer" id="mobile-menu">
       <a href="#como-funciona" class="nav-link mobile-link">Como funciona</a>
       <a href="#recursos" class="nav-link mobile-link">Recursos</a>
-      <a href="#telas-app" class="nav-link mobile-link">Por dentro</a>
       <a href="#planos" class="nav-link mobile-link">Planos</a>
+      <a href="#telas-app" class="nav-link mobile-link">Por dentro</a>
+      <a href="#prova-social" class="nav-link mobile-link">Resultados reais</a>
       <a href="#faq" class="nav-link mobile-link">FAQ</a>
       <button type="button" class="btn-share-mobile" id="mobile-share-btn" aria-label="Compartilhar site">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -3679,8 +3837,18 @@
         </svg>
         <span>Compartilhar site</span>
       </button>
-      <a href="https://nutriibase.com.br/app" class="btn btn-outline" id="mobile-ja-sou-cliente">
-        Já sou cliente
+      <a href="https://nutriibase.com.br/app" class="btn btn-header-client mobile-link" id="mobile-ja-sou-cliente">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>Já sou cliente</span>
+      </a>
+      <a href="#planos" class="btn btn-header-pro mobile-link" id="mobile-assine-pro">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"></path>
+        </svg>
+        <span>Assine o Pro</span>
       </a>
       <a href="https://nutriibase.com.br/app" class="btn btn-primary mobile-link" data-cta="action">Começar agora, é grátis</a>
     </div>
@@ -3797,7 +3965,7 @@
     </section>
 
     <!-- ============================================================
-         4. RECURSOS / FEATURE GALLERY (3 cards)
+         4. RECURSOS / FEATURE GALLERY (6 cards - 3x2)
          ============================================================ -->
     <section id="recursos" class="reveal-on-scroll" aria-label="Tecnologias e recursos principais do NutriiBase">
       <div class="container">
@@ -3843,10 +4011,12 @@
           <div class="feature-card" id="card-feature-foto">
             <div class="feature-top-row">
               <span class="feature-category-tag">Visão por IA</span>
-              <span class="pro-badge"><svg class="pro-badge-star" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>Exclusivo Pro</span>
             </div>
             <div class="feature-info">
               <h3>Foto do Prato com IA</h3>
+              <div class="feature-pro-badge-wrap">
+                <span class="pro-badge"><svg class="pro-badge-star" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>Exclusivo Pro</span>
+              </div>
               <p>Tire uma foto da sua refeição. A inteligência artificial identifica cada item e estima gramas e macros na hora.</p>
             </div>
             <div class="feature-preview">
@@ -3876,29 +4046,19 @@
                 </div>
               </div>
             </div>
-            <div class="feature-card-footer">
-              <button type="button" class="btn-share-feature" data-feature-id="foto" data-feature-title="Foto do Prato com IA" data-feature-desc="Tire uma foto da sua refeição e a IA calcula calorias e macronutrientes na hora, identificando cada item." aria-label="Compartilhar recurso Foto do Prato com IA">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="18" cy="5" r="3"></circle>
-                  <circle cx="6" cy="12" r="3"></circle>
-                  <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                <span>Compartilhar</span>
-              </button>
-            </div>
           </div>
 
-          <!-- Card 2: IA que entende descrição -->
+          <!-- Card 2: IA no Reconhecimento -->
           <div class="feature-card" id="card-feature-ia">
             <div class="feature-top-row">
               <span class="feature-category-tag">Linguagem natural</span>
-              <span class="pro-badge"><svg class="pro-badge-star" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>Exclusivo Pro</span>
             </div>
             <div class="feature-info">
               <h3>IA no Reconhecimento</h3>
-              <p>Compreende pratos brasileiros, marmitas e receitas caseiras sem rodeios.</p>
+              <div class="feature-pro-badge-wrap">
+                <span class="pro-badge"><svg class="pro-badge-star" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>Exclusivo Pro</span>
+              </div>
+              <p>Compreende pratos brasileiros, marmitas e receitas caseiras sem rodeios nem balanças.</p>
             </div>
             <div class="feature-preview">
               <div class="preview-input-box">
@@ -3911,27 +4071,56 @@
                 <span class="macro-tag">18g gord</span>
               </div>
             </div>
-            <div class="feature-card-footer">
-              <button type="button" class="btn-share-feature" data-feature-id="ia" data-feature-title="IA no Reconhecimento de Refeições" data-feature-desc="Compreende pratos brasileiros, marmitas e receitas caseiras sem balanças nem rodeios." aria-label="Compartilhar recurso IA no Reconhecimento">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="18" cy="5" r="3"></circle>
-                  <circle cx="6" cy="12" r="3"></circle>
-                  <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                <span>Compartilhar</span>
-              </button>
+          </div>
+
+          <!-- Card 3: Alimentação por Voz -->
+          <div class="feature-card" id="card-feature-voz">
+            <div class="feature-top-row">
+              <span class="feature-category-tag">Comando de voz</span>
+            </div>
+            <div class="feature-info">
+              <h3>Alimentação por Voz</h3>
+              <div class="feature-pro-badge-wrap">
+                <span class="pro-badge"><svg class="pro-badge-star" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>Exclusivo Pro</span>
+              </div>
+              <p>Dite sua refeição naturalmente enquanto come. A IA transcreve e calcula calorias na hora.</p>
+            </div>
+            <div class="feature-preview">
+              <div class="voice-preview-wrapper">
+                <div class="voice-audio-status">
+                  <div class="voice-mic-icon-box" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                      <line x1="12" y1="19" x2="12" y2="22"></line>
+                    </svg>
+                  </div>
+                  <div class="voice-waves-container" aria-label="Ouvindo áudio">
+                    <span class="voice-wave-bar"></span>
+                    <span class="voice-wave-bar"></span>
+                    <span class="voice-wave-bar"></span>
+                    <span class="voice-wave-bar"></span>
+                    <span class="voice-wave-bar"></span>
+                  </div>
+                  <span class="voice-tag-rec">Gravando</span>
+                </div>
+                <div class="voice-transcription-box">
+                  "2 fatias de pão com ovos mexidos e café" &rarr; <strong>290 kcal</strong>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Card 2: Gráficos de evolução (Estático / Apenas informativo) -->
+          <!-- Card 4: Gráficos de Evolução -->
           <div class="feature-card" id="card-feature-evolucao">
             <div class="feature-top-row">
               <span class="feature-category-tag">Constância</span>
             </div>
             <div class="feature-info">
               <h3>Gráficos de Evolução</h3>
+              <div class="feature-pro-badge-wrap">
+                <span class="feature-free-badge">Incluso no Free e Pro</span>
+              </div>
               <p>Histórico visual de calorias e macronutrientes para acompanhar sua constância diária.</p>
             </div>
             <div class="feature-preview">
@@ -3977,29 +4166,19 @@
                 </div>
               </div>
             </div>
-            <div class="feature-card-footer">
-              <button type="button" class="btn-share-feature" data-feature-id="evolucao" data-feature-title="Gráficos de Evolução Nutricional" data-feature-desc="Histórico visual de calorias e macronutrientes para acompanhar sua constância diária." aria-label="Compartilhar recurso Gráficos de Evolução">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="18" cy="5" r="3"></circle>
-                  <circle cx="6" cy="12" r="3"></circle>
-                  <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                <span>Compartilhar</span>
-              </button>
-            </div>
           </div>
 
-          <!-- Card 3: Chat de IA personalizado (Pro) -->
+          <!-- Card 5: Chat Nutricional IA -->
           <div class="feature-card" id="card-feature-chat">
             <div class="feature-top-row">
-              <span class="feature-category-tag">Assistente</span>
-              <span class="pro-badge"><svg class="pro-badge-star" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>Exclusivo Pro</span>
+              <span class="feature-category-tag">Assistente inteligente</span>
             </div>
             <div class="feature-info">
               <h3>Chat Nutricional IA</h3>
-              <p>Assistente que lembra do que você já comeu e sugere ajustes para suas metas.</p>
+              <div class="feature-pro-badge-wrap">
+                <span class="pro-badge"><svg class="pro-badge-star" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>Exclusivo Pro</span>
+              </div>
+              <p>Assistente com memória que lembra do que você já comeu e sugere ajustes para suas metas.</p>
             </div>
             <div class="feature-preview">
               <div class="chat-bubble-user">
@@ -4009,65 +4188,34 @@
                 "160g de iogurte grego ou 4 claras mexidas (~210 kcal)."
               </div>
             </div>
-            <div class="feature-card-footer">
-              <button type="button" class="btn-share-feature" data-feature-id="chat" data-feature-title="Chat Nutricional IA" data-feature-desc="Assistente que lembra do que você já comeu e sugere ajustes para suas metas." aria-label="Compartilhar recurso Chat Nutricional IA">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="18" cy="5" r="3"></circle>
-                  <circle cx="6" cy="12" r="3"></circle>
-                  <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                <span>Compartilhar</span>
-              </button>
-            </div>
           </div>
 
-          <!-- Card 4: Adicionar alimentação por voz (Pro) -->
-          <div class="feature-card" id="card-feature-voz">
+          <!-- Card 6: Treino & Gasto Calórico -->
+          <div class="feature-card" id="card-feature-treino">
             <div class="feature-top-row">
-              <span class="feature-category-tag">Agilidade</span>
-              <span class="pro-badge"><svg class="pro-badge-star" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>Exclusivo Pro</span>
+              <span class="feature-category-tag">Atividade física</span>
             </div>
             <div class="feature-info">
-              <h3>Alimentação por Voz</h3>
-              <p>Dite sua refeição naturalmente enquanto come. A IA transcreve e calcula na hora.</p>
+              <h3>Treino & Gasto Calórico</h3>
+              <div class="feature-pro-badge-wrap">
+                <span class="feature-free-badge">Incluso no Free e Pro</span>
+              </div>
+              <p>Monitore musculação, cardio e esportes com cálculo de calorias gastas integrado ao seu saldo diário.</p>
             </div>
             <div class="feature-preview">
-              <div class="voice-preview-wrapper">
-                <div class="voice-audio-status">
-                  <div class="voice-mic-icon-box" aria-hidden="true">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                      <line x1="12" y1="19" x2="12" y2="22"></line>
-                    </svg>
+              <div class="workout-preview-box">
+                <div class="workout-preview-top">
+                  <div class="workout-preview-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6.5 6.5 11 11"></path><path d="m21 21-1-1a2 2 0 0 0-2.8 0l-.7.7a2 2 0 0 1-2.8 0l-7.4-7.4a2 2 0 0 1 0-2.8l.7-.7a2 2 0 0 0 0-2.8L6 3"></path></svg>
+                    <span>Musculação &bull; Intensa</span>
                   </div>
-                  <div class="voice-waves-container" aria-label="Ouvindo áudio">
-                    <span class="voice-wave-bar"></span>
-                    <span class="voice-wave-bar"></span>
-                    <span class="voice-wave-bar"></span>
-                    <span class="voice-wave-bar"></span>
-                    <span class="voice-wave-bar"></span>
-                  </div>
-                  <span class="voice-tag-rec">Gravando</span>
+                  <span class="workout-burn-pill">-380 kcal</span>
                 </div>
-                <div class="voice-transcription-box">
-                  "2 fatias de pão com ovos mexidos e café" &rarr; <strong>290 kcal</strong>
+                <div class="workout-preview-details">
+                  <span>Duração estimada: <strong>55 min</strong></span>
+                  <span class="workout-sync-tag">&bull; Abatido da meta</span>
                 </div>
               </div>
-            </div>
-            <div class="feature-card-footer">
-              <button type="button" class="btn-share-feature" data-feature-id="voz" data-feature-title="Alimentação por Voz" data-feature-desc="Dite sua refeição naturalmente enquanto come: a IA transcreve e calcula calorias na hora." aria-label="Compartilhar recurso Alimentação por Voz">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="18" cy="5" r="3"></circle>
-                  <circle cx="6" cy="12" r="3"></circle>
-                  <circle cx="18" cy="19" r="3"></circle>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                </svg>
-                <span>Compartilhar</span>
-              </button>
             </div>
           </div>
         </div>
@@ -4142,6 +4290,10 @@
                 <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>Histórico dos últimos 7 dias</span>
               </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Registro de treinos &amp; gasto calórico</span>
+              </li>
               <li class="plan-feature-item">
                 <svg class="feature-icon-cross" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 <span style="color:var(--ink-faint);">Chat de IA personalizado</span>
@@ -4213,6 +4365,10 @@
                 <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <span>Metas personalizadas e exportação em PDF</span>
               </li>
+              <li class="plan-feature-item included">
+                <svg class="feature-icon-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Registro de treinos &amp; gasto calórico</span>
+              </li>
             </ul>
 
             <div class="card-footer-cta">
@@ -4275,130 +4431,7 @@
       </div>
     </section>
 
-    <!-- ============================================================
-         6. PROVA SOCIAL (3 depoimentos + estatísticas)
-         ============================================================ -->
-    <section id="prova-social" class="reveal-on-scroll" aria-label="Depoimentos e estatísticas de uso">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-tag">Resultados reais</span>
-          <h2 class="section-title">Quem usa, não volta para as tabelas antigas</h2>
-          <p>O que as pessoas dizem sobre a facilidade de controlar a alimentação com linguagem natural.</p>
-        </div>
 
-        <!-- 3 Depoimentos com Prova Social e Resultados Reais -->
-        <div class="testimonials-grid">
-          <!-- Depoimento 1 -->
-          <div class="testimonial-card">
-            <div>
-              <div class="testimonial-stars" aria-label="Avaliação 5 de 5 estrelas">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-              </div>
-              <p class="testimonial-quote">
-                "Eu sempre abandonava aplicativos de calorias na segunda semana porque dava preguiça de achar o alimento exato. No NutriiBase eu só escrevo o que comi e sigo o dia."
-              </p>
-            </div>
-            <div class="testimonial-author">
-              <div class="author-avatar">
-                <img 
-                  src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&h=150&q=85" 
-                  alt="Foto de perfil de Marina Silveira" 
-                  loading="lazy" 
-                  referrerpolicy="no-referrer"
-                  onerror="this.style.display='none'; this.parentElement.innerText='MS';"
-                />
-              </div>
-              <div>
-                <div class="author-name">Marina Silveira</div>
-                <div class="author-location">São Paulo, SP • <span class="author-pro-tag">*Assinante Nutriibase PRO</span></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Depoimento 2 -->
-          <div class="testimonial-card">
-            <div>
-              <div class="testimonial-stars" aria-label="Avaliação 5 de 5 estrelas">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-              </div>
-              <p class="testimonial-quote">
-                "A inteligência artificial entende o que o brasileiro come de verdade. Marmita, prato feito, lanche na rua. Ficou muito mais tranquilo manter a constância na dieta."
-              </p>
-            </div>
-            <div class="testimonial-author">
-              <div class="author-avatar">
-                <img 
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80" 
-                  alt="Foto de perfil de Carlos Eduardo" 
-                  loading="lazy" 
-                  referrerpolicy="no-referrer"
-                  onerror="this.style.display='none'; this.parentElement.innerText='CE';"
-                />
-              </div>
-              <div>
-                <div class="author-name">Carlos Eduardo</div>
-                <div class="author-location">Curitiba, PR • <span class="author-pro-tag">*Assinante Nutriibase PRO</span></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Depoimento 3 -->
-          <div class="testimonial-card">
-            <div>
-              <div class="testimonial-stars" aria-label="Avaliação 5 de 5 estrelas">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-              </div>
-              <p class="testimonial-quote">
-                "O chat que lembra do que comi no dia é um diferencial enorme. Quando falta proteína à noite, pergunto o que comer rápido e ele resolve na hora."
-              </p>
-            </div>
-            <div class="testimonial-author">
-              <div class="author-avatar">
-                <img 
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&h=120&q=80" 
-                  alt="Foto de perfil de Juliana Mendes" 
-                  loading="lazy" 
-                  referrerpolicy="no-referrer"
-                  onerror="this.style.display='none'; this.parentElement.innerText='JM';"
-                />
-              </div>
-              <div>
-                <div class="author-name">Juliana Mendes</div>
-                <div class="author-location">Belo Horizonte, MG • <span class="author-pro-tag">*Assinante Nutriibase PRO</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3 Estatísticas em destaque -->
-        <div class="stats-strip">
-          <div class="stat-item">
-            <div class="stat-number">30s</div>
-            <div class="stat-label">Tempo médio para descrever e registrar qualquer refeição</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">100%</div>
-            <div class="stat-label">No navegador e no celular, sem downloads pesados</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">24/7</div>
-            <div class="stat-label">Acesso contínuo pelo navegador e celular para acompanhar sua rotina</div>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- ============================================================
          6.5 TELAS DO APLICATIVO (Por dentro do app)
@@ -5488,6 +5521,131 @@
     </section>
 
     <!-- ============================================================
+         6.5 PROVA SOCIAL (Resultados reais)
+         ============================================================ -->
+    <section id="prova-social" class="reveal-on-scroll" aria-label="Depoimentos e estatísticas de uso">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-tag">Resultados reais</span>
+          <h2 class="section-title">Quem usa, não volta para as tabelas antigas</h2>
+          <p>O que as pessoas dizem sobre a facilidade de controlar a alimentação com linguagem natural.</p>
+        </div>
+
+        <!-- 3 Depoimentos com Prova Social e Resultados Reais -->
+        <div class="testimonials-grid">
+          <!-- Depoimento 1 -->
+          <div class="testimonial-card">
+            <div>
+              <div class="testimonial-stars" aria-label="Avaliação 5 de 5 estrelas">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+              <p class="testimonial-quote">
+                "Eu sempre abandonava aplicativos de calorias na segunda semana porque dava preguiça de achar o alimento exato. No NutriiBase eu só escrevo o que comi e sigo o dia."
+              </p>
+            </div>
+            <div class="testimonial-author">
+              <div class="author-avatar">
+                <img 
+                  src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&h=150&q=85" 
+                  alt="Foto de perfil de Marina Silveira" 
+                  loading="lazy" 
+                  referrerpolicy="no-referrer"
+                  onerror="this.style.display='none'; this.parentElement.innerText='MS';"
+                />
+              </div>
+              <div>
+                <div class="author-name">Marina Silveira</div>
+                <div class="author-location">São Paulo, SP • <span class="author-pro-tag">*Assinante Nutriibase PRO</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Depoimento 2 -->
+          <div class="testimonial-card">
+            <div>
+              <div class="testimonial-stars" aria-label="Avaliação 5 de 5 estrelas">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+              <p class="testimonial-quote">
+                "A inteligência artificial entende o que o brasileiro come de verdade. Marmita, prato feito, lanche na rua. Ficou muito mais tranquilo manter a constância na dieta."
+              </p>
+            </div>
+            <div class="testimonial-author">
+              <div class="author-avatar">
+                <img 
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80" 
+                  alt="Foto de perfil de Carlos Eduardo" 
+                  loading="lazy" 
+                  referrerpolicy="no-referrer"
+                  onerror="this.style.display='none'; this.parentElement.innerText='CE';"
+                />
+              </div>
+              <div>
+                <div class="author-name">Carlos Eduardo</div>
+                <div class="author-location">Curitiba, PR • <span class="author-pro-tag">*Assinante Nutriibase PRO</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Depoimento 3 -->
+          <div class="testimonial-card">
+            <div>
+              <div class="testimonial-stars" aria-label="Avaliação 5 de 5 estrelas">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FBBF24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+              <p class="testimonial-quote">
+                "O chat que lembra do que comi no dia é um diferencial enorme. Quando falta proteína à noite, pergunto o que comer rápido e ele resolve na hora."
+              </p>
+            </div>
+            <div class="testimonial-author">
+              <div class="author-avatar">
+                <img 
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&h=120&q=80" 
+                  alt="Foto de perfil de Juliana Mendes" 
+                  loading="lazy" 
+                  referrerpolicy="no-referrer"
+                  onerror="this.style.display='none'; this.parentElement.innerText='JM';"
+                />
+              </div>
+              <div>
+                <div class="author-name">Juliana Mendes</div>
+                <div class="author-location">Belo Horizonte, MG • <span class="author-pro-tag">*Assinante Nutriibase PRO</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Estatísticas em destaque -->
+        <div class="stats-strip">
+          <div class="stat-item">
+            <div class="stat-number">30s</div>
+            <div class="stat-label">Tempo médio para descrever e registrar qualquer refeição</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">100%</div>
+            <div class="stat-label">No navegador e no celular, sem downloads pesados</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">Acesso contínuo pelo navegador e celular para acompanhar sua rotina</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
          7. FAQ (details / summary nativo + botão ver mais)
          ============================================================ -->
     <section id="faq" aria-label="Perguntas frequentes">
@@ -5506,7 +5664,7 @@
               <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </summary>
             <div class="faq-answer">
-              Sim. Você pode usar a versão gratuita para registrar até 5 refeições por dia e realizar até 3 estimativas com inteligência artificial diariamente, com histórico dos últimos 7 dias, sem pagar nada.
+              Sim. Você pode usar a versão gratuita para registrar até 5 refeições por dia, realizar até 3 estimativas com inteligência artificial diariamente, registrar treinos e gasto calórico, com histórico dos últimos 7 dias, sem pagar nada.
             </div>
           </details>
 
@@ -5980,6 +6138,8 @@
           // Atualiza o link do checkout conforme o período selecionado
           if (proCheckoutBtn) {
             proCheckoutBtn.setAttribute("href", data.checkoutUrl);
+            proCheckoutBtn.setAttribute("target", "_blank");
+            proCheckoutBtn.setAttribute("rel", "noopener noreferrer");
           }
         });
       });
