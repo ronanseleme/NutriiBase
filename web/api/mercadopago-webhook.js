@@ -42,13 +42,21 @@ function getSupabaseAdmin() {
 // de resposta.
 function verifyMercadoPagoSignature(req, dataId) {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET
+  const signatureHeader = req.headers['x-signature']
+  const requestId = req.headers['x-request-id'] || ''
+
+  // TODO: logs temporários pra diagnosticar mismatch de assinatura em
+  // produção — remover depois que confirmarmos a causa (nunca logar o
+  // MERCADOPAGO_WEBHOOK_SECRET em si, só o resultado do hash).
+  console.log('DEBUG: x-signature recebido =', signatureHeader)
+  console.log('DEBUG: x-request-id recebido =', requestId)
+  console.log('DEBUG: dataId extraído =', dataId)
+
   if (!secret) {
     console.error('mercadopago-webhook: MERCADOPAGO_WEBHOOK_SECRET não configurada.')
     return false
   }
   if (!dataId) return false
-
-  const signatureHeader = req.headers['x-signature']
   if (!signatureHeader) return false
 
   const parts = {}
@@ -63,9 +71,11 @@ function verifyMercadoPagoSignature(req, dataId) {
   const v1 = parts.v1
   if (!ts || !v1) return false
 
-  const requestId = req.headers['x-request-id'] || ''
   const manifest = `id:${String(dataId).toLowerCase()};request-id:${requestId};ts:${ts};`
   const expectedHex = crypto.createHmac('sha256', secret).update(manifest).digest('hex')
+
+  console.log('DEBUG: manifest calculado =', manifest)
+  console.log('DEBUG: hash HMAC calculado =', expectedHex)
 
   const expectedBuffer = Buffer.from(expectedHex, 'utf8')
   const receivedBuffer = Buffer.from(v1, 'utf8')
