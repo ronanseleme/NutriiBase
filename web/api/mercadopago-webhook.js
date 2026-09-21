@@ -25,6 +25,10 @@ import { WebhookSignatureValidator, InvalidWebhookSignatureError } from 'mercado
 
 const MERCADOPAGO_ORDERS_URL = 'https://api.mercadopago.com/v1/orders'
 
+// Mesma convenção de plan_code usada em PLANO_HINT_DAYS
+// (web/src/components/PlanSelector.tsx) — dias que a licença avulsa vale.
+const PLAN_DAYS = { mensal: 30, trimestral: 90, semestral: 180, anual: 365 }
+
 function getSupabaseAdmin() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -108,17 +112,50 @@ export default async function handler(req, res) {
     try {
       const supabaseAdmin = getSupabaseAdmin()
       // Só transiciona pedidos ainda "pending" — evita sobrescrever
-      // paid_at se o mesmo evento chegar duplicado.
-      const { error: updateError } = await supabaseAdmin
+      // paid_at se o mesmo evento chegar duplicado. .select() devolve a
+      // linha atualizada pra sabermos quem ativar (null se já tinha virado
+      // "paid" antes, aí não ativa de novo).
+      const { data: paidOrder, error: updateError } = await supabaseAdmin
         .from('pix_orders')
         .update({ status: 'paid', paid_at: new Date().toISOString() })
         .eq('mp_order_id', orderId)
         .eq('status', 'pending')
+        .select('user_id, plan_code')
+        .maybeSingle()
       if (updateError) {
         console.error('mercadopago-webhook: falha ao atualizar pix_orders', orderId, updateError)
+      } else if (paidOrder) {
+        // Reaproveita a mesma RPC do fluxo de Pix via Stripe (o nome ficou
+        // "stripe_" por histórico, mas o comportamento é genérico: só seta
+        // role/créditos/vencimento — não depende de nada específico do
+        // Stripe) em vez de duplicar essa lógica de negócio aqui.
+        const dias = PLAN_DAYS[paidOrder.plan_code] ?? 30
+        const { error: activateError } = await supabaseAdmin.rpc('stripe_activate_pro_avulso', {
+          target_user: paidOrder.user_id,
+          dias,
+        })
+        if (activateError) {
+          console.error('mercadopago-webhook: falha ao ativar Pro', orderId, paidOrder.user_id, activateError)
+        }
       }
     } catch (err) {
       console.error('mercadopago-webhook: erro inesperado ao atualizar pedido', orderId, err)
+    }
+  } else if (['canceled', 'cancelled', 'failed', 'expired'].includes(mpData.status)) {
+    // A order Pix não vai mais virar pagamento — encerra o pedido em vez
+    // de deixá-lo preso em "pending" pra sempre.
+    try {
+      const supabaseAdmin = getSupabaseAdmin()
+      const { error: updateError } = await supabaseAdmin
+        .from('pix_orders')
+        .update({ status: mpData.status })
+        .eq('mp_order_id', orderId)
+        .eq('status', 'pending')
+      if (updateError) {
+        console.error('mercadopago-webhook: falha ao marcar pix_orders como', mpData.status, orderId, updateError)
+      }
+    } catch (err) {
+      console.error('mercadopago-webhook: erro inesperado ao encerrar pedido', orderId, err)
     }
   }
 
