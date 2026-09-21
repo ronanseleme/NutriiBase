@@ -1,24 +1,18 @@
+import { useState } from 'react'
 import { dayFoodTotals, dayWorkoutKcal, leanMassKg } from '../../lib/calculations'
 import { WeightBodyFatKpi } from '../WeightBodyFatKpi'
 import { CalcMemoryKcal, CalcMemoryMacro, CalcMemorySaldo } from '../CalcMemory'
 import { GoalsForm } from './GoalsForm'
 import { MacroOverrideForm } from './MacroOverrideForm'
 import { UpgradeGate } from '../UpgradeGate'
-import { exportGoalsPdf } from '../../lib/exportGoalsPdf'
+import { exportGoalsPdf, shareGoalsPdf } from '../../lib/exportGoalsPdf'
 import { parseISODate, todayISO } from '../../lib/dateUtils'
+import { formatGoalText } from '../../lib/text'
 import { useDayLog } from '../../hooks/useDayLog'
 import type { Profile } from '../../types'
 
 function fmtNum(n: number | null | undefined): string {
   return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
-}
-
-// Tira um "Objetivo:" que a pessoa (ou o texto de exemplo) tenha colocado no
-// início da frase, e garante a primeira letra maiúscula — sem esse prefixo
-// repetitivo, já que o card acima já tem o rótulo "Seu objetivo".
-function formatGoalText(text: string): string {
-  const stripped = text.replace(/^objetivo\s*:\s*/i, '').trim()
-  return stripped ? stripped.charAt(0).toUpperCase() + stripped.slice(1) : stripped
 }
 
 interface Props {
@@ -32,6 +26,32 @@ interface Props {
 export function MetasTab({ profile, startWeight, weekWorkoutCount, userId, onSaveProfile }: Props) {
   const t = profile.targets
   const leanMassNow = leanMassKg(profile)
+  const [pdfBusy, setPdfBusy] = useState<'download' | 'share' | null>(null)
+  const [pdfError, setPdfError] = useState<string | null>(null)
+
+  async function handleDownloadPdf() {
+    setPdfBusy('download')
+    setPdfError(null)
+    try {
+      await exportGoalsPdf(profile, startWeight, weekWorkoutCount)
+    } catch {
+      setPdfError('Não foi possível gerar o PDF agora. Tente de novo.')
+    } finally {
+      setPdfBusy(null)
+    }
+  }
+
+  async function handleSharePdf() {
+    setPdfBusy('share')
+    setPdfError(null)
+    try {
+      await shareGoalsPdf(profile, startWeight, weekWorkoutCount)
+    } catch {
+      setPdfError('Não foi possível compartilhar o PDF agora. Tente de novo.')
+    } finally {
+      setPdfBusy(null)
+    }
+  }
 
   // Números de hoje, para a memória de cálculo do saldo — sempre o dia
   // atual, independente de qualquer navegação de data em outras abas.
@@ -79,13 +99,27 @@ export function MetasTab({ profile, startWeight, weekWorkoutCount, userId, onSav
       </div>
 
       {!isFree && (
-        <button
-          type="button"
-          onClick={() => exportGoalsPdf(profile, startWeight, weekWorkoutCount)}
-          className="nb-btn nb-btn-secondary w-full py-2.5"
-        >
-          📄 Exportar minhas metas em PDF
-        </button>
+        <div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={pdfBusy !== null}
+              className="nb-btn nb-btn-secondary py-2.5"
+            >
+              {pdfBusy === 'download' ? 'Gerando…' : '📄 Baixar PDF'}
+            </button>
+            <button
+              type="button"
+              onClick={handleSharePdf}
+              disabled={pdfBusy !== null}
+              className="nb-btn nb-btn-secondary py-2.5"
+            >
+              {pdfBusy === 'share' ? 'Gerando…' : '📤 Compartilhar'}
+            </button>
+          </div>
+          {pdfError && <p className="mt-2 text-[0.8rem] text-[var(--coral)]">{pdfError}</p>}
+        </div>
       )}
 
       <div className="nb-card">
