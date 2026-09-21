@@ -11,9 +11,10 @@ interface Props {
   profile: Profile
   onSaveProfile: (updates: Partial<Omit<Profile, 'id' | 'targets'>>) => Promise<{ error: Error | null }>
   onFinish: () => void
+  onProfileRefresh: () => void
 }
 
-export function OnboardingWizard({ profile, onSaveProfile, onFinish }: Props) {
+export function OnboardingWizard({ profile, onSaveProfile, onFinish, onProfileRefresh }: Props) {
   const [step, setStep] = useState<Step>(1)
 
   return (
@@ -36,7 +37,7 @@ export function OnboardingWizard({ profile, onSaveProfile, onFinish }: Props) {
         {step === 2 && (
           <StepGoals profile={profile} onSaveProfile={onSaveProfile} onBack={() => setStep(1)} onNext={() => setStep(3)} />
         )}
-        {step === 3 && <StepPlan onBack={() => setStep(2)} onFinish={onFinish} />}
+        {step === 3 && <StepPlan onBack={() => setStep(2)} onFinish={onFinish} onProfileRefresh={onProfileRefresh} />}
       </div>
     </div>
   )

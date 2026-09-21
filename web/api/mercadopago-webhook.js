@@ -20,23 +20,16 @@
 //   VITE_SUPABASE_URL          (a mesma usada pelo frontend)
 //   SUPABASE_SERVICE_ROLE_KEY
 
-import { createClient } from '@supabase/supabase-js'
 import { WebhookSignatureValidator, InvalidWebhookSignatureError } from 'mercadopago'
+import { getSupabaseAdmin } from './_shared/supabaseAdmin.js'
+import { PLAN_DAYS } from './_shared/plans.js'
 
 const MERCADOPAGO_ORDERS_URL = 'https://api.mercadopago.com/v1/orders'
 
-// Mesma convenção de plan_code usada em PLANO_HINT_DAYS
-// (web/src/components/PlanSelector.tsx) — dias que a licença avulsa vale.
-const PLAN_DAYS = { mensal: 30, trimestral: 90, semestral: 180, anual: 365 }
-
-function getSupabaseAdmin() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Faltam VITE_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY nas env vars do servidor.')
-  }
-  return createClient(supabaseUrl, serviceRoleKey)
-}
+// pix_orders.status só usa este vocabulário (o mesmo que GET
+// /api/payments/status devolve pro frontend) — nunca a string crua que o
+// Mercado Pago manda, que inclui as duas grafias "canceled"/"cancelled".
+const FAILED_MP_STATUSES = new Set(['canceled', 'cancelled', 'failed'])
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -141,18 +134,21 @@ export default async function handler(req, res) {
     } catch (err) {
       console.error('mercadopago-webhook: erro inesperado ao atualizar pedido', orderId, err)
     }
-  } else if (['canceled', 'cancelled', 'failed', 'expired'].includes(mpData.status)) {
+  } else if (mpData.status === 'expired' || FAILED_MP_STATUSES.has(mpData.status)) {
     // A order Pix não vai mais virar pagamento — encerra o pedido em vez
-    // de deixá-lo preso em "pending" pra sempre.
+    // de deixá-lo preso em "pending" pra sempre. Normaliza pro vocabulário
+    // local (pending/paid/expired/failed) — nunca grava a string crua do
+    // Mercado Pago, que tem duas grafias possíveis pra cancelamento.
+    const localStatus = mpData.status === 'expired' ? 'expired' : 'failed'
     try {
       const supabaseAdmin = getSupabaseAdmin()
       const { error: updateError } = await supabaseAdmin
         .from('pix_orders')
-        .update({ status: mpData.status })
+        .update({ status: localStatus })
         .eq('mp_order_id', orderId)
         .eq('status', 'pending')
       if (updateError) {
-        console.error('mercadopago-webhook: falha ao marcar pix_orders como', mpData.status, orderId, updateError)
+        console.error('mercadopago-webhook: falha ao marcar pix_orders como', localStatus, orderId, updateError)
       }
     } catch (err) {
       console.error('mercadopago-webhook: erro inesperado ao encerrar pedido', orderId, err)

@@ -8,9 +8,10 @@ import type { Profile } from '../types'
 interface Props {
   profile: Profile
   onEditProfile: () => void
+  onProfileRefresh: () => void
 }
 
-export function ProfileScreen({ profile, onEditProfile }: Props) {
+export function ProfileScreen({ profile, onEditProfile, onProfileRefresh }: Props) {
   const targets = profile.targets
   const activityLabel = ACTIVITY.find((a) => a.key === profile.activity)?.label || profile.activity
   const goalLabel = GOALS.find((g) => g.key === profile.goal)?.label || profile.goal
@@ -45,7 +46,7 @@ export function ProfileScreen({ profile, onEditProfile }: Props) {
         )}
       </Card>
 
-      <SubscriptionCard profile={profile} />
+      <SubscriptionCard profile={profile} onProfileRefresh={onProfileRefresh} />
 
       <Card>
         <CardTitle>Dados pessoais</CardTitle>

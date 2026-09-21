@@ -7,7 +7,7 @@ function formatDate(iso: string): string {
   return new Intl.DateTimeFormat('pt-BR').format(new Date(iso))
 }
 
-export function SubscriptionCard({ profile }: { profile: Profile }) {
+export function SubscriptionCard({ profile, onProfileRefresh }: { profile: Profile; onProfileRefresh: () => void }) {
   if (profile.role === 'admin') {
     return (
       <div className="nb-card">
@@ -17,7 +17,7 @@ export function SubscriptionCard({ profile }: { profile: Profile }) {
     )
   }
   if (profile.role === 'pro') return <ProPlanCard profile={profile} />
-  return <FreePlanCard />
+  return <FreePlanCard onProfileRefresh={onProfileRefresh} />
 }
 
 function ProPlanCard({ profile }: { profile: Profile }) {
@@ -40,14 +40,14 @@ function ProPlanCard({ profile }: { profile: Profile }) {
   )
 }
 
-function FreePlanCard() {
+function FreePlanCard({ onProfileRefresh }: { onProfileRefresh: () => void }) {
   return (
     <div className="nb-card">
       <div className="nb-card-title">Assinatura</div>
       <p className="mb-3 text-[0.84rem] text-[var(--text-soft)]">
         Assine o Pro e desbloqueie descrever refeições com IA (texto e voz), chat nutricional e insights personalizados.
       </p>
-      <PlanSelector />
+      <PlanSelector onProfileRefresh={onProfileRefresh} />
     </div>
   )
 }

@@ -8,6 +8,8 @@ import {
   type PriceInfo,
   type RecurringPriceInfo,
 } from '../lib/billing'
+import { PixPaymentModal } from './PixPaymentModal'
+import type { PixPlanCode } from '../lib/pixPayment'
 
 export function formatCurrency(cents: number, currency: string): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency })
@@ -33,6 +35,11 @@ function formatOneTimePrice(price: PriceInfo): string {
 // some no roundtrip de confirmação de e-mail / OAuth do Google).
 const PLANO_HINT_DAYS: Record<string, number> = { mensal: 30, trimestral: 90, semestral: 180, anual: 365 }
 
+// Inverso de PLANO_HINT_DAYS — pra saber que código de plano mandar pro
+// endpoint do Pix (Mercado Pago) a partir do plano do Stripe selecionado
+// na tela (que só sabe o productId/days, não esse código).
+const DAYS_TO_PLAN_CODE: Record<number, PixPlanCode> = { 30: 'mensal', 90: 'trimestral', 180: 'semestral', 365: 'anual' }
+
 function consumePlanoHintDays(): number | null {
   const plano = localStorage.getItem('nb_plano')
   if (!plano) return null
@@ -40,17 +47,20 @@ function consumePlanoHintDays(): number | null {
   return PLANO_HINT_DAYS[plano] ?? null
 }
 
-// Escolha de plano (cartão recorrente ou Pix avulso) + botões de checkout.
-// Reaproveitado tanto no card "Assinatura" do Perfil (usuário Free já
-// logado, decide assinar depois) quanto no passo 3 do onboarding (conta
-// recém-criada, decide na hora). O "footer" é onde cada chamador encaixa
-// uma ação extra (ex: "Continuar no Free" só existe no onboarding).
-export function PlanSelector({ footer }: { footer?: React.ReactNode }) {
+// Escolha de plano (cartão recorrente via Stripe ou Pix avulso via
+// Mercado Pago) + botões de checkout. Reaproveitado tanto no card
+// "Assinatura" do Perfil (usuário Free já logado, decide assinar depois)
+// quanto no passo 3 do onboarding (conta recém-criada, decide na hora). O
+// "footer" é onde cada chamador encaixa uma ação extra (ex: "Continuar no
+// Free" só existe no onboarding). onProfileRefresh é chamado assim que um
+// pagamento Pix confirma, pra profile.role virar "pro" na hora sem reload.
+export function PlanSelector({ footer, onProfileRefresh }: { footer?: React.ReactNode; onProfileRefresh?: () => void }) {
   const [plans, setPlans] = useState<Plan[] | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
-  const [starting, setStarting] = useState<'card' | 'pix' | null>(null)
+  const [starting, setStarting] = useState<'card' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showPixModal, setShowPixModal] = useState(false)
 
   useEffect(() => {
     listPlans()
@@ -65,14 +75,15 @@ export function PlanSelector({ footer }: { footer?: React.ReactNode }) {
   }, [])
 
   const selectedPlan = plans?.find((p) => p.productId === selected) ?? null
+  const pixPlanCode = selectedPlan ? DAYS_TO_PLAN_CODE[selectedPlan.days] : undefined
 
-  async function handleSubscribe(mode: 'subscription' | 'payment') {
-    const priceId = mode === 'subscription' ? selectedPlan?.recurring?.priceId : selectedPlan?.oneTime?.priceId
+  async function handleSubscribeCard() {
+    const priceId = selectedPlan?.recurring?.priceId
     if (!priceId) return
-    setStarting(mode === 'subscription' ? 'card' : 'pix')
+    setStarting('card')
     setError(null)
     try {
-      await startCheckout(priceId, mode)
+      await startCheckout(priceId, 'subscription')
     } catch (err) {
       setError(err instanceof BillingError ? mapBillingErrorCode(err.code, err.message) : mapBillingErrorCode('upstream_error'))
       setStarting(null)
@@ -116,21 +127,21 @@ export function PlanSelector({ footer }: { footer?: React.ReactNode }) {
         {selectedPlan?.recurring && (
           <button
             type="button"
-            onClick={() => handleSubscribe('subscription')}
+            onClick={handleSubscribeCard}
             disabled={!!starting}
             className="nb-btn nb-btn-primary w-full py-2.5"
           >
             {starting === 'card' ? 'Abrindo pagamento…' : 'Assinar com cartão'}
           </button>
         )}
-        {selectedPlan?.oneTime && (
+        {selectedPlan?.oneTime && pixPlanCode && (
           <button
             type="button"
-            onClick={() => handleSubscribe('payment')}
+            onClick={() => setShowPixModal(true)}
             disabled={!!starting}
             className="nb-btn nb-btn-secondary w-full py-2.5"
           >
-            {starting === 'pix' ? 'Abrindo pagamento…' : `Pagar com Pix · ${formatOneTimePrice(selectedPlan.oneTime)}`}
+            {`Pagar com Pix · ${formatOneTimePrice(selectedPlan.oneTime)}`}
           </button>
         )}
       </div>
@@ -140,6 +151,16 @@ export function PlanSelector({ footer }: { footer?: React.ReactNode }) {
         </p>
       )}
       {footer}
+
+      {showPixModal && selectedPlan?.oneTime && pixPlanCode && (
+        <PixPaymentModal
+          plan={pixPlanCode}
+          planLabel={selectedPlan.label}
+          priceLabel={formatOneTimePrice(selectedPlan.oneTime)}
+          onClose={() => setShowPixModal(false)}
+          onProfileRefresh={() => onProfileRefresh?.()}
+        />
+      )}
     </>
   )
 }

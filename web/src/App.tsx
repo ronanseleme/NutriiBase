@@ -28,7 +28,7 @@ import type { DateRange } from './types'
 
 function App() {
   const { user, loading: authLoading, signOut } = useAuth()
-  const { profile, loading: profileLoading, isNew, saveProfile } = useProfile(user?.id ?? null)
+  const { profile, loading: profileLoading, isNew, saveProfile, refetch: refetchProfile } = useProfile(user?.id ?? null)
   const [dateIso, setDateIso] = useState(todayISO())
   const [tab, setTab] = useState<TabKey>('dashboard')
   const [viewMode, setViewMode] = useState<ViewMode>('daily')
@@ -123,7 +123,14 @@ function App() {
   }
 
   if (showOnboarding) {
-    return <OnboardingWizard profile={profile} onSaveProfile={saveProfile} onFinish={() => setShowOnboarding(false)} />
+    return (
+      <OnboardingWizard
+        profile={profile}
+        onSaveProfile={saveProfile}
+        onFinish={() => setShowOnboarding(false)}
+        onProfileRefresh={refetchProfile}
+      />
+    )
   }
 
   return (
@@ -200,7 +207,7 @@ function App() {
         )}
 
         {tab === 'profile' && (
-          <ProfileScreen profile={profile} onEditProfile={() => setShowProfileForm(true)} />
+          <ProfileScreen profile={profile} onEditProfile={() => setShowProfileForm(true)} onProfileRefresh={refetchProfile} />
         )}
 
         {tab === 'food' && (
