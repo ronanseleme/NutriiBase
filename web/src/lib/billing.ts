@@ -73,17 +73,25 @@ export async function listPlans(): Promise<Plan[]> {
 }
 
 export async function startCheckout(priceId: string, mode: 'subscription' | 'payment' = 'subscription'): Promise<void> {
-  const origin = window.location.origin + import.meta.env.BASE_URL
+  // Mesmo padrão do redirectTo do Google OAuth (useAuth.ts) — origin +
+  // pathname sempre reflete a URL real da página, funciona em qualquer
+  // domínio. NUNCA usar import.meta.env.BASE_URL aqui: com o base: './'
+  // do vite.config.ts, isso vale a string literal "./", e concatenado
+  // direto no fim da origin (sem separador) gera uma URL inválida como
+  // "https://nutriibase.com.br./" — foi exatamente isso que quebrava o
+  // redirecionamento pós-pagamento.
+  const appUrl = window.location.origin + window.location.pathname
+  const successUrl = `${appUrl}?checkout=success`
   const data = await unwrap<{ url: string }>(
     supabase.functions.invoke('create-checkout-session', {
-      body: { priceId, mode, successUrl: origin, cancelUrl: origin },
+      body: { priceId, mode, successUrl, cancelUrl: appUrl },
     }),
   )
   window.location.href = data.url
 }
 
 export async function openBillingPortal(): Promise<void> {
-  const origin = window.location.origin + import.meta.env.BASE_URL
+  const origin = window.location.origin + window.location.pathname
   const data = await unwrap<{ url: string }>(
     supabase.functions.invoke('create-portal-session', { body: { returnUrl: origin } }),
   )

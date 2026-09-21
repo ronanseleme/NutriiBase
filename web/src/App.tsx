@@ -5,6 +5,7 @@ import { useDayLog } from './hooks/useDayLog'
 import { useMetasExtras } from './hooks/useMetasExtras'
 import { useRecentLogs } from './hooks/useRecentLogs'
 import { AuthScreen } from './components/AuthScreen'
+import { CheckoutSuccessScreen } from './components/CheckoutSuccessScreen'
 import { ProfileForm } from './components/ProfileForm'
 import { ProfileScreen } from './components/ProfileScreen'
 import { OnboardingWizard } from './components/onboarding/OnboardingWizard'
@@ -33,6 +34,20 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('daily')
   const [customRange, setCustomRange] = useState<DateRange | null>(null)
   const [addMealSignal, setAddMealSignal] = useState(0)
+  // Sinalizado pelo successUrl do Stripe Checkout (?checkout=success) — dá
+  // pra vir direto na 1ª renderização (sem esperar profile/log carregarem).
+  const [showCheckoutSuccess, setShowCheckoutSuccess] = useState(
+    () => new URLSearchParams(window.location.search).get('checkout') === 'success',
+  )
+
+  useEffect(() => {
+    if (!showCheckoutSuccess) return
+    // Limpa o parâmetro da URL — evita reabrir essa tela se a pessoa der F5.
+    const url = new URL(window.location.href)
+    url.searchParams.delete('checkout')
+    window.history.replaceState({}, '', url.toString())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     registerGoToProfile(() => setTab('profile'))
@@ -93,6 +108,10 @@ function App() {
 
   if (!user) {
     return <AuthScreen />
+  }
+
+  if (showCheckoutSuccess) {
+    return <CheckoutSuccessScreen onContinue={() => setShowCheckoutSuccess(false)} />
   }
 
   if (profileLoading || !profile) {
