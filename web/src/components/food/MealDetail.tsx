@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { ItemRow } from './ItemRow'
 import { AddFoodModal } from './AddFoodModal'
-import { MealAiModal } from './MealAiModal'
-import { MealPhotoModal } from './MealPhotoModal'
 import type { AiAccess, FoodItem } from '../../types'
 
 interface Props {
@@ -35,8 +33,6 @@ export function MealDetail({
   onUpdateSaved,
 }: Props) {
   const [showAdd, setShowAdd] = useState(false)
-  const [showAi, setShowAi] = useState(false)
-  const [showPhoto, setShowPhoto] = useState(false)
   const [editItem, setEditItem] = useState<FoodItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -102,20 +98,10 @@ export function MealDetail({
           editItem={null}
           draftCount={draft.length}
           access={access}
+          userId={userId}
           onAdd={(item) => onAddToDraft(item)}
+          onAddMany={onAddManyToDraft}
           onUpdate={async () => ({ error: null })}
-          onDescribeWithAI={() => {
-            setShowAdd(false)
-            setShowAi(true)
-          }}
-          onPhotoWithAI={
-            access.role !== 'free'
-              ? () => {
-                  setShowAdd(false)
-                  setShowPhoto(true)
-                }
-              : undefined
-          }
           onClose={() => setShowAdd(false)}
         />
       )}
@@ -125,16 +111,11 @@ export function MealDetail({
           editItem={editItem}
           draftCount={draft.length}
           access={access}
+          userId={userId}
           onAdd={() => {}}
           onUpdate={onUpdateSaved}
           onClose={() => setEditItem(null)}
         />
-      )}
-      {showAi && (
-        <MealAiModal mealLabel={mealLabel} access={access} onAddMany={onAddManyToDraft} onClose={() => setShowAi(false)} />
-      )}
-      {showPhoto && (
-        <MealPhotoModal mealLabel={mealLabel} userId={userId} onAddMany={onAddManyToDraft} onClose={() => setShowPhoto(false)} />
       )}
     </div>
   )

@@ -8,8 +8,6 @@ import { MealSummary } from './MealSummary'
 import { MealDetail } from './MealDetail'
 import { AddMealPicker } from './AddMealPicker'
 import { AddFoodModal } from './AddFoodModal'
-import { MealAiModal } from './MealAiModal'
-import { MealPhotoModal } from './MealPhotoModal'
 import { GeralIcon, MEAL_ICONS } from './mealIcons'
 import type { ViewMode } from '../ViewModeToggle'
 import type { AiAccess, DateRange, DayLog, FoodItem, MealKey, Targets } from '../../types'
@@ -73,8 +71,6 @@ export function FoodTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openPickerSignal])
   const [addFlowMeal, setAddFlowMeal] = useState<MealKey | null>(null)
-  const [aiFlowMeal, setAiFlowMeal] = useState<MealKey | null>(null)
-  const [photoFlowMeal, setPhotoFlowMeal] = useState<MealKey | null>(null)
   const dayTotals = dayFoodTotals(log.meals)
   const kcalByMeal = Object.fromEntries(MEALS.map((m) => [m.key, mealTotals(log.meals[m.key]).kcal])) as Record<MealKey, number>
 
@@ -218,45 +214,13 @@ export function FoodTab({
           editItem={null}
           draftCount={draft[addFlowMeal].length}
           access={access}
+          userId={userId}
           onAdd={(item) => onAddToDraft(addFlowMeal, item)}
+          onAddMany={(items) => onAddManyToDraft(addFlowMeal, items)}
           onUpdate={async () => ({ error: null })}
-          onDescribeWithAI={() => {
-            setAiFlowMeal(addFlowMeal)
-            setAddFlowMeal(null)
-          }}
-          onPhotoWithAI={
-            access.role !== 'free'
-              ? () => {
-                  setPhotoFlowMeal(addFlowMeal)
-                  setAddFlowMeal(null)
-                }
-              : undefined
-          }
           onClose={() => {
             setActive(addFlowMeal)
             setAddFlowMeal(null)
-          }}
-        />
-      )}
-      {aiFlowMeal && (
-        <MealAiModal
-          mealLabel={MEALS.find((m) => m.key === aiFlowMeal)!.label}
-          access={access}
-          onAddMany={(items) => onAddManyToDraft(aiFlowMeal, items)}
-          onClose={() => {
-            setActive(aiFlowMeal)
-            setAiFlowMeal(null)
-          }}
-        />
-      )}
-      {photoFlowMeal && (
-        <MealPhotoModal
-          mealLabel={MEALS.find((m) => m.key === photoFlowMeal)!.label}
-          userId={userId}
-          onAddMany={(items) => onAddManyToDraft(photoFlowMeal, items)}
-          onClose={() => {
-            setActive(photoFlowMeal)
-            setPhotoFlowMeal(null)
           }}
         />
       )}
