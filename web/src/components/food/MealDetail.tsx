@@ -55,33 +55,9 @@ export function MealDetail({
     <div className="nb-card">
       <div className="mb-3">
         <div className="nb-card-title mb-2">{mealLabel}</div>
-        <div className={`grid gap-1.5 ${access.role !== 'free' ? 'grid-cols-3' : 'grid-cols-2'}`}>
-          <button
-            type="button"
-            onClick={() => setShowAi(true)}
-            className="rounded-full px-2 py-1.5 text-center text-[0.74rem] font-bold leading-tight text-[var(--blue)]"
-            style={{ background: 'color-mix(in srgb, var(--blue) 12%, var(--surface))' }}
-          >
-            ✨ Descrever com IA
-          </button>
-          {access.role !== 'free' && (
-            <button
-              type="button"
-              onClick={() => setShowPhoto(true)}
-              className="rounded-full px-2 py-1.5 text-center text-[0.74rem] font-bold leading-tight text-[var(--purple)]"
-              style={{ background: 'color-mix(in srgb, var(--purple) 12%, var(--surface))' }}
-            >
-              📷 Foto com IA
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setShowAdd(true)}
-            className="rounded-full border border-[var(--line-strong)] px-2 py-1.5 text-center text-[0.74rem] font-bold leading-tight"
-          >
-            + Adicionar
-          </button>
-        </div>
+        <button type="button" onClick={() => setShowAdd(true)} className="nb-btn nb-btn-primary w-full py-2.5">
+          + Adicionar Refeição
+        </button>
       </div>
 
       {saved.length === 0 && draft.length === 0 && (

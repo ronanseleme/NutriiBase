@@ -17,6 +17,11 @@ function fmtNum(n: number): string {
   return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 }
 
+// Guarda fora do componente (sobrevive a remontagens da aba) qual o último
+// valor de openPickerSignal já tratado, pra não reabrir o seletor de
+// refeição só por causa de um clique normal na aba "Alimentação".
+let lastHandledAddMealSignal = 0
+
 interface Props {
   log: DayLog
   draft: Record<MealKey, FoodItem[]>
@@ -57,8 +62,13 @@ export function FoodTab({
 
   // Sinal vindo de fora (ex: botão "Adicionar refeição" no Painel) pra abrir
   // a tela de escolha de refeição direto, sem precisar clicar de novo aqui.
+  // Só abre quando o sinal realmente mudou desde a última vez tratado —
+  // senão, um clique comum na aba "Alimentação" reabriria o seletor.
   useEffect(() => {
-    if (openPickerSignal) setPickingMeal(true)
+    if (openPickerSignal && openPickerSignal !== lastHandledAddMealSignal) {
+      lastHandledAddMealSignal = openPickerSignal
+      setPickingMeal(true)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openPickerSignal])
   const [addFlowMeal, setAddFlowMeal] = useState<MealKey | null>(null)
