@@ -5,10 +5,10 @@
 // consultar a order de verdade (GET /v1/orders/{id}) pra saber o status
 // real, e só então marcar o pedido como pago em pix_orders.
 //
-// Antes de processar qualquer coisa, valida a assinatura HMAC-SHA256 do
-// header x-signature — sem isso, qualquer um que descobrisse esta URL
-// poderia forjar uma notificação de pagamento e liberar acesso Pro de
-// graça. Ver verifyMercadoPagoSignature() abaixo.
+// Antes de processar qualquer coisa, valida a assinatura do header
+// x-signature com o validador oficial do SDK do Mercado Pago — sem isso,
+// qualquer um que descobrisse esta URL poderia forjar uma notificação de
+// pagamento e liberar acesso Pro de graça.
 //
 // Cadastre esta URL no Mercado Pago (Suas integrações → Webhooks):
 //   https://<seu-dominio>/api/mercadopago-webhook
@@ -20,8 +20,8 @@
 //   VITE_SUPABASE_URL          (a mesma usada pelo frontend)
 //   SUPABASE_SERVICE_ROLE_KEY
 
-import crypto from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
+import { WebhookSignatureValidator, InvalidWebhookSignatureError } from 'mercadopago'
 
 const MERCADOPAGO_ORDERS_URL = 'https://api.mercadopago.com/v1/orders'
 
@@ -34,47 +34,6 @@ function getSupabaseAdmin() {
   return createClient(supabaseUrl, serviceRoleKey)
 }
 
-// Formato do header x-signature: "ts=1704908010,v1=<hmac em hex>". O
-// manifest assinado pelo Mercado Pago é "id:{data.id};request-id:{x-request-id};ts:{ts};"
-// — id sempre em minúsculas. Recalcula o HMAC-SHA256 com o secret do
-// webhook e compara com v1 em tempo constante (timingSafeEqual), pra não
-// vazar informação sobre o quanto da assinatura bateu através do tempo
-// de resposta.
-function verifyMercadoPagoSignature(req, dataId) {
-  // .trim() evita que um espaço ou quebra de linha acidental ao colar o
-  // secret no painel do Vercel invalide toda assinatura em produção.
-  const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim()
-  const signatureHeader = req.headers['x-signature']
-  const requestId = req.headers['x-request-id'] || ''
-
-  if (!secret) {
-    console.error('mercadopago-webhook: MERCADOPAGO_WEBHOOK_SECRET não configurada.')
-    return false
-  }
-  if (!dataId) return false
-  if (!signatureHeader) return false
-
-  const parts = {}
-  for (const chunk of String(signatureHeader).split(',')) {
-    const separatorIndex = chunk.indexOf('=')
-    if (separatorIndex === -1) continue
-    const key = chunk.slice(0, separatorIndex).trim()
-    const value = chunk.slice(separatorIndex + 1).trim()
-    parts[key] = value
-  }
-  const ts = parts.ts
-  const v1 = parts.v1
-  if (!ts || !v1) return false
-
-  const manifest = `id:${String(dataId).toLowerCase()};request-id:${requestId};ts:${ts};`
-  const expectedHex = crypto.createHmac('sha256', secret).update(manifest).digest('hex')
-
-  const expectedBuffer = Buffer.from(expectedHex, 'utf8')
-  const receivedBuffer = Buffer.from(v1, 'utf8')
-  if (expectedBuffer.length !== receivedBuffer.length) return false
-  return crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST')
@@ -82,12 +41,31 @@ export default async function handler(req, res) {
   }
 
   // data.id vem como query param nas notificações "topic"/webhooks
-  // clássicos do Mercado Pago, e no corpo em outras — aceita os dois.
+  // clássicos do Mercado Pago, e no corpo em outras — aceita os dois pro
+  // lookup da order. A validação de assinatura abaixo usa só o query
+  // param, que é o que o Mercado Pago realmente assina.
   const orderId = req.query?.['data.id'] || req.body?.data?.id
 
-  if (!verifyMercadoPagoSignature(req, orderId)) {
-    console.error('mercadopago-webhook: assinatura x-signature inválida ou ausente', orderId)
-    return res.status(401).json({ error: 'Assinatura inválida.' })
+  // TODO: log temporário — se data.id não veio no query string (só no
+  // body), o validador abaixo recebe dataId vazio e a assinatura nunca
+  // bate. Ajuda a confirmar se isso acontece de verdade em produção.
+  if (!req.query?.['data.id']) {
+    console.log('DEBUG: data.id ausente no query string — req.query =', req.query, '| req.url =', req.url)
+  }
+
+  try {
+    WebhookSignatureValidator.validate({
+      xSignature: req.headers['x-signature'],
+      xRequestId: req.headers['x-request-id'],
+      dataId: req.query['data.id'],
+      secret: process.env.MERCADOPAGO_WEBHOOK_SECRET.trim(),
+    })
+  } catch (err) {
+    if (err instanceof InvalidWebhookSignatureError) {
+      console.error('mercadopago-webhook: assinatura inválida', err.reason, orderId)
+      return res.status(401).json({ error: 'invalid signature' })
+    }
+    throw err
   }
 
   if (!orderId) {
