@@ -76,6 +76,12 @@ export function PlanSelector({ footer, onProfileRefresh }: { footer?: React.Reac
 
   const selectedPlan = plans?.find((p) => p.productId === selected) ?? null
   const pixPlanCode = selectedPlan ? DAYS_TO_PLAN_CODE[selectedPlan.days] : undefined
+  // O Pix (Mercado Pago) usa o valor do preço recorrente como base — não
+  // depende de existir um preço "avulso" separado no Stripe, que só fazia
+  // sentido quando o Pix passava pelo Checkout do próprio Stripe.
+  const pixPriceLabel = selectedPlan?.recurring
+    ? formatCurrency(selectedPlan.recurring.unitAmount, selectedPlan.recurring.currency)
+    : null
 
   async function handleSubscribeCard() {
     const priceId = selectedPlan?.recurring?.priceId
@@ -134,29 +140,29 @@ export function PlanSelector({ footer, onProfileRefresh }: { footer?: React.Reac
             {starting === 'card' ? 'Abrindo pagamento…' : 'Assinar com cartão'}
           </button>
         )}
-        {selectedPlan?.oneTime && pixPlanCode && (
+        {pixPriceLabel && pixPlanCode && (
           <button
             type="button"
             onClick={() => setShowPixModal(true)}
             disabled={!!starting}
             className="nb-btn nb-btn-secondary w-full py-2.5"
           >
-            {`Pagar com Pix · ${formatOneTimePrice(selectedPlan.oneTime)}`}
+            {`Pagar com Pix · ${pixPriceLabel}`}
           </button>
         )}
       </div>
-      {selectedPlan?.oneTime && (
+      {pixPriceLabel && (
         <p className="mt-2 text-[0.72rem] text-[var(--text-soft)]">
-          Pix é pagamento único — libera o Pro por {selectedPlan.days} dias, sem cobrança automática depois.
+          Pix é pagamento único — libera o Pro por {selectedPlan!.days} dias, sem cobrança automática depois.
         </p>
       )}
       {footer}
 
-      {showPixModal && selectedPlan?.oneTime && pixPlanCode && (
+      {showPixModal && pixPriceLabel && pixPlanCode && (
         <PixPaymentModal
           plan={pixPlanCode}
-          planLabel={selectedPlan.label}
-          priceLabel={formatOneTimePrice(selectedPlan.oneTime)}
+          planLabel={selectedPlan!.label}
+          priceLabel={pixPriceLabel}
           onClose={() => setShowPixModal(false)}
           onProfileRefresh={() => onProfileRefresh?.()}
         />

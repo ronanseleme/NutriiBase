@@ -25,6 +25,11 @@ import { PLAN_DAYS } from '../_shared/plans.js'
 const MERCADOPAGO_ORDERS_URL = 'https://api.mercadopago.com/v1/orders'
 const PIX_EXPIRATION_MINUTES = 30
 
+// Usa o preço RECORRENTE (assinatura via cartão) como base do valor do
+// Pix — não depende de existir um preço avulso/one-time separado no
+// Stripe, que só fazia sentido quando o Pix passava pelo Checkout do
+// próprio Stripe. Todo plano tem preço recorrente (é o que "Assinar com
+// cartão" usa), então isso nunca fica indisponível por falta de config.
 async function fetchPlanPrice(planCode) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY
@@ -39,8 +44,8 @@ async function fetchPlanPrice(planCode) {
   if (!Array.isArray(plans)) return null
 
   const plan = plans.find((p) => p.days === days)
-  if (!plan?.oneTime) return null
-  return plan.oneTime
+  if (!plan?.recurring) return null
+  return plan.recurring
 }
 
 export default async function handler(req, res) {
@@ -77,7 +82,7 @@ export default async function handler(req, res) {
 
   const price = await fetchPlanPrice(plan)
   if (!price) {
-    return res.status(400).json({ error: 'Esse plano não tem opção de pagamento avulso (Pix) configurada.' })
+    return res.status(400).json({ error: 'Não foi possível obter o preço desse plano agora.' })
   }
   const amountFormatted = (price.unitAmount / 100).toFixed(2)
   const externalReference = `pix-${userId}-${Date.now()}`
