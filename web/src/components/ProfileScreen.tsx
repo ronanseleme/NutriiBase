@@ -1,6 +1,6 @@
 import { ACTIVITY, GOALS, PACES } from '../lib/constants'
 import { parseISODate } from '../lib/dateUtils'
-import { getInitials } from '../lib/initials'
+import { Avatar } from './Avatar'
 import { RoleBadge } from './RoleBadge'
 import { SubscriptionCard } from './SubscriptionCard'
 import type { Profile } from '../types'
@@ -22,9 +22,7 @@ export function ProfileScreen({ profile, onEditProfile }: Props) {
       <Card>
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--blue)] font-bold text-white">
-              {getInitials(profile.name)}
-            </div>
+            <Avatar name={profile.name} avatarUrl={profile.avatarUrl} size={44} />
             <div className="min-w-0">
               <div className="truncate font-[Space_Grotesk] font-bold">{profile.name || 'Sem nome'}</div>
               <div className="mt-1">

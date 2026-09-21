@@ -11,7 +11,19 @@ export type MealKey =
   | 'ceia'
   | 'preTreino'
   | 'posTreino'
-export type WorkoutType = 'musculacao' | 'corrida' | 'ciclismo' | 'funcional' | 'natacao' | 'outro'
+export type WorkoutType =
+  | 'musculacao'
+  | 'corrida'
+  | 'ciclismo'
+  | 'funcional'
+  | 'natacao'
+  | 'caminhada'
+  | 'yoga'
+  | 'pilates'
+  | 'crossfit'
+  | 'danca'
+  | 'hiit'
+  | 'outro'
 export type WorkoutIntensity = 'leve' | 'moderada' | 'intensa'
 export type WorkoutMode = 'duracao' | 'distancia'
 
@@ -71,6 +83,7 @@ export interface Profile {
   licencaAvulsaExpiraEm: string | null
   estimativasIaFreeHoje: number
   estimativasIaFreeData: string | null
+  avatarUrl: string | null
 }
 
 // Subconjunto de Profile usado só para as regras de acesso a IA (Chat e

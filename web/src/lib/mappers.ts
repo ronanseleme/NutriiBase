@@ -55,6 +55,7 @@ export interface ProfileRow {
   licenca_avulsa_expira_em: string | null
   estimativas_ia_free_hoje: number | null
   estimativas_ia_free_data: string | null
+  avatar_url: string | null
 }
 
 // Propositalmente NÃO inclui role/creditos_ia/creditos_mensais/
@@ -89,6 +90,7 @@ export function profileToDbRow(p: Profile, userId: string) {
     meta_gordura_g: p.targets?.fat ?? null,
     override_proteina_g: p.macroOverride?.proteinG ?? null,
     override_gordura_g: p.macroOverride?.fatG ?? null,
+    avatar_url: p.avatarUrl ?? null,
   }
 }
 
@@ -121,6 +123,7 @@ export function dbProfileToLocal(row: ProfileRow): Omit<Profile, 'targets'> {
     licencaAvulsaExpiraEm: row.licenca_avulsa_expira_em,
     estimativasIaFreeHoje: row.estimativas_ia_free_hoje ?? 0,
     estimativasIaFreeData: row.estimativas_ia_free_data,
+    avatarUrl: row.avatar_url ?? null,
   }
 }
 

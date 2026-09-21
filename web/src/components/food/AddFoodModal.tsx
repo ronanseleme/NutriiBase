@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FOODS, scaledFood, type FoodDbEntry } from '../../lib/foods'
+import { foodIcon } from '../../lib/foodIcons'
 import { uid } from '../../lib/uid'
 import { CreditsBadge } from '../CreditsBadge'
 import { callDescribeMealAI, mapAIErrorCode, DescribeMealAIError, type AiFoodItem as AiTextFoodItem } from '../../lib/describeMealAI'
@@ -486,7 +487,9 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, userId, 
                   onClick={() => selectFood(f)}
                   className="flex w-full items-center justify-between border-b border-[var(--line)] px-3 py-2.5 text-left text-[0.85rem] last:border-b-0 hover:bg-[var(--bg)]"
                 >
-                  <span>{f.name}</span>
+                  <span>
+                    <span aria-hidden="true">{foodIcon(f.name)}</span> {f.name}
+                  </span>
                   <span className="text-[0.75rem] text-[var(--text-soft)]">{f.kcal} kcal /100g</span>
                 </button>
               ))}

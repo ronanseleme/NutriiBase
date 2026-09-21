@@ -825,12 +825,13 @@ $$;
 -- Chamada pelas Edge Functions (describe-meal, chat-assistant) logo após
 -- uma resposta bem-sucedida da IA, sempre em nome de quem está logado
 -- (auth.uid() — nunca recebe um user_id por parâmetro, pra não dar
--- brecha de um usuário decrementar crédito de outro). Admin não consome
--- (retorna true sem mexer em nada); Free não deveria nem chegar aqui
--- (a Edge Function já bloqueia antes de chamar a IA), mas por segurança
--- também retorna false aqui. `for update` trava a linha durante a
--- função pra duas chamadas simultâneas do mesmo usuário não zerarem os
--- créditos em dobro (não deixar creditos_ia ficar negativo).
+-- brecha de um usuário decrementar crédito de outro). Admin e Pro não
+-- consomem (retornam true sem mexer em nada) — Pro é IA ilimitada de
+-- verdade, sem teto mensal; as colunas creditos_ia/creditos_mensais
+-- ficam no schema só como histórico/uso administrativo, não limitam
+-- mais nada na prática. Free não deveria nem chegar aqui (a Edge
+-- Function já bloqueia antes de chamar a IA), mas por segurança também
+-- retorna false aqui.
 create or replace function public.consumir_credito_ia(descricao text default 'Uso de IA')
 returns boolean
 language plpgsql
@@ -839,31 +840,19 @@ set search_path = public
 as $$
 declare
   v_role public.user_role_enum;
-  v_creditos int;
 begin
-  perform set_config('app.bypass_profile_protection', 'true', true);
-
-  select role, creditos_ia into v_role, v_creditos
+  select role into v_role
   from public.profiles
-  where id = auth.uid()
-  for update;
+  where id = auth.uid();
 
   if not found then
     return false;
   end if;
-  if v_role = 'admin' then
+  if v_role = 'admin' or v_role = 'pro' then
     return true;
   end if;
-  if v_role <> 'pro' or v_creditos <= 0 then
-    return false;
-  end if;
 
-  update public.profiles set creditos_ia = creditos_ia - 1 where id = auth.uid();
-
-  insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
-  values (auth.uid(), 'consumo', -1, coalesce(nullif(trim(descricao), ''), 'Uso de IA'));
-
-  return true;
+  return false;
 end;
 $$;
 
@@ -1061,4 +1050,53 @@ drop policy if exists "meal_photos_delete_own" on storage.objects;
 create policy "meal_photos_delete_own" on storage.objects
   for delete using (
     bucket_id = 'meal-photos' and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- ========== Etapa 10 — mais tipos de treino ==========
+-- ALTER TYPE ... ADD VALUE precisa rodar fora de bloco transacional com
+-- outras operações que dependam do novo valor no mesmo statement — por
+-- isso cada ADD VALUE fica isolado, sem do $$ ... $$ envolvendo.
+alter type tipo_atividade_enum add value if not exists 'caminhada';
+alter type tipo_atividade_enum add value if not exists 'yoga';
+alter type tipo_atividade_enum add value if not exists 'pilates';
+alter type tipo_atividade_enum add value if not exists 'crossfit';
+alter type tipo_atividade_enum add value if not exists 'danca';
+alter type tipo_atividade_enum add value if not exists 'hiit';
+
+-- ========== Etapa 11 — foto de perfil ==========
+-- Diferente das fotos de refeição (bucket privado, URL assinada), o
+-- avatar é exibido o tempo todo no topo do app — bucket público evita
+-- ficar gerando/renovando signed URL a cada render. avatar_url guarda a
+-- URL pública já pronta (com um "?t=" de cache-busting, adicionado pelo
+-- frontend a cada novo upload).
+alter table public.profiles
+  add column if not exists avatar_url text;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 3145728, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "avatars_select_public" on storage.objects;
+create policy "avatars_select_public" on storage.objects
+  for select using (bucket_id = 'avatars');
+
+drop policy if exists "avatars_insert_own" on storage.objects;
+create policy "avatars_insert_own" on storage.objects
+  for insert with check (
+    bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "avatars_update_own" on storage.objects;
+create policy "avatars_update_own" on storage.objects
+  for update using (
+    bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "avatars_delete_own" on storage.objects;
+create policy "avatars_delete_own" on storage.objects
+  for delete using (
+    bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
   );

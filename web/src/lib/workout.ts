@@ -6,15 +6,29 @@ export const WORKOUT_TYPES: { key: WorkoutType; label: string }[] = [
   { key: 'ciclismo', label: 'Ciclismo' },
   { key: 'funcional', label: 'Funcional' },
   { key: 'natacao', label: 'Natação' },
+  { key: 'caminhada', label: 'Caminhada' },
+  { key: 'yoga', label: 'Yoga' },
+  { key: 'pilates', label: 'Pilates' },
+  { key: 'crossfit', label: 'Crossfit' },
+  { key: 'danca', label: 'Dança' },
+  { key: 'hiit', label: 'HIIT' },
   { key: 'outro', label: 'Outro' },
 ]
 
+// Valores de MET (Compêndio de Atividades Físicas) por intensidade —
+// mesma fonte/critério das entradas já existentes.
 const MET: Record<WorkoutType, Record<WorkoutIntensity, number>> = {
   musculacao: { leve: 3.5, moderada: 5.0, intensa: 6.0 },
   funcional: { leve: 4.0, moderada: 6.0, intensa: 8.0 },
   corrida: { leve: 7.0, moderada: 9.8, intensa: 12.8 },
   ciclismo: { leve: 6.0, moderada: 8.0, intensa: 10.0 },
   natacao: { leve: 6.0, moderada: 8.3, intensa: 10.0 },
+  caminhada: { leve: 2.8, moderada: 3.5, intensa: 5.0 },
+  yoga: { leve: 2.0, moderada: 3.0, intensa: 4.0 },
+  pilates: { leve: 2.5, moderada: 3.5, intensa: 4.5 },
+  crossfit: { leve: 5.0, moderada: 8.0, intensa: 12.0 },
+  danca: { leve: 3.0, moderada: 4.5, intensa: 6.5 },
+  hiit: { leve: 6.0, moderada: 8.5, intensa: 11.0 },
   outro: { leve: 3.0, moderada: 4.5, intensa: 6.0 },
 }
 

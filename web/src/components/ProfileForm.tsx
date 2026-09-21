@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { ACTIVITY, GOALS, PACES } from '../lib/constants'
 import { useTheme } from '../hooks/useTheme'
+import { compressImage } from '../lib/compressImage'
+import { uploadAvatarPhoto } from '../lib/avatar'
+import { Avatar } from './Avatar'
 import type { Profile } from '../types'
 
 interface Props {
@@ -36,6 +39,29 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+
+  async function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !profile.id) return
+    setAvatarUploading(true)
+    setAvatarError(null)
+    try {
+      const { blob } = await compressImage(file)
+      const url = await uploadAvatarPhoto(profile.id, blob)
+      setAvatarUrl(url)
+      // Salva na hora, independente do restante do formulário — assim a
+      // foto não se perde se a pessoa fechar sem clicar em "Salvar perfil".
+      await onSave({ avatarUrl: url })
+    } catch {
+      setAvatarError('Não foi possível enviar a foto. Tente outra imagem.')
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -75,6 +101,23 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
             {error}
           </div>
         )}
+
+        <div className="mb-4 flex flex-col items-center gap-2">
+          <div className="relative">
+            <Avatar name={form.name || profile.name} avatarUrl={avatarUrl} size={76} />
+            <label
+              htmlFor="profile-avatar-input"
+              title="Trocar foto de perfil"
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-2 border-[var(--surface)] text-[0.85rem] text-white"
+              style={{ background: 'var(--purple)' }}
+            >
+              📷
+            </label>
+            <input id="profile-avatar-input" type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" />
+          </div>
+          {avatarUploading && <span className="text-[0.75rem] text-[var(--text-soft)]">Enviando foto…</span>}
+          {avatarError && <span className="text-[0.75rem] text-[var(--coral)]">{avatarError}</span>}
+        </div>
 
         <div className="mb-4">
           <span className="mb-1.5 block text-[0.8rem] font-bold text-[var(--text-soft)]">Tema</span>

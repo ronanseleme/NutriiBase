@@ -27,6 +27,7 @@ export function newProfile(userId: string | null): Profile {
     licencaAvulsaExpiraEm: null,
     estimativasIaFreeHoje: 0,
     estimativasIaFreeData: null,
+    avatarUrl: null,
   }
   return { ...base, targets: computeTargets(base) }
 }

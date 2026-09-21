@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getMealPhotoSignedUrl } from '../../lib/analyzeMealPhotoAI'
+import { foodIcon } from '../../lib/foodIcons'
 import type { FoodItem } from '../../types'
 
 function fmtNum(n: number | null | undefined): string {
@@ -45,7 +46,9 @@ export function ItemRow({ item, targetKcal, isDraft, onEdit, onRemove }: Props) 
     >
       {item.fotoUrl && <PhotoThumb path={item.fotoUrl} />}
       <div className="min-w-0 flex-1">
-        <div className="truncate font-semibold">{item.name}</div>
+        <div className="truncate font-semibold">
+          <span aria-hidden="true">{foodIcon(item.name)}</span> {item.name}
+        </div>
         {item.grams != null && <div className="text-[0.78rem] text-[var(--text-soft)]">{fmtNum(item.grams)} g</div>}
         <div className="mt-0.5 flex gap-2 text-[0.78rem]">
           <span style={{ color: 'var(--protein)' }}>

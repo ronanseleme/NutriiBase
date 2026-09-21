@@ -5,6 +5,7 @@ import { useDayLog } from './hooks/useDayLog'
 import { useMetasExtras } from './hooks/useMetasExtras'
 import { useRecentLogs } from './hooks/useRecentLogs'
 import { AuthScreen } from './components/AuthScreen'
+import { Avatar } from './components/Avatar'
 import { CheckoutSuccessScreen } from './components/CheckoutSuccessScreen'
 import { ProfileForm } from './components/ProfileForm'
 import { ProfileScreen } from './components/ProfileScreen'
@@ -22,7 +23,6 @@ import { AdminTab } from './components/admin/AdminTab'
 import { RoleBadge } from './components/RoleBadge'
 import { ViewModeToggle, type ViewMode } from './components/ViewModeToggle'
 import { parseISODate, todayISO } from './lib/dateUtils'
-import { getInitials } from './lib/initials'
 import { registerGoToProfile, registerGoToAddMeal } from './lib/tabNav'
 import type { DateRange } from './types'
 
@@ -138,9 +138,7 @@ function App() {
               title="Ver perfil"
               className="flex min-w-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-[var(--bg)]"
             >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--blue)] text-[0.62rem] font-bold text-white">
-                {getInitials(profile.name)}
-              </span>
+              <Avatar name={profile.name} avatarUrl={profile.avatarUrl} size={24} />
               <span className="min-w-0 truncate text-xs font-semibold text-[var(--text-soft)]" title={user.email ?? undefined}>
                 {profile.name || user.email}
               </span>

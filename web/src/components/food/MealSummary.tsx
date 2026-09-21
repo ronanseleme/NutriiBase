@@ -6,6 +6,9 @@ import type { MealsByKey, Targets } from '../../types'
 function fmtNum(n: number | null | undefined): string {
   return Number(n || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
 }
+function fmtSigned(n: number): string {
+  return (n >= 0 ? '+' : '') + fmtNum(n)
+}
 
 const SUGGESTION_POOL: Record<'protein' | 'carb' | 'fat', string[]> = {
   protein: ['Peito de frango grelhado', 'Ovo cozido', 'Iogurte grego', 'Whey protein (pó)'],
@@ -95,6 +98,42 @@ export function MealSummary({ meals, targets }: { meals: MealsByKey; targets: Ta
           {fmtNum(dayTotals.fat)}
         </span>
       </div>
+      <div className="grid grid-cols-[1fr_repeat(5,44px)] items-center gap-1 border-t border-[var(--line)] pt-2 text-[0.8rem] font-bold text-[var(--text-soft)]">
+        <span>Total Meta</span>
+        <span className="text-right">—</span>
+        <span className="text-right">{fmtNum(targets.kcal)}</span>
+        <span className="text-right" style={{ color: 'var(--protein)' }}>
+          {fmtNum(targets.protein)}
+        </span>
+        <span className="text-right" style={{ color: 'var(--carb)' }}>
+          {fmtNum(targets.carb)}
+        </span>
+        <span className="text-right" style={{ color: 'var(--fat)' }}>
+          {fmtNum(targets.fat)}
+        </span>
+      </div>
+      <div className="grid grid-cols-[1fr_repeat(5,44px)] items-center gap-1 pt-2 text-[0.85rem] font-extrabold">
+        <span>Resultado</span>
+        <span className="text-right">—</span>
+        <span
+          className="text-right"
+          style={{ color: targets.kcal - dayTotals.kcal < 0 ? 'var(--coral)' : 'var(--teal)' }}
+        >
+          {fmtSigned(targets.kcal - dayTotals.kcal)}
+        </span>
+        <span className="text-right" style={{ color: 'var(--protein)' }}>
+          {fmtSigned(targets.protein - dayTotals.protein)}
+        </span>
+        <span className="text-right" style={{ color: 'var(--carb)' }}>
+          {fmtSigned(targets.carb - dayTotals.carbs)}
+        </span>
+        <span className="text-right" style={{ color: 'var(--fat)' }}>
+          {fmtSigned(targets.fat - dayTotals.fat)}
+        </span>
+      </div>
+      <p className="mt-1 text-[0.7rem] text-[var(--text-soft)]">
+        Resultado positivo = ainda dentro da meta · negativo = já passou do limite.
+      </p>
       <div className="mt-4 flex gap-2 rounded-[12px] bg-[var(--bg)] p-3 text-[0.82rem]">
         <span>💡</span>
         <span>{suggestion(dayTotals, targets)}</span>
