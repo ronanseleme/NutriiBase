@@ -6,7 +6,7 @@
   <title>NutriiBase — Controle calórico e treino com inteligência artificial</title>
   <meta name="description" content="Descreva o que comeu em uma frase e a inteligência artificial calcula calorias e macros na hora. Simples, rápido e sem tabelas complicadas." />
   <meta property="og:title" content="NutriiBase — Alimentação com inteligência artificial" />
-  <meta property="og:description" content="Descreva o que comeu em uma frase e a IA estima calorias e macros na hora. Comece agora com 5 dias grátis." />
+  <meta property="og:description" content="Descreva o que comeu em uma frase e a IA estima calorias e macros na hora. Comece agora gratuitamente." />
   <meta property="og:image" content="logo-nutriibase.png" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -893,44 +893,65 @@
       display: inline-flex;
       background-color: var(--surface);
       border: 1px solid var(--line);
-      padding: 4px;
+      padding: 5px;
       border-radius: var(--radius-pill);
-      gap: 4px;
+      gap: 6px;
       flex-wrap: wrap;
       justify-content: center;
       max-width: 100%;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
     }
 
     .toggle-btn {
-      background: none;
-      border: none;
+      background: transparent;
+      border: 1px solid transparent;
       color: var(--ink-muted);
       font-family: var(--font-body);
-      font-size: 0.88rem;
+      font-size: 0.9rem;
       font-weight: 500;
-      padding: 8px 16px;
+      padding: 9px 18px;
       border-radius: var(--radius-pill);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       align-items: center;
       gap: 6px;
       white-space: nowrap;
+      user-select: none;
+    }
+
+    .toggle-btn:hover:not(.active) {
+      color: var(--ink);
+      background-color: rgba(255, 255, 255, 0.06);
     }
 
     .toggle-btn.active {
-      background-color: var(--surface-2);
-      color: var(--ink);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg, var(--purple-cta) 0%, #8B5CF6 100%);
+      color: #FFFFFF;
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 18px rgba(124, 58, 237, 0.55), 0 0 0 1px rgba(179, 136, 255, 0.35);
+      transform: translateY(-1px);
     }
 
     .toggle-discount-badge {
       font-size: 0.72rem;
-      background-color: rgba(179, 136, 255, 0.2);
+      background-color: rgba(179, 136, 255, 0.16);
       color: var(--purple-accent);
-      padding: 2px 6px;
+      border: 1px solid rgba(179, 136, 255, 0.25);
+      padding: 2px 7px;
       border-radius: var(--radius-pill);
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-btn.active .toggle-discount-badge {
+      background-color: #FFFFFF;
+      color: #5B21B6;
+      border-color: rgba(255, 255, 255, 0.9);
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
     }
 
     /* Grid de Planos: Free vs Pro */
@@ -2008,6 +2029,150 @@
       color: var(--ink-faint);
     }
 
+    /* Redes Sociais no Rodapé */
+    .footer-social-links {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .social-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      color: var(--ink-muted);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .social-btn:hover {
+      color: #ffffff;
+      border-color: var(--purple-accent);
+      background: rgba(139, 92, 246, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .social-btn svg {
+      flex-shrink: 0;
+    }
+
+    .social-btn.instagram-btn:hover {
+      border-color: #E1306C;
+      color: #ffffff;
+      background: rgba(225, 48, 108, 0.15);
+    }
+
+    .social-btn.kwai-btn:hover {
+      border-color: #FF6600;
+      color: #ffffff;
+      background: rgba(255, 102, 0, 0.15);
+    }
+
+    /* Formas de pagamento no rodapé */
+    .footer-payment-section {
+      border-top: 1px solid var(--line);
+      padding: 24px 0 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .payment-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .payment-shield-icon {
+      color: var(--purple-accent);
+      flex-shrink: 0;
+    }
+
+    .payment-methods-list {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .payment-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 5px 12px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .payment-card-name {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .payment-safe-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--ink-faint);
+    }
+
+    .safe-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--green-accent);
+    }
+
+    /* Métodos de pagamento na seção de Planos */
+    .pricing-payment-methods {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      font-size: 0.8125rem;
+      color: var(--ink-muted);
+    }
+
+    .pricing-badges-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
     /* Modal / Feedback Toast de apoio a links placeholders */
     .site-toast {
       position: fixed;
@@ -2147,7 +2312,7 @@
        ============================================================ -->
   <header id="site-header">
     <div class="container header-content">
-      <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="header-brand" aria-label="NutriiBase Página Inicial">
+      <a href="https://nutriibase.com.br/app" target="_blank" rel="noopener noreferrer" class="header-brand" aria-label="NutriiBase Página Inicial">
         <img 
           src="Logo%20Branca%20SF.png" 
           alt="NutriiBase" 
@@ -2168,7 +2333,7 @@
 
       <!-- Desktop Actions -->
       <div class="header-actions">
-        <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="desktop-ja-sou-cliente">
+        <a href="https://nutriibase.com.br/app" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="desktop-ja-sou-cliente">
           Já sou cliente
         </a>
         <button class="menu-toggle" id="menu-toggle-btn" aria-label="Abrir menu mobile" aria-expanded="false">
@@ -2188,10 +2353,10 @@
       <a href="#telas-app" class="nav-link mobile-link">Por dentro</a>
       <a href="#planos" class="nav-link mobile-link">Planos</a>
       <a href="#faq" class="nav-link mobile-link">FAQ</a>
-      <a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="mobile-ja-sou-cliente">
+      <a href="https://nutriibase.com.br/app" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="mobile-ja-sou-cliente">
         Já sou cliente
       </a>
-      <a href="https://nutriibase.com.br/?signup=1" target="_blank" rel="noopener noreferrer" class="btn btn-primary mobile-link">Começar agora, é grátis</a>
+      <a href="https://nutriibase.com.br/app" target="_blank" rel="noopener noreferrer" class="btn btn-primary mobile-link">Começar agora, é grátis</a>
     </div>
   </header>
 
@@ -2212,7 +2377,7 @@
         </p>
 
         <div class="hero-cta-wrapper">
-          <a href="https://nutriibase.com.br/?signup=1" target="_blank" rel="noopener noreferrer" class="btn btn-primary hero-cta-btn">
+          <a href="https://nutriibase.com.br/app" target="_blank" rel="noopener noreferrer" class="btn btn-primary hero-cta-btn">
             Começar agora, é grátis
           </a>
           
@@ -2476,24 +2641,24 @@
         <div class="pricing-header-center">
           <span class="section-tag">Preços claros e sem surpresas</span>
           <h2 class="section-title">Escolha como quer cuidar de você</h2>
-          <p>Comece grátis ou experimente o plano Pro com 5 dias livres para testar tudo.</p>
+          <p>Comece grátis ou turbine seus resultados com todos os recursos do plano Pro.</p>
         </div>
 
         <!-- Seletor de Período -->
         <div class="period-toggle-wrapper">
           <div class="period-toggle" role="group" aria-label="Selecionar período do plano Pro">
-            <button type="button" class="toggle-btn" data-period="mensal" id="btn-period-mensal">
+            <button type="button" class="toggle-btn" data-period="mensal" id="btn-period-mensal" aria-pressed="false">
               Mensal
             </button>
-            <button type="button" class="toggle-btn" data-period="trimestral" id="btn-period-trimestral">
+            <button type="button" class="toggle-btn" data-period="trimestral" id="btn-period-trimestral" aria-pressed="false">
               Trimestral
               <span class="toggle-discount-badge">5% off</span>
             </button>
-            <button type="button" class="toggle-btn" data-period="semestral" id="btn-period-semestral">
+            <button type="button" class="toggle-btn" data-period="semestral" id="btn-period-semestral" aria-pressed="false">
               Semestral
               <span class="toggle-discount-badge">10% off</span>
             </button>
-            <button type="button" class="toggle-btn active" data-period="anual" id="btn-period-anual">
+            <button type="button" class="toggle-btn active" data-period="anual" id="btn-period-anual" aria-pressed="true">
               Anual
               <span class="toggle-discount-badge">15% off</span>
             </button>
@@ -2551,7 +2716,7 @@
             </ul>
 
             <div class="card-footer-cta">
-              <a href="https://nutriibase.com.br/?signup=1" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btn-signup-free">
+              <a href="https://nutriibase.com.br/app" target="_blank" rel="noopener noreferrer" class="btn btn-outline" id="btn-signup-free">
                 Criar conta gratuita
               </a>
             </div>
@@ -2610,16 +2775,30 @@
             </ul>
 
             <div class="card-footer-cta">
-              <a href="https://nutriibase.com.br/?signup=1&amp;plano=anual" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="btn-pro-checkout">
-                Começar 5 dias grátis
+              <a href="https://nutriibase.com.br/app" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="btn-pro-checkout">
+                Assinar plano Pro
               </a>
             </div>
           </div>
         </div>
 
         <p class="pricing-microcopy">
-          O cartão de crédito é cadastrado no início e a cobrança acontece automaticamente ao fim do período de 5 dias. Você pode cancelar a qualquer momento antes do término sem nenhuma cobrança.
+          Pagamento 100% seguro com ativação imediata. Cancele a qualquer momento direto no painel da sua conta.
         </p>
+
+        <div class="pricing-payment-methods">
+          <span>Formas de pagamento aceitas:</span>
+          <div class="pricing-badges-inline">
+            <span class="card-chip" title="Aceita Visa">
+              <svg width="28" height="18" viewBox="0 0 48 30" fill="none" aria-hidden="true"><rect width="48" height="30" rx="3" fill="#FFF"/><path d="M19.4 19.8L21.7 6.2H25.3L23 19.8H19.4Z" fill="#1A1F71"/><path d="M32.8 6.5C32 6.2 30.7 5.9 29.2 5.9C25.5 5.9 22.9 7.8 22.9 10.5C22.9 12.5 24.8 13.6 26.2 14.3C27.6 15 28.1 15.5 28.1 16.1C28.1 17.1 26.9 17.5 25.7 17.5C24 17.5 22.9 17.2 21.8 16.7L21.3 16.5L20.8 19.7C21.7 20.1 23.4 20.4 25.2 20.4C29.2 20.4 31.8 18.5 31.8 15.6C31.8 13.3 29.8 12.2 28.3 11.5C27 10.8 26.6 10.4 26.6 9.8C26.6 9 27.6 8.5 28.8 8.5C30 8.5 30.9 8.8 31.6 9.1L32 9.3L32.8 6.5Z" fill="#1A1F71"/><path d="M37.5 15.2C37.8 14.4 39 10.9 39 10.9C39 10.9 39.3 9.9 39.5 9.3L40 11.8C40.4 13.8 41.2 18 41.2 18L37.5 15.2ZM42.8 6.2H39.9C39 6.2 38.3 6.7 37.9 7.6L32.4 19.8H36.2L36.9 17.6H41.5L41.9 19.8H45.3L42.8 6.2Z" fill="#1A1F71"/><path d="M16.6 6.2L13 15.4L12.6 13.4C12 11.1 10 8.6 7.6 7.3L10.9 19.8H14.7L20.4 6.2H16.6Z" fill="#1A1F71"/><path d="M9.8 6.2H4.2L4 6.5C8.4 7.6 11.9 10.4 13.1 13.5L11.8 7.3C11.5 6.4 10.7 6.2 9.8 6.2Z" fill="#F7B600"/></svg>
+              Visa
+            </span>
+            <span class="card-chip" title="Aceita Mastercard">
+              <svg width="28" height="18" viewBox="0 0 48 30" fill="none" aria-hidden="true"><rect width="48" height="30" rx="3" fill="#FFF"/><circle cx="19" cy="15" r="9" fill="#EB001B"/><circle cx="29" cy="15" r="9" fill="#F79E1B"/><path d="M24 8.7C25.9 10.3 27.1 12.5 27.1 15C27.1 17.5 25.9 19.7 24 21.3C22.1 19.7 20.9 17.5 20.9 15C20.9 12.5 22.1 10.3 24 8.7Z" fill="#FF5F00"/></svg>
+              Mastercard
+            </span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -2711,8 +2890,8 @@
             <div class="stat-label">No navegador e no celular, sem downloads pesados</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">5 dias</div>
-            <div class="stat-label">De teste gratuito para você comprovar a facilidade na rotina</div>
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">Acesso contínuo pelo navegador e celular para acompanhar sua rotina</div>
           </div>
         </div>
       </div>
@@ -3152,22 +3331,22 @@
           <!-- Pergunta 2 -->
           <details class="faq-item">
             <summary class="faq-question">
-              <span>Como funciona o trial de 5 dias do plano Pro?</span>
+              <span>Como funciona a assinatura do plano Pro?</span>
               <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </summary>
             <div class="faq-answer">
-              Você escolhe qualquer um dos períodos do plano Pro (mensal, trimestral ou semestral) e tem 5 dias completos para testar todos os recursos ilimitados. O cartão de crédito é cadastrado no início e a cobrança só acontece após o fim do período de teste.
+              Você escolhe qualquer um dos períodos do plano Pro (mensal, trimestral, semestral ou anual) e tem acesso imediato a todos os recursos ilimitados: estimativas ilimitadas por IA, edições ilimitadas, chat inteligente com seu histórico e relatórios completos.
             </div>
           </details>
 
           <!-- Pergunta 3 -->
           <details class="faq-item">
             <summary class="faq-question">
-              <span>Como faço para cancelar antes de ser cobrado?</span>
+              <span>Como faço para cancelar minha assinatura?</span>
               <svg class="faq-icon-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </summary>
             <div class="faq-answer">
-              O cancelamento pode ser feito em poucos cliques direto nas configurações da sua conta a qualquer momento antes do término dos 5 dias. Nenhuma cobrança será realizada se você cancelar dentro do período de trial.
+              O cancelamento pode ser feito em poucos cliques direto nas configurações da sua conta a qualquer momento. Você continua com acesso até o término do período já pago e não há fidelidade nem multas.
             </div>
           </details>
 
@@ -3259,7 +3438,7 @@
           <p class="cta-subtitle">
             Crie sua conta em menos de um minuto e teste a inteligência artificial na sua próxima refeição.
           </p>
-          <a href="https://nutriibase.com.br/?signup=1" target="_blank" rel="noopener noreferrer" class="btn btn-primary cta-btn-large">
+          <a href="https://nutriibase.com.br/app" target="_blank" rel="noopener noreferrer" class="btn btn-primary cta-btn-large">
             Começar agora, é grátis
           </a>
         </div>
@@ -3283,6 +3462,22 @@
           <p class="footer-brand-desc">
             Controle calórico e evolução física através de inteligência artificial simples, feita para a realidade brasileira.
           </p>
+          <div class="footer-social-links">
+            <a href="https://www.instagram.com/nutriibasebr" target="_blank" rel="noopener noreferrer" class="social-btn instagram-btn" aria-label="Acessar Instagram da NutriiBase" title="Instagram @nutriibasebr">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+              </svg>
+              <span>Instagram</span>
+            </a>
+            <a href="https://www.kwai.com/@nutriibase" target="_blank" rel="noopener noreferrer" class="social-btn kwai-btn" aria-label="Acessar Kwai da NutriiBase" title="Kwai @nutriibase">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M17.5 4h-11C4.57 4 3 5.57 3 7.5v9C3 18.43 4.57 20 6.5 20h11c1.93 0 3.5-1.57 3.5-3.5v-9C21 5.57 19.43 4 17.5 4zm-7.25 11.5v-7l5.5 3.5-5.5 3.5z"/>
+              </svg>
+              <span>Kwai</span>
+            </a>
+          </div>
         </div>
 
         <div>
@@ -3292,7 +3487,7 @@
             <li><a href="#recursos" class="footer-link">Recursos</a></li>
             <li><a href="#planos" class="footer-link">Planos e preços</a></li>
             <li><a href="#faq" class="footer-link">Perguntas frequentes</a></li>
-            <li><a href="https://nutriibase.com.br" target="_blank" rel="noopener noreferrer" class="footer-link" id="footer-ja-sou-cliente">Já sou cliente</a></li>
+            <li><a href="https://nutriibase.com.br/app" target="_blank" rel="noopener noreferrer" class="footer-link" id="footer-ja-sou-cliente">Já sou cliente</a></li>
           </ul>
         </div>
 
@@ -3303,6 +3498,45 @@
             <li><a href="/termos.html" class="footer-link">Termos de uso</a></li>
             <li><a href="/suporte.html" class="footer-link">Suporte</a></li>
           </ul>
+        </div>
+      </div>
+
+      <!-- Métodos de Pagamento Aceitos -->
+      <div class="footer-payment-section">
+        <div class="payment-title-group">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="payment-shield-icon" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span class="payment-heading">Formas de pagamento aceitas:</span>
+        </div>
+        <div class="payment-methods-list">
+          <div class="payment-badge" title="Cartão de Crédito Visa">
+            <svg width="38" height="24" viewBox="0 0 48 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Visa">
+              <rect width="48" height="30" rx="4" fill="#FFFFFF"/>
+              <path d="M19.4 19.8L21.7 6.2H25.3L23 19.8H19.4Z" fill="#1A1F71"/>
+              <path d="M32.8 6.5C32 6.2 30.7 5.9 29.2 5.9C25.5 5.9 22.9 7.8 22.9 10.5C22.9 12.5 24.8 13.6 26.2 14.3C27.6 15 28.1 15.5 28.1 16.1C28.1 17.1 26.9 17.5 25.7 17.5C24 17.5 22.9 17.2 21.8 16.7L21.3 16.5L20.8 19.7C21.7 20.1 23.4 20.4 25.2 20.4C29.2 20.4 31.8 18.5 31.8 15.6C31.8 13.3 29.8 12.2 28.3 11.5C27 10.8 26.6 10.4 26.6 9.8C26.6 9 27.6 8.5 28.8 8.5C30 8.5 30.9 8.8 31.6 9.1L32 9.3L32.8 6.5Z" fill="#1A1F71"/>
+              <path d="M37.5 15.2C37.8 14.4 39 10.9 39 10.9C39 10.9 39.3 9.9 39.5 9.3L40 11.8C40.4 13.8 41.2 18 41.2 18L37.5 15.2ZM42.8 6.2H39.9C39 6.2 38.3 6.7 37.9 7.6L32.4 19.8H36.2L36.9 17.6H41.5L41.9 19.8H45.3L42.8 6.2Z" fill="#1A1F71"/>
+              <path d="M16.6 6.2L13 15.4L12.6 13.4C12 11.1 10 8.6 7.6 7.3L10.9 19.8H14.7L20.4 6.2H16.6Z" fill="#1A1F71"/>
+              <path d="M9.8 6.2H4.2L4 6.5C8.4 7.6 11.9 10.4 13.1 13.5L11.8 7.3C11.5 6.4 10.7 6.2 9.8 6.2Z" fill="#F7B600"/>
+            </svg>
+            <span class="payment-card-name">Visa</span>
+          </div>
+
+          <div class="payment-badge" title="Cartão de Crédito Mastercard">
+            <svg width="38" height="24" viewBox="0 0 48 30" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Mastercard">
+              <rect width="48" height="30" rx="4" fill="#FFFFFF"/>
+              <circle cx="19" cy="15" r="9" fill="#EB001B"/>
+              <circle cx="29" cy="15" r="9" fill="#F79E1B"/>
+              <path d="M24 8.7C25.9 10.3 27.1 12.5 27.1 15C27.1 17.5 25.9 19.7 24 21.3C22.1 19.7 20.9 17.5 20.9 15C20.9 12.5 22.1 10.3 24 8.7Z" fill="#FF5F00"/>
+            </svg>
+            <span class="payment-card-name">Mastercard</span>
+          </div>
+
+          <div class="payment-safe-tag">
+            <span class="safe-dot"></span>
+            <span>Ambiente seguro e criptografado</span>
+          </div>
         </div>
       </div>
 
@@ -3331,33 +3565,33 @@
   <script>
     (function () {
       // 1. Dados dos planos Pro (Mensal, Trimestral, Semestral, Anual 15% off)
-      // Redirecionamento unificado para o site matriz
-      var CHECKOUT_BASE_URL = "https://nutriibase.com.br/?signup=1&plano=";
+      // Redirecionamento unificado para o aplicativo
+      var CHECKOUT_BASE_URL = "https://nutriibase.com.br/app";
 
       var planData = {
         mensal: {
           priceMain: "R$ 19,90",
           period: "/mês",
           billingDetail: "Cobrança recorrente mensal (sem fidelidade)",
-          checkoutUrl: CHECKOUT_BASE_URL + "mensal"
+          checkoutUrl: CHECKOUT_BASE_URL
         },
         trimestral: {
           priceMain: "R$ 18,90",
           period: "/mês",
           billingDetail: "R$ 56,72 cobrados a cada 3 meses (5% de desconto)",
-          checkoutUrl: CHECKOUT_BASE_URL + "trimestral"
+          checkoutUrl: CHECKOUT_BASE_URL
         },
         semestral: {
           priceMain: "R$ 17,91",
           period: "/mês",
           billingDetail: "R$ 107,46 cobrados a cada 6 meses (10% de desconto)",
-          checkoutUrl: CHECKOUT_BASE_URL + "semestral"
+          checkoutUrl: CHECKOUT_BASE_URL
         },
         anual: {
           priceMain: "R$ 16,91",
           period: "/mês",
           billingDetail: "R$ 202,98 cobrados anualmente (15% de desconto do preço mensal)",
-          checkoutUrl: CHECKOUT_BASE_URL + "anual"
+          checkoutUrl: CHECKOUT_BASE_URL
         }
       };
 
@@ -3372,9 +3606,13 @@
           var period = btn.getAttribute("data-period");
           if (!planData[period]) return;
 
-          // Atualizar classe ativa dos botões
-          toggleButtons.forEach(function (b) { b.classList.remove("active"); });
+          // Atualizar classe ativa e aria-pressed dos botões
+          toggleButtons.forEach(function (b) {
+            b.classList.remove("active");
+            b.setAttribute("aria-pressed", "false");
+          });
           btn.classList.add("active");
+          btn.setAttribute("aria-pressed", "true");
 
           // Atualizar texto de preço e parcelamento
           var data = planData[period];
