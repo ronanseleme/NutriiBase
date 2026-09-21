@@ -53,13 +53,13 @@ export function MealDetail({
 
   return (
     <div className="nb-card">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="nb-card-title mb-0">{mealLabel}</div>
-        <div className="flex gap-2">
+      <div className="mb-3">
+        <div className="nb-card-title mb-2">{mealLabel}</div>
+        <div className={`grid gap-1.5 ${access.role !== 'free' ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <button
             type="button"
             onClick={() => setShowAi(true)}
-            className="rounded-full px-3 py-1.5 text-[0.78rem] font-bold text-[var(--blue)]"
+            className="rounded-full px-2 py-1.5 text-center text-[0.74rem] font-bold leading-tight text-[var(--blue)]"
             style={{ background: 'color-mix(in srgb, var(--blue) 12%, var(--surface))' }}
           >
             ✨ Descrever com IA
@@ -68,7 +68,7 @@ export function MealDetail({
             <button
               type="button"
               onClick={() => setShowPhoto(true)}
-              className="rounded-full px-3 py-1.5 text-[0.78rem] font-bold text-[var(--purple)]"
+              className="rounded-full px-2 py-1.5 text-center text-[0.74rem] font-bold leading-tight text-[var(--purple)]"
               style={{ background: 'color-mix(in srgb, var(--purple) 12%, var(--surface))' }}
             >
               📷 Foto com IA
@@ -77,7 +77,7 @@ export function MealDetail({
           <button
             type="button"
             onClick={() => setShowAdd(true)}
-            className="rounded-full border border-[var(--line-strong)] px-3 py-1.5 text-[0.78rem] font-bold"
+            className="rounded-full border border-[var(--line-strong)] px-2 py-1.5 text-center text-[0.74rem] font-bold leading-tight"
           >
             + Adicionar
           </button>
