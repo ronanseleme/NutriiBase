@@ -5,14 +5,22 @@
 // consultar a order de verdade (GET /v1/orders/{id}) pra saber o status
 // real, e só então marcar o pedido como pago em pix_orders.
 //
+// Antes de processar qualquer coisa, valida a assinatura HMAC-SHA256 do
+// header x-signature — sem isso, qualquer um que descobrisse esta URL
+// poderia forjar uma notificação de pagamento e liberar acesso Pro de
+// graça. Ver verifyMercadoPagoSignature() abaixo.
+//
 // Cadastre esta URL no Mercado Pago (Suas integrações → Webhooks):
 //   https://<seu-dominio>/api/mercadopago-webhook
 //
 // Env vars (Vercel → Settings → Environment Variables):
 //   MERCADOPAGO_ACCESS_TOKEN
+//   MERCADOPAGO_WEBHOOK_SECRET (chave secreta da assinatura, na mesma
+//                               tela onde a URL do webhook foi cadastrada)
 //   VITE_SUPABASE_URL          (a mesma usada pelo frontend)
 //   SUPABASE_SERVICE_ROLE_KEY
 
+import crypto from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 
 const MERCADOPAGO_ORDERS_URL = 'https://api.mercadopago.com/v1/orders'
@@ -26,13 +34,60 @@ function getSupabaseAdmin() {
   return createClient(supabaseUrl, serviceRoleKey)
 }
 
+// Formato do header x-signature: "ts=1704908010,v1=<hmac em hex>". O
+// manifest assinado pelo Mercado Pago é "id:{data.id};request-id:{x-request-id};ts:{ts};"
+// — id sempre em minúsculas. Recalcula o HMAC-SHA256 com o secret do
+// webhook e compara com v1 em tempo constante (timingSafeEqual), pra não
+// vazar informação sobre o quanto da assinatura bateu através do tempo
+// de resposta.
+function verifyMercadoPagoSignature(req, dataId) {
+  const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET
+  if (!secret) {
+    console.error('mercadopago-webhook: MERCADOPAGO_WEBHOOK_SECRET não configurada.')
+    return false
+  }
+  if (!dataId) return false
+
+  const signatureHeader = req.headers['x-signature']
+  if (!signatureHeader) return false
+
+  const parts = {}
+  for (const chunk of String(signatureHeader).split(',')) {
+    const separatorIndex = chunk.indexOf('=')
+    if (separatorIndex === -1) continue
+    const key = chunk.slice(0, separatorIndex).trim()
+    const value = chunk.slice(separatorIndex + 1).trim()
+    parts[key] = value
+  }
+  const ts = parts.ts
+  const v1 = parts.v1
+  if (!ts || !v1) return false
+
+  const requestId = req.headers['x-request-id'] || ''
+  const manifest = `id:${String(dataId).toLowerCase()};request-id:${requestId};ts:${ts};`
+  const expectedHex = crypto.createHmac('sha256', secret).update(manifest).digest('hex')
+
+  const expectedBuffer = Buffer.from(expectedHex, 'utf8')
+  const receivedBuffer = Buffer.from(v1, 'utf8')
+  if (expectedBuffer.length !== receivedBuffer.length) return false
+  return crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST')
     return res.status(405).json({ error: 'Use POST.' })
   }
 
-  const orderId = req.body?.data?.id
+  // data.id vem como query param nas notificações "topic"/webhooks
+  // clássicos do Mercado Pago, e no corpo em outras — aceita os dois.
+  const orderId = req.query?.['data.id'] || req.body?.data?.id
+
+  if (!verifyMercadoPagoSignature(req, orderId)) {
+    console.error('mercadopago-webhook: assinatura x-signature inválida ou ausente', orderId)
+    return res.status(401).json({ error: 'Assinatura inválida.' })
+  }
+
   if (!orderId) {
     // O Mercado Pago também manda notificações de teste sem data.id —
     // devolve 200 pra não gerar retentativa em cima de algo que nunca vai
