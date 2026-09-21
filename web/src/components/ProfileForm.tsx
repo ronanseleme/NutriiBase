@@ -11,7 +11,18 @@ interface Props {
 
 export function ProfileForm({ profile, onSave, onClose }: Props) {
   const { theme, setTheme } = useTheme()
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string
+    age: number | null
+    sex: Profile['sex']
+    heightCm: number | null
+    weightKg: number | null
+    bodyFatPct: number | null
+    activity: Profile['activity']
+    goal: Profile['goal']
+    pace: Profile['pace']
+    restrictionsNote: string
+  }>({
     name: profile.name,
     age: profile.age,
     sex: profile.sex,
@@ -28,11 +39,19 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    // Os required do HTML5 já impedem o envio com esses campos vazios —
+    // essa checagem só existe pra convencer o TypeScript de que não são
+    // mais null neste ponto (evita permitir number | null pra dentro do
+    // Profile, que espera number).
+    if (form.age == null || form.heightCm == null || form.weightKg == null) return
     setSaving(true)
     setError(null)
-    const { restrictionsNote, ...rest } = form
+    const { restrictionsNote, age, heightCm, weightKg, ...rest } = form
     const { error: saveError } = await onSave({
       ...rest,
+      age,
+      heightCm,
+      weightKg,
       restrictions: { tags: [], note: restrictionsNote.trim() },
     })
     setSaving(false)
@@ -96,8 +115,8 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
                 min={10}
                 max={100}
                 required
-                value={form.age}
-                onChange={(e) => setForm({ ...form, age: +e.target.value })}
+                value={form.age ?? ''}
+                onChange={(e) => setForm({ ...form, age: e.target.value ? +e.target.value : null })}
                 className="nb-input"
               />
             </Field>
@@ -126,8 +145,8 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
                 min={100}
                 max={250}
                 required
-                value={form.heightCm}
-                onChange={(e) => setForm({ ...form, heightCm: +e.target.value })}
+                value={form.heightCm ?? ''}
+                onChange={(e) => setForm({ ...form, heightCm: e.target.value ? +e.target.value : null })}
                 className="nb-input"
               />
             </Field>
@@ -138,8 +157,8 @@ export function ProfileForm({ profile, onSave, onClose }: Props) {
                 min={30}
                 max={300}
                 required
-                value={form.weightKg}
-                onChange={(e) => setForm({ ...form, weightKg: +e.target.value })}
+                value={form.weightKg ?? ''}
+                onChange={(e) => setForm({ ...form, weightKg: e.target.value ? +e.target.value : null })}
                 className="nb-input"
               />
             </Field>
