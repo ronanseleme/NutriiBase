@@ -1100,3 +1100,37 @@ create policy "avatars_delete_own" on storage.objects
   for delete using (
     bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- ========== Etapa 12 — pagamentos via Pix (Mercado Pago) ==========
+-- Registra cada order Pix criada em web/api/create-pix-order.js e
+-- atualizada em web/api/mercadopago-webhook.js. Só essas duas Serverless
+-- Functions escrevem aqui (Service Role Key, ignora RLS) — a policy de
+-- select abaixo é só pra o usuário logado acompanhar o status do próprio
+-- pedido no frontend (ex: tela de checkout esperando o Pix cair).
+create table if not exists public.pix_orders (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  plan_code text not null,
+  amount numeric not null,
+  payer_email text not null,
+  mp_order_id text not null,
+  external_reference text,
+  status text not null default 'pending',
+  qr_code text,
+  qr_code_base64 text,
+  created_at timestamptz not null default now(),
+  paid_at timestamptz
+);
+
+create unique index if not exists pix_orders_mp_order_id_idx on public.pix_orders(mp_order_id);
+create index if not exists pix_orders_user_id_idx on public.pix_orders(user_id);
+
+alter table public.pix_orders enable row level security;
+
+drop policy if exists "pix_orders_select_own" on public.pix_orders;
+create policy "pix_orders_select_own" on public.pix_orders
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "pix_orders_select_admin" on public.pix_orders;
+create policy "pix_orders_select_admin" on public.pix_orders
+  for select using (public.is_admin(auth.uid()));
