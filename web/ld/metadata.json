@@ -1,6 +1,6 @@
 {
   "name": "NutriiBase",
-  "description": "Landing page oficial do NutriiBase - Controle calórico e treinos com inteligência artificial.",
+  "description": "Landing page oficial do NutriiBase - Controle calórico, foto do prato e treinos com inteligência artificial.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
