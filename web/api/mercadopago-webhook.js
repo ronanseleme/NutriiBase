@@ -54,10 +54,16 @@ export default async function handler(req, res) {
   }
 
   try {
+    // O SDK oficial (WebhookSignatureValidator) NÃO faz lowercase do
+    // dataId antes de montar o manifest — mas a doc do Mercado Pago exige
+    // isso quando o id vem com letras maiúsculas (ex: "ORD01JQ4S4KY..."),
+    // que é o formato real de todo order id da API de Orders. Sem esse
+    // lowercase aqui, a assinatura de qualquer notificação real nunca
+    // bateria e todo pagamento seria rejeitado com 401.
     WebhookSignatureValidator.validate({
       xSignature: req.headers['x-signature'],
       xRequestId: req.headers['x-request-id'],
-      dataId: req.query['data.id'],
+      dataId: req.query['data.id']?.toLowerCase(),
       secret: process.env.MERCADOPAGO_WEBHOOK_SECRET.trim(),
     })
   } catch (err) {
