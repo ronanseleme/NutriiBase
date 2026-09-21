@@ -4,6 +4,7 @@
   ],
   "rewrites": [
     { "source": "/app/", "destination": "https://nutrii-base.vercel.app/" },
-    { "source": "/app/:path+", "destination": "https://nutrii-base.vercel.app/:path*" }
+    { "source": "/app/:path+", "destination": "https://nutrii-base.vercel.app/:path*" },
+    { "source": "/api/:path+", "destination": "https://nutrii-base.vercel.app/api/:path*" }
   ]
 }
