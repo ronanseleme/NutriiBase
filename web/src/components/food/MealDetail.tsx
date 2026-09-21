@@ -132,6 +132,14 @@ export function MealDetail({
             setShowAdd(false)
             setShowAi(true)
           }}
+          onPhotoWithAI={
+            access.role !== 'free'
+              ? () => {
+                  setShowAdd(false)
+                  setShowPhoto(true)
+                }
+              : undefined
+          }
           onClose={() => setShowAdd(false)}
         />
       )}

@@ -29,6 +29,7 @@ interface Props {
   onAdd: (item: FoodItem) => void
   onUpdate: (item: FoodItem) => Promise<{ error: Error | null }>
   onDescribeWithAI?: () => void
+  onPhotoWithAI?: () => void
   onClose: () => void
 }
 
@@ -39,7 +40,7 @@ function normalize(s: string): string {
     .replace(/[̀-ͯ]/g, '')
 }
 
-export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, onUpdate, onDescribeWithAI, onClose }: Props) {
+export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, onUpdate, onDescribeWithAI, onPhotoWithAI, onClose }: Props) {
   const isEdit = !!editItem
   const dbMatch = editItem?.grams != null ? FOODS.find((f) => f.name === editItem.name) : null
 
@@ -192,17 +193,31 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, onAdd, o
           ))}
         </div>
 
-        {!isEdit && onDescribeWithAI && (
+        {!isEdit && (onDescribeWithAI || onPhotoWithAI) && (
           <>
             <CreditsBadge access={access} />
-            <button
-              type="button"
-              onClick={onDescribeWithAI}
-              className="mb-4 w-full rounded-full px-3 py-2 text-[0.82rem] font-bold text-[var(--purple)]"
-              style={{ background: 'color-mix(in srgb, var(--purple) 12%, var(--surface))' }}
-            >
-              ✨ Descrever com IA
-            </button>
+            <div className={`mb-4 grid gap-1.5 ${onDescribeWithAI && onPhotoWithAI ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {onDescribeWithAI && (
+                <button
+                  type="button"
+                  onClick={onDescribeWithAI}
+                  className="rounded-full px-2 py-2 text-center text-[0.8rem] font-bold leading-tight text-[var(--purple)]"
+                  style={{ background: 'color-mix(in srgb, var(--purple) 12%, var(--surface))' }}
+                >
+                  ✨ Descrever com IA
+                </button>
+              )}
+              {onPhotoWithAI && (
+                <button
+                  type="button"
+                  onClick={onPhotoWithAI}
+                  className="rounded-full px-2 py-2 text-center text-[0.8rem] font-bold leading-tight text-[var(--blue)]"
+                  style={{ background: 'color-mix(in srgb, var(--blue) 12%, var(--surface))' }}
+                >
+                  📷 Foto com IA
+                </button>
+              )}
+            </div>
           </>
         )}
 
