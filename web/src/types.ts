@@ -95,6 +95,8 @@ export interface FoodItem {
   fat: number
   descricaoIa?: string | null
   edicoes?: number
+  fotoUrl?: string | null
+  confidence?: 'alta' | 'media' | 'baixa'
 }
 
 export interface Workout {

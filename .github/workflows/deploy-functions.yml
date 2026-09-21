@@ -23,6 +23,7 @@ jobs:
           supabase functions deploy describe-meal --project-ref yvsqvvjrprovcpfqmevh
           supabase functions deploy chat-assistant --project-ref yvsqvvjrprovcpfqmevh
           supabase functions deploy transcribe-audio --project-ref yvsqvvjrprovcpfqmevh
+          supabase functions deploy analyze-meal-photo --project-ref yvsqvvjrprovcpfqmevh
           supabase functions deploy list-plans --project-ref yvsqvvjrprovcpfqmevh
           supabase functions deploy create-checkout-session --project-ref yvsqvvjrprovcpfqmevh
           supabase functions deploy create-portal-session --project-ref yvsqvvjrprovcpfqmevh

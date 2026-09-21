@@ -138,6 +138,7 @@ export interface RefeicaoRow {
   gordura_g: number
   descricao_ia: string | null
   edicoes: number | null
+  foto_url: string | null
 }
 
 export function refeicaoRowToLocal(row: RefeicaoRow): FoodItem {
@@ -151,6 +152,7 @@ export function refeicaoRowToLocal(row: RefeicaoRow): FoodItem {
     fat: row.gordura_g,
     descricaoIa: row.descricao_ia,
     edicoes: row.edicoes ?? 0,
+    fotoUrl: row.foto_url,
   }
 }
 
@@ -167,6 +169,7 @@ export function refeicaoLocalToRow(item: FoodItem, userId: string, dataIso: stri
     carboidrato_g: item.carbs,
     gordura_g: item.fat,
     descricao_ia: item.descricaoIa || null,
+    foto_url: item.fotoUrl || null,
   }
 }
 

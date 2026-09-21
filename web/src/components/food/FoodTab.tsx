@@ -180,6 +180,7 @@ export function FoodTab({
           draft={draft[active]}
           targetKcal={targets.kcal}
           access={access}
+          userId={userId}
           onAddToDraft={(item) => onAddToDraft(active, item)}
           onAddManyToDraft={(items) => onAddManyToDraft(active, items)}
           onRemoveDraft={(itemId) => onRemoveDraft(active, itemId)}

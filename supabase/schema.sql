@@ -1026,3 +1026,39 @@ create policy "registros_peso_select_own" on public.registros_peso
     auth.uid() = user_id
     and (not public.is_free(auth.uid()) or data >= (current_date - interval '7 days'))
   );
+
+-- ========== Etapa 9 — Foto de refeição com IA (Pro) ==========
+-- Referência (caminho no Storage, não URL pública — o bucket é privado) da
+-- foto que originou os alimentos, quando registrados via "Foto com IA" em
+-- vez de texto/manual. Null pros outros fluxos.
+alter table public.refeicoes
+  add column if not exists foto_url text;
+
+-- Bucket privado — cada usuário só acessa os próprios arquivos, guardados
+-- sob o prefixo "{auth.uid()}/...". 5MB e só os 3 formatos que o frontend
+-- realmente envia (a foto já é comprimida/redimensionada no client antes
+-- do upload).
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('meal-photos', 'meal-photos', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "meal_photos_insert_own" on storage.objects;
+create policy "meal_photos_insert_own" on storage.objects
+  for insert with check (
+    bucket_id = 'meal-photos' and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "meal_photos_select_own" on storage.objects;
+create policy "meal_photos_select_own" on storage.objects
+  for select using (
+    bucket_id = 'meal-photos' and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists "meal_photos_delete_own" on storage.objects;
+create policy "meal_photos_delete_own" on storage.objects
+  for delete using (
+    bucket_id = 'meal-photos' and (storage.foldername(name))[1] = auth.uid()::text
+  );

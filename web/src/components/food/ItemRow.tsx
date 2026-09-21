@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { getMealPhotoSignedUrl } from '../../lib/analyzeMealPhotoAI'
 import type { FoodItem } from '../../types'
 
 function fmtNum(n: number | null | undefined): string {
@@ -12,6 +14,27 @@ interface Props {
   onRemove: () => void
 }
 
+function PhotoThumb({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    getMealPhotoSignedUrl(path).then((signed) => {
+      if (!cancelled) setUrl(signed)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [path])
+
+  if (!url) return null
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="shrink-0" title="Ver foto original">
+      <img src={url} alt="Foto do alimento" className="h-10 w-10 rounded-[8px] object-cover" />
+    </a>
+  )
+}
+
 export function ItemRow({ item, targetKcal, isDraft, onEdit, onRemove }: Props) {
   const pctGoal = targetKcal > 0 ? Math.round((item.kcal / targetKcal) * 100) : 0
   return (
@@ -20,6 +43,7 @@ export function ItemRow({ item, targetKcal, isDraft, onEdit, onRemove }: Props) 
         isDraft ? 'opacity-90' : ''
       }`}
     >
+      {item.fotoUrl && <PhotoThumb path={item.fotoUrl} />}
       <div className="min-w-0 flex-1">
         <div className="truncate font-semibold">{item.name}</div>
         {item.grams != null && <div className="text-[0.78rem] text-[var(--text-soft)]">{fmtNum(item.grams)} g</div>}

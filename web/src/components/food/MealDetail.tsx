@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ItemRow } from './ItemRow'
 import { AddFoodModal } from './AddFoodModal'
 import { MealAiModal } from './MealAiModal'
+import { MealPhotoModal } from './MealPhotoModal'
 import type { AiAccess, FoodItem } from '../../types'
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
   draft: FoodItem[]
   targetKcal: number
   access: AiAccess
+  userId: string | null
   onAddToDraft: (item: FoodItem) => void
   onAddManyToDraft: (items: FoodItem[]) => void
   onRemoveDraft: (itemId: string) => void
@@ -24,6 +26,7 @@ export function MealDetail({
   draft,
   targetKcal,
   access,
+  userId,
   onAddToDraft,
   onAddManyToDraft,
   onRemoveDraft,
@@ -33,6 +36,7 @@ export function MealDetail({
 }: Props) {
   const [showAdd, setShowAdd] = useState(false)
   const [showAi, setShowAi] = useState(false)
+  const [showPhoto, setShowPhoto] = useState(false)
   const [editItem, setEditItem] = useState<FoodItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,6 +64,16 @@ export function MealDetail({
           >
             ✨ Descrever com IA
           </button>
+          {access.role !== 'free' && (
+            <button
+              type="button"
+              onClick={() => setShowPhoto(true)}
+              className="rounded-full px-3 py-1.5 text-[0.78rem] font-bold text-[var(--purple)]"
+              style={{ background: 'color-mix(in srgb, var(--purple) 12%, var(--surface))' }}
+            >
+              📷 Foto com IA
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setShowAdd(true)}
@@ -134,6 +148,9 @@ export function MealDetail({
       )}
       {showAi && (
         <MealAiModal mealLabel={mealLabel} access={access} onAddMany={onAddManyToDraft} onClose={() => setShowAi(false)} />
+      )}
+      {showPhoto && (
+        <MealPhotoModal mealLabel={mealLabel} userId={userId} onAddMany={onAddManyToDraft} onClose={() => setShowPhoto(false)} />
       )}
     </div>
   )
