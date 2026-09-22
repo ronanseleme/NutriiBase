@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { callChatAI, mapChatAIErrorCode, ChatAIError, type ChatTurn } from '../../lib/chatAI'
+import nutriiAvatar from '../../assets/nutrii-avatar.jpg'
+import nutriiMascot from '../../assets/nutrii-mascot.jpg'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -51,22 +53,42 @@ export function ChatPanel({ context }: Props) {
 
   return (
     <div className="nb-card">
-      <div className="nb-card-title">Assistente nutricional</div>
+      <div className="mb-3 flex items-center gap-2.5">
+        <img src={nutriiAvatar} alt="Nutrii" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+        <div>
+          <div className="font-extrabold leading-tight">Nutrii</div>
+          <div className="text-[0.72rem] text-[var(--text-soft)]">Assistente nutricional</div>
+        </div>
+      </div>
       <div className="mb-3 flex max-h-[420px] flex-col gap-2.5 overflow-y-auto">
         {history.length === 0 && (
-          <p className="text-[0.86rem] text-[var(--text-soft)]">
-            Pergunte algo sobre sua alimentação, treino ou meta — o assistente conhece seu perfil e seu histórico
-            recente.
-          </p>
+          <div className="flex flex-col items-center gap-3 rounded-[16px] bg-[var(--bg)] p-4 text-center">
+            <img
+              src={nutriiMascot}
+              alt="Nutrii, o brócolis bombado, mascote do NutriiBase"
+              className="h-36 w-auto rounded-[14px] object-cover shadow-[0_14px_30px_-16px_rgba(124,58,237,.45)]"
+            />
+            <div>
+              <p className="text-[0.95rem] font-extrabold">Esse aqui é o Nutrii 🥦💪</p>
+              <p className="mt-1 text-[0.84rem] text-[var(--text-soft)]">
+                Nosso assistente nutricional! Pergunte sobre sua alimentação, treino ou metas — ele conhece seu
+                perfil e seu histórico recente pra te ajudar na hora.
+              </p>
+            </div>
+          </div>
         )}
         {history.map((m, i) => (
-          <div
-            key={i}
-            className={`max-w-[85%] whitespace-pre-wrap rounded-[14px] px-3.5 py-2.5 text-[0.86rem] ${
-              m.role === 'user' ? 'self-end bg-[var(--blue)] text-white' : 'self-start bg-[var(--bg)] text-[var(--text)]'
-            }`}
-          >
-            {m.content}
+          <div key={i} className={`flex items-end gap-2 ${m.role === 'user' ? 'flex-row-reverse self-end' : 'self-start'}`}>
+            {m.role === 'assistant' && (
+              <img src={nutriiAvatar} alt="Nutrii" className="h-6 w-6 shrink-0 rounded-full object-cover" />
+            )}
+            <div
+              className={`max-w-[calc(85vw-5rem)] whitespace-pre-wrap rounded-[14px] px-3.5 py-2.5 text-[0.86rem] sm:max-w-[360px] ${
+                m.role === 'user' ? 'bg-[var(--blue)] text-white' : 'bg-[var(--bg)] text-[var(--text)]'
+              }`}
+            >
+              {m.content}
+            </div>
           </div>
         ))}
         {lastChips && lastChips.length > 0 && (
