@@ -41,11 +41,7 @@ function PhotoThumb({ path, name }: { path: string; name: string }) {
 // evidência visual à esquerda em toda a lista.
 function FoodEmojiThumb({ name }: { name: string }) {
   return (
-    <div
-      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[14px] text-[1.9rem]"
-      style={{ background: 'var(--bg)' }}
-      aria-hidden="true"
-    >
+    <div className="flex h-14 w-14 shrink-0 items-center justify-center text-[1.9rem]" aria-hidden="true">
       {foodIcon(name)}
     </div>
   )
