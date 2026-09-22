@@ -167,7 +167,7 @@ function App() {
             <button
               type="button"
               onClick={() => signOut()}
-              className="nb-btn nb-btn-secondary shrink-0 px-3 py-1.5 text-xs"
+              className="nb-btn nb-btn-secondary shrink-0 px-3 py-1.5 text-xs hover:border-transparent hover:bg-[var(--coral)] hover:text-white"
             >
               Sair
             </button>

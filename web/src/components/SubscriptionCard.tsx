@@ -16,11 +16,11 @@ export function SubscriptionCard({ profile, onProfileRefresh }: { profile: Profi
       </div>
     )
   }
-  if (profile.role === 'pro') return <ProPlanCard profile={profile} />
+  if (profile.role === 'pro') return <ProPlanCard profile={profile} onProfileRefresh={onProfileRefresh} />
   return <FreePlanCard onProfileRefresh={onProfileRefresh} />
 }
 
-function ProPlanCard({ profile }: { profile: Profile }) {
+function ProPlanCard({ profile, onProfileRefresh }: { profile: Profile; onProfileRefresh: () => void }) {
   const isLicencaAvulsa = !!profile.licencaAvulsaExpiraEm
 
   return (
@@ -29,10 +29,13 @@ function ProPlanCard({ profile }: { profile: Profile }) {
       <CreditsBadge access={profile} />
 
       {isLicencaAvulsa ? (
-        <p className="mb-3 text-[0.84rem] text-[var(--text-soft)]">
-          Licença avulsa (Pix) válida até <b className="text-[var(--text)]">{formatDate(profile.licencaAvulsaExpiraEm!)}</b>. Pague de
-          novo antes de vencer pra continuar com o Pro sem interrupção.
-        </p>
+        <>
+          <p className="mb-3 text-[0.84rem] text-[var(--text-soft)]">
+            Licença avulsa (Pix) válida até <b className="text-[var(--text)]">{formatDate(profile.licencaAvulsaExpiraEm!)}</b>. Compre
+            mais meses antes de vencer pra continuar com o Pro sem interrupção.
+          </p>
+          <PlanSelector onProfileRefresh={onProfileRefresh} />
+        </>
       ) : (
         <SubscriptionDetails />
       )}
