@@ -45,6 +45,7 @@
   --brand-gradient: linear-gradient(135deg, var(--lilac) 0%, var(--lavender) 50%, var(--purple) 100%);
   --accent-gradient: linear-gradient(135deg, var(--purple), var(--purple-hover));
   --blue-gradient: linear-gradient(135deg, var(--purple), var(--lavender));
+  --teal-gradient: linear-gradient(135deg, var(--teal), #10b981);
   --card-shadow: 0 1px 2px rgba(30, 24, 51, 0.06), 0 18px 34px -22px rgba(30, 24, 51, 0.18);
   --modal-shadow: 0 24px 60px -24px rgba(30, 24, 51, 0.35);
 }
@@ -90,6 +91,7 @@
   --brand-gradient: linear-gradient(135deg, var(--lilac) 0%, var(--lavender) 50%, var(--purple) 100%);
   --accent-gradient: linear-gradient(135deg, var(--purple), var(--purple-hover));
   --blue-gradient: linear-gradient(135deg, var(--purple), var(--lavender));
+  --teal-gradient: linear-gradient(135deg, var(--teal), #10b981);
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 18px 34px -22px rgba(0, 0, 0, 0.6);
   --modal-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.75);
 }
@@ -191,6 +193,14 @@ button:not(:disabled):hover {
     box-shadow: 0 12px 26px -12px rgba(179, 136, 255, 0.45);
   }
   .nb-btn-blue:hover {
+    filter: brightness(1.05);
+  }
+  .nb-btn-teal {
+    color: #fff;
+    background: var(--teal-gradient);
+    box-shadow: 0 12px 26px -12px rgba(5, 150, 105, 0.55);
+  }
+  .nb-btn-teal:hover {
     filter: brightness(1.05);
   }
   .nb-btn-secondary {

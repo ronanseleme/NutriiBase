@@ -143,12 +143,10 @@ function App() {
               type="button"
               onClick={() => setTab('profile')}
               title="Ver perfil"
+              aria-label={`Ver perfil de ${profile.name || user.email}`}
               className="flex min-w-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-[var(--bg)]"
             >
               <Avatar name={profile.name} avatarUrl={profile.avatarUrl} size={24} />
-              <span className="min-w-0 truncate text-xs font-semibold text-[var(--text-soft)]" title={user.email ?? undefined}>
-                {profile.name || user.email}
-              </span>
               <RoleBadge role={profile.role} />
             </button>
             <button

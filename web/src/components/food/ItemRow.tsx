@@ -15,7 +15,7 @@ interface Props {
   onRemove: () => void
 }
 
-function PhotoThumb({ path }: { path: string }) {
+function PhotoThumb({ path, name }: { path: string; name: string }) {
   const [url, setUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -28,11 +28,26 @@ function PhotoThumb({ path }: { path: string }) {
     }
   }, [path])
 
-  if (!url) return null
+  if (!url) return <FoodEmojiThumb name={name} />
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" className="shrink-0" title="Ver foto original">
-      <img src={url} alt="Foto do alimento" className="h-10 w-10 rounded-[8px] object-cover" />
+      <img src={url} alt="Foto do alimento" className="h-14 w-14 rounded-[14px] object-cover" />
     </a>
+  )
+}
+
+// Quando não há foto real (maioria dos casos — fotos são Pro-only), mostra
+// o ícone do alimento num bloco do mesmo tamanho, pra manter a mesma
+// evidência visual à esquerda em toda a lista.
+function FoodEmojiThumb({ name }: { name: string }) {
+  return (
+    <div
+      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[14px] text-[1.9rem]"
+      style={{ background: 'var(--bg)' }}
+      aria-hidden="true"
+    >
+      {foodIcon(name)}
+    </div>
   )
 }
 
@@ -44,11 +59,9 @@ export function ItemRow({ item, targetKcal, isDraft, onEdit, onRemove }: Props) 
         isDraft ? 'opacity-90' : ''
       }`}
     >
-      {item.fotoUrl && <PhotoThumb path={item.fotoUrl} />}
+      {item.fotoUrl ? <PhotoThumb path={item.fotoUrl} name={item.name} /> : <FoodEmojiThumb name={item.name} />}
       <div className="min-w-0 flex-1">
-        <div className="truncate font-semibold">
-          <span aria-hidden="true">{foodIcon(item.name)}</span> {item.name}
-        </div>
+        <div className="truncate font-semibold">{item.name}</div>
         {item.grams != null && <div className="text-[0.78rem] text-[var(--text-soft)]">{fmtNum(item.grams)} g</div>}
         <div className="mt-0.5 flex gap-2 text-[0.78rem]">
           <span style={{ color: 'var(--protein)' }}>

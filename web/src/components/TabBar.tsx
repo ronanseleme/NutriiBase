@@ -69,6 +69,15 @@ function AssistantIcon() {
   )
 }
 
+function ProfileIcon() {
+  return (
+    <svg width={20} height={20} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx={10} cy={6.5} r={3.25} stroke="currentColor" strokeWidth={1.6} />
+      <path d="M3.5 17c0-3.5 2.9-6 6.5-6s6.5 2.5 6.5 6" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
+    </svg>
+  )
+}
+
 function AdminIcon() {
   return (
     <svg width={20} height={20} viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -89,6 +98,7 @@ const TABS: { key: TabKey; label: string; Icon: () => React.ReactElement }[] = [
   { key: 'workout', label: 'Treino', Icon: WorkoutIcon },
   { key: 'goals', label: 'Metas', Icon: GoalsIcon },
   { key: 'assistant', label: 'Chat', Icon: AssistantIcon },
+  { key: 'profile', label: 'Perfil', Icon: ProfileIcon },
   { key: 'admin', label: 'Admin', Icon: AdminIcon },
 ]
 

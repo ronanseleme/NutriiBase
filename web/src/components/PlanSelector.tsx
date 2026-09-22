@@ -130,24 +130,24 @@ export function PlanSelector({ footer, onProfileRefresh }: { footer?: React.Reac
       {error && <div className="mb-3 text-[0.8rem] text-[var(--coral)]">{error}</div>}
 
       <div className="flex flex-col gap-2">
-        {selectedPlan?.recurring && (
-          <button
-            type="button"
-            onClick={handleSubscribeCard}
-            disabled={!!starting}
-            className="nb-btn nb-btn-primary w-full py-2.5"
-          >
-            {starting === 'card' ? 'Abrindo pagamento…' : 'Assinar com cartão'}
-          </button>
-        )}
         {pixPriceLabel && pixPlanCode && (
           <button
             type="button"
             onClick={() => setShowPixModal(true)}
             disabled={!!starting}
+            className="nb-btn nb-btn-teal w-full py-3 text-[0.95rem]"
+          >
+            {`⚡ Pagar com Pix · ${pixPriceLabel}`}
+          </button>
+        )}
+        {selectedPlan?.recurring && (
+          <button
+            type="button"
+            onClick={handleSubscribeCard}
+            disabled={!!starting}
             className="nb-btn nb-btn-secondary w-full py-2.5"
           >
-            {`Pagar com Pix · ${pixPriceLabel}`}
+            {starting === 'card' ? 'Abrindo pagamento…' : 'Assinar com cartão'}
           </button>
         )}
       </div>
