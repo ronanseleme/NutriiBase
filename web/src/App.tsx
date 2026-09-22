@@ -13,7 +13,7 @@ import { OnboardingWizard } from './components/onboarding/OnboardingWizard'
 import { Dashboard } from './components/Dashboard'
 import { Logo } from './components/Logo'
 import { DateNav } from './components/DateNav'
-import { TabBar, type TabKey } from './components/TabBar'
+import { TabBar, AdminIcon, type TabKey } from './components/TabBar'
 import { FoodTab } from './components/food/FoodTab'
 import { WorkoutTab } from './components/workout/WorkoutTab'
 import { MetasTab } from './components/metas/MetasTab'
@@ -149,6 +149,21 @@ function App() {
               <Avatar name={profile.name} avatarUrl={profile.avatarUrl} size={24} />
               <RoleBadge role={profile.role} />
             </button>
+            {profile.role === 'admin' && (
+              <button
+                type="button"
+                onClick={() => setTab('admin')}
+                title="Administração"
+                aria-label="Abrir administração"
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors ${
+                  tab === 'admin'
+                    ? 'bg-[image:var(--brand-gradient)] text-white'
+                    : 'text-[var(--text-soft)] hover:bg-[var(--bg)]'
+                }`}
+              >
+                <AdminIcon />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => signOut()}
@@ -158,7 +173,7 @@ function App() {
             </button>
           </div>
         </div>
-        <TabBar active={tab} onChange={setTab} showAdmin={profile.role === 'admin'} />
+        <TabBar active={tab} onChange={setTab} />
         <div className="h-[3px] bg-[image:var(--brand-gradient)] opacity-80" />
       </div>
 

@@ -78,7 +78,7 @@ function ProfileIcon() {
   )
 }
 
-function AdminIcon() {
+export function AdminIcon() {
   return (
     <svg width={20} height={20} viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path
@@ -99,20 +99,17 @@ const TABS: { key: TabKey; label: string; Icon: () => React.ReactElement }[] = [
   { key: 'goals', label: 'Metas', Icon: GoalsIcon },
   { key: 'assistant', label: 'Chat', Icon: AssistantIcon },
   { key: 'profile', label: 'Perfil', Icon: ProfileIcon },
-  { key: 'admin', label: 'Admin', Icon: AdminIcon },
 ]
 
 interface Props {
   active: TabKey
   onChange: (tab: TabKey) => void
-  showAdmin: boolean
 }
 
-export function TabBar({ active, onChange, showAdmin }: Props) {
-  const tabs = showAdmin ? TABS : TABS.filter((t) => t.key !== 'admin')
+export function TabBar({ active, onChange }: Props) {
   return (
     <nav className="mx-auto flex max-w-md gap-1 px-2 pb-2" aria-label="Navegação principal">
-      {tabs.map((t) => (
+      {TABS.map((t) => (
         <button
           key={t.key}
           type="button"
