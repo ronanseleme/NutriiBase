@@ -88,4 +88,7 @@ jobs:
           git add -A
           git diff --cached --quiet && echo "Nada novo para commitar" && exit 0
           git commit -m "Backup $DATA"
-          git push
+          # -u origin HEAD: o repo de backups pode não ter nenhum commit
+          # ainda (branch "não nascida"), então não existe upstream
+          # configurado por um "git clone" comum de repositório vazio.
+          git push -u origin HEAD
