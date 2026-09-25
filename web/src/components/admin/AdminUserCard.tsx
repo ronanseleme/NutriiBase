@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { RoleBadge } from '../RoleBadge'
-import { daysUntil } from '../../lib/dateUtils'
 import type { AdminUserRow } from '../../hooks/useAdminUsers'
 
 function fmtDate(iso: string): string {
@@ -12,27 +11,12 @@ interface Props {
   busy: boolean
   onPromote: () => Promise<void>
   onDemote: () => Promise<void>
-  onAdjustCreditos: (delta: number, motivo: string) => Promise<void>
-  onSetCreditosMensais: (novoValor: number) => Promise<void>
   onViewHistory: () => void
 }
 
-export function AdminUserCard({
-  user,
-  busy,
-  onPromote,
-  onDemote,
-  onAdjustCreditos,
-  onSetCreditosMensais,
-  onViewHistory,
-}: Props) {
+export function AdminUserCard({ user, busy, onPromote, onDemote, onViewHistory }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [confirmRoleChange, setConfirmRoleChange] = useState<'promote' | 'demote' | null>(null)
-  const [mensaisInput, setMensaisInput] = useState(String(user.creditosMensais))
-  const [ajusteDelta, setAjusteDelta] = useState('')
-  const [ajusteMotivo, setAjusteMotivo] = useState('')
-
-  const dias = user.dataProximaRenovacao ? daysUntil(user.dataProximaRenovacao) : null
 
   return (
     <div className="nb-card">
@@ -56,11 +40,6 @@ export function AdminUserCard({
         <span className="rounded-full bg-[var(--bg)] px-2.5 py-1">
           Último acesso {user.ultimoLogin ? fmtDate(user.ultimoLogin) : 'nunca'}
         </span>
-        {user.role === 'pro' && (
-          <span className="rounded-full bg-[var(--bg)] px-2.5 py-1">
-            {user.creditosIa}/{user.creditosMensais} créditos{dias != null ? ` · renova em ${dias} dia${dias === 1 ? '' : 's'}` : ''}
-          </span>
-        )}
       </div>
 
       {expanded && (
@@ -94,63 +73,6 @@ export function AdminUserCard({
               Ver histórico
             </button>
           </div>
-
-          <label className="flex flex-col gap-1">
-            <span className="text-[0.72rem] font-bold uppercase tracking-wide text-[var(--text-soft)]">
-              Limite mensal de créditos
-            </span>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                min={0}
-                value={mensaisInput}
-                onChange={(e) => setMensaisInput(e.target.value)}
-                className="nb-input flex-1"
-              />
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => onSetCreditosMensais(Math.max(0, Math.round(+mensaisInput || 0)))}
-                className="nb-btn nb-btn-secondary px-3 text-xs"
-              >
-                Salvar
-              </button>
-            </div>
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className="text-[0.72rem] font-bold uppercase tracking-wide text-[var(--text-soft)]">
-              Ajuste manual de créditos (saldo atual)
-            </span>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                placeholder="+10 ou -5"
-                value={ajusteDelta}
-                onChange={(e) => setAjusteDelta(e.target.value)}
-                className="nb-input w-24"
-              />
-              <input
-                type="text"
-                placeholder="Motivo (opcional)"
-                value={ajusteMotivo}
-                onChange={(e) => setAjusteMotivo(e.target.value)}
-                className="nb-input flex-1"
-              />
-              <button
-                type="button"
-                disabled={busy || !ajusteDelta.trim() || Number(ajusteDelta) === 0}
-                onClick={async () => {
-                  await onAdjustCreditos(Math.round(+ajusteDelta), ajusteMotivo)
-                  setAjusteDelta('')
-                  setAjusteMotivo('')
-                }}
-                className="nb-btn nb-btn-secondary px-3 text-xs"
-              >
-                Aplicar
-              </button>
-            </div>
-          </label>
         </div>
       )}
 
@@ -162,8 +84,8 @@ export function AdminUserCard({
             </h2>
             <p className="mb-4 text-[0.86rem] text-[var(--text-soft)]">
               {confirmRoleChange === 'promote'
-                ? `${user.nome} passa a ter acesso completo à IA, com ${user.creditosMensais} créditos iniciais e renovação a cada 30 dias.`
-                : `${user.nome} perde acesso à IA imediatamente e os créditos atuais são zerados. O limite mensal configurado é mantido para uma futura promoção.`}
+                ? `${user.nome} passa a ter acesso completo e ilimitado à IA.`
+                : `${user.nome} perde acesso à IA imediatamente.`}
             </p>
             <div className="flex justify-end gap-2.5">
               <button

@@ -7,10 +7,7 @@ export interface AdminUserRow {
   nome: string
   email: string
   role: AccessRole
-  creditosIa: number
-  creditosMensais: number
   dataInicioPro: string | null
-  dataProximaRenovacao: string | null
   createdAt: string
   ultimoLogin: string | null
 }
@@ -20,10 +17,7 @@ interface AdminListUsersRow {
   nome: string | null
   email: string
   role: AccessRole
-  creditos_ia: number
-  creditos_mensais: number
   data_inicio_pro: string | null
-  data_proxima_renovacao: string | null
   created_at: string
   ultimo_login: string | null
 }
@@ -34,10 +28,7 @@ function mapRow(r: AdminListUsersRow): AdminUserRow {
     nome: r.nome || '(sem nome)',
     email: r.email,
     role: r.role,
-    creditosIa: r.creditos_ia,
-    creditosMensais: r.creditos_mensais,
     dataInicioPro: r.data_inicio_pro,
-    dataProximaRenovacao: r.data_proxima_renovacao,
     createdAt: r.created_at,
     ultimoLogin: r.ultimo_login,
   }
@@ -82,30 +73,5 @@ export function useAdminUsers() {
     [reload],
   )
 
-  const adjustCreditos = useCallback(
-    async (userId: string, delta: number, motivo?: string) => {
-      const { error: err } = await supabase.rpc('admin_adjust_creditos', {
-        target_user: userId,
-        delta,
-        motivo: motivo || null,
-      })
-      if (!err) await reload()
-      return { error: err }
-    },
-    [reload],
-  )
-
-  const setCreditosMensais = useCallback(
-    async (userId: string, novoValor: number) => {
-      const { error: err } = await supabase.rpc('admin_set_creditos_mensais', {
-        target_user: userId,
-        novo_valor: novoValor,
-      })
-      if (!err) await reload()
-      return { error: err }
-    },
-    [reload],
-  )
-
-  return { users, loading, error, reload, promote, demote, adjustCreditos, setCreditosMensais }
+  return { users, loading, error, reload, promote, demote }
 }

@@ -741,10 +741,7 @@ returns table (
   nome text,
   email text,
   role public.user_role_enum,
-  creditos_ia int,
-  creditos_mensais int,
   data_inicio_pro timestamptz,
-  data_proxima_renovacao timestamptz,
   created_at timestamptz,
   ultimo_login timestamptz
 )
@@ -758,8 +755,7 @@ begin
   end if;
 
   return query
-    select p.id, p.nome, u.email::text, p.role, p.creditos_ia, p.creditos_mensais,
-           p.data_inicio_pro, p.data_proxima_renovacao, p.created_at, u.last_sign_in_at
+    select p.id, p.nome, u.email::text, p.role, p.data_inicio_pro, p.created_at, u.last_sign_in_at
     from public.profiles p
     join auth.users u on u.id = p.id
     order by p.created_at desc;

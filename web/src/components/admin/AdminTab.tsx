@@ -8,7 +8,7 @@ type SubView = 'users' | 'status'
 
 export function AdminTab() {
   const [subView, setSubView] = useState<SubView>('users')
-  const { users, loading, error, promote, demote, adjustCreditos, setCreditosMensais } = useAdminUsers()
+  const { users, loading, error, promote, demote } = useAdminUsers()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [historyUser, setHistoryUser] = useState<{ id: string; nome: string } | null>(null)
@@ -63,8 +63,6 @@ export function AdminTab() {
               busy={busyId === u.id}
               onPromote={() => runAction(u.id, () => promote(u.id))}
               onDemote={() => runAction(u.id, () => demote(u.id))}
-              onAdjustCreditos={(delta, motivo) => runAction(u.id, () => adjustCreditos(u.id, delta, motivo))}
-              onSetCreditosMensais={(novoValor) => runAction(u.id, () => setCreditosMensais(u.id, novoValor))}
               onViewHistory={() => setHistoryUser({ id: u.id, nome: u.nome })}
             />
           ))}
