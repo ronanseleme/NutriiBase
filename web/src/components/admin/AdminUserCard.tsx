@@ -53,6 +53,9 @@ export function AdminUserCard({
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[0.72rem] text-[var(--text-soft)]">
         <span className="rounded-full bg-[var(--bg)] px-2.5 py-1">Cadastro {fmtDate(user.createdAt)}</span>
+        <span className="rounded-full bg-[var(--bg)] px-2.5 py-1">
+          Último acesso {user.ultimoLogin ? fmtDate(user.ultimoLogin) : 'nunca'}
+        </span>
         {user.role === 'pro' && (
           <span className="rounded-full bg-[var(--bg)] px-2.5 py-1">
             {user.creditosIa}/{user.creditosMensais} créditos{dias != null ? ` · renova em ${dias} dia${dias === 1 ? '' : 's'}` : ''}

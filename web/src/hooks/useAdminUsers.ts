@@ -12,6 +12,7 @@ export interface AdminUserRow {
   dataInicioPro: string | null
   dataProximaRenovacao: string | null
   createdAt: string
+  ultimoLogin: string | null
 }
 
 interface AdminListUsersRow {
@@ -24,6 +25,7 @@ interface AdminListUsersRow {
   data_inicio_pro: string | null
   data_proxima_renovacao: string | null
   created_at: string
+  ultimo_login: string | null
 }
 
 function mapRow(r: AdminListUsersRow): AdminUserRow {
@@ -37,6 +39,7 @@ function mapRow(r: AdminListUsersRow): AdminUserRow {
     dataInicioPro: r.data_inicio_pro,
     dataProximaRenovacao: r.data_proxima_renovacao,
     createdAt: r.created_at,
+    ultimoLogin: r.ultimo_login,
   }
 }
 

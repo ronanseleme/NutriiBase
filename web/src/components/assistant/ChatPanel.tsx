@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { callChatAI, mapChatAIErrorCode, ChatAIError, type ChatTurn } from '../../lib/chatAI'
+import { loadChatHistory, saveChatHistory } from '../../lib/chatHistoryStorage'
 import nutriiAvatar from '../../assets/nutrii-avatar.jpg'
 import nutriiMascot from '../../assets/nutrii-mascot.jpg'
 
@@ -11,12 +12,20 @@ interface Message {
 
 interface Props {
   context: string
+  userId: string | null
 }
 
-export function ChatPanel({ context }: Props) {
-  const [history, setHistory] = useState<Message[]>([])
+export function ChatPanel({ context, userId }: Props) {
+  const [history, setHistory] = useState<Message[]>(() => (userId ? loadChatHistory(userId) : []))
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
+
+  // Salva a conversa do dia no localStorage (some sozinha depois de 24h) —
+  // só grava quando não há resposta em andamento, pra nunca persistir o
+  // placeholder "Pensando…" nem sobrescrever com um estado intermediário.
+  useEffect(() => {
+    if (userId && !busy) saveChatHistory(userId, history)
+  }, [userId, history, busy])
 
   async function send(rawText?: string) {
     const text = (rawText ?? input).trim()

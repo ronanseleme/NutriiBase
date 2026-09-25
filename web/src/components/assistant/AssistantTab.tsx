@@ -61,7 +61,7 @@ export function AssistantTab({ userId, profile, recentMap }: Props) {
         ) : (
           <>
             <CreditsBadge access={profile} />
-            <ChatPanel context={context} />
+            <ChatPanel context={context} userId={userId} />
           </>
         )
       ) : (
