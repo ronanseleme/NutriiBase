@@ -1,0 +1,79 @@
+name: Backup diário (banco + Storage)
+
+# Faz um backup extra, fora do Supabase, do banco de dados e dos arquivos
+# do Storage (meal-photos, avatars) — o backup nativo do Supabase (diário,
+# 7 dias de retenção no plano Pro) NÃO cobre os arquivos do Storage, só
+# metadados. Isso complementa aquele backup, guardando uma cópia própria
+# num repositório privado separado.
+#
+# Requer estes secrets configurados em Settings > Secrets and variables >
+# Actions deste repositório (ver README do repo de backups para o passo a
+# passo de como obter cada um):
+#   SUPABASE_DB_URL          — connection string completa do Postgres, com
+#                               senha (Database Settings > Connection string > URI)
+#   SUPABASE_URL              — https://yvsqvvjrprovcpfqmevh.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY — Service Role Key do projeto (Settings > API)
+#   BACKUPS_REPO_TOKEN        — Personal Access Token (fine-grained, só com
+#                               permissão de escrita no repo
+#                               ronanseleme/nutriibase-backups)
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # 03:00 America/Sao_Paulo
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Dump do banco (schema + dados)
+        run: |
+          supabase db dump --db-url "${{ secrets.SUPABASE_DB_URL }}" -f db.sql
+
+      - name: Baixar arquivos do Storage (meal-photos, avatars)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node .github/scripts/backup-storage.mjs ./storage
+
+      - name: Compactar
+        run: |
+          DATA=$(date +%F)
+          echo "DATA=$DATA" >> "$GITHUB_ENV"
+          tar -czf "db_${DATA}.sql.tar.gz" db.sql
+          tar -czf "storage_${DATA}.tar.gz" -C storage .
+
+      - name: Clonar repo de backups
+        run: |
+          git clone "https://x-access-token:${{ secrets.BACKUPS_REPO_TOKEN }}@github.com/ronanseleme/nutriibase-backups.git" backups-repo
+
+      - name: Copiar backup de hoje e limpar backups com mais de 30 dias
+        run: |
+          mkdir -p "backups-repo/$DATA"
+          mv "db_${DATA}.sql.tar.gz" "backups-repo/$DATA/"
+          mv "storage_${DATA}.tar.gz" "backups-repo/$DATA/"
+          find backups-repo -maxdepth 1 -type d -name '20*' -mtime +30 -exec rm -rf {} +
+
+      - name: Commit e push
+        run: |
+          cd backups-repo
+          git config user.name "nutriibase-backup-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && echo "Nada novo para commitar" && exit 0
+          git commit -m "Backup $DATA"
+          git push

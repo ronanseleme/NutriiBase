@@ -1,36 +1,20 @@
--- NutriiBase — schema + Row Level Security
+-- Baseline de migrations do NutriiBase.
 --
--- DEPRECADO (2026-09-25): este arquivo não é mais a fonte da verdade do
--- schema, e alguns trechos abaixo já divergem do banco de produção (ex:
--- pix_orders). A partir de agora, o schema vive em supabase/migrations/ —
--- veja supabase/migrations/20260908224600_baseline_producao.sql pro
--- estado atual completo e real. Mudanças de schema devem virar um novo
--- arquivo em supabase/migrations/ (supabase migration new <nome>), nunca
--- mais SQL solto direto em produção. Este arquivo fica só como registro
--- histórico de como o schema evoluiu, com os comentários de contexto
--- originais — não rode ele mais.
+-- Este arquivo nasceu de uma auditoria comparando supabase/schema.sql com o
+-- schema REAL rodando em produção (introspecção via pg_catalog/information_schema
+-- em 2026-09-25), para permitir habilitar o Supabase Branching sem criar
+-- ambientes de teste com um schema diferente do de produção.
 --
--- Rode este arquivo inteiro no SQL Editor do Supabase (Database > SQL Editor > New query).
+-- O conteúdo é o mesmo schema.sql de sempre, com dois ajustes onde produção
+-- havia divergido do arquivo (ver notas inline abaixo): a tabela pix_orders
+-- e a função/event trigger rls_auto_enable. Escrito para ser idempotente
+-- (if not exists / or replace / drop-then-create), então pode rodar com
+-- segurança tanto em um branch novo (do zero) quanto em produção (onde a
+-- maior parte já existe).
 --
--- Notas sobre pequenos ajustes em relação à especificação original (documentados para revisão):
--- 1) profiles: adicionadas as colunas opcionais `percentual_gordura_atual`,
---    `percentual_gordura_meta` e `meta_treinos_semanais` — o app já tem essas
---    funcionalidades (Katch-McArdle, meta de % de gordura, meta de treinos/semana)
---    e elas ficariam sem onde persistir se o schema seguisse só os campos originais.
--- 2) registros_peso: adicionada a coluna opcional `percentual_gordura` (o app já
---    registra "percentual de gordura do dia" junto com o peso do dia) e uma
---    constraint unique(user_id, data) para permitir upsert (1 registro por dia).
--- 3) metas_mensais: unique(user_id, mes_ano) pelo mesmo motivo (1 registro por mês).
--- 4) profiles.objetivo usa o valor 'ganho_massa' (conforme pedido); o app internamente
---    usa a chave "ganho" — o frontend faz o de/para na hora de ler/gravar.
--- 5) profiles.nivel_atividade aceita 'sedentario' e 'atleta' (conforme pedido), mas o
---    app hoje só oferece 3 opções na interface (leve/moderado/intenso) — os outros dois
---    valores do enum ficam disponíveis para uso futuro.
--- 6) treinos: adicionada a coluna opcional `pace_min_km` — o modo "distância" do
---    registro de corrida guarda o pace (min/km) usado para estimar o gasto calórico,
---    e precisa ser recuperado ao carregar o treino de novo (para exibir/editar).
--- 7) registros_peso.peso_kg passou a ser opcional (sem "not null") — o app permite
---    salvar só o percentual de gordura do dia sem peso, e vice-versa (upsert por dia).
+-- A partir de agora, qualquer mudança de schema deve virar um novo arquivo
+-- em supabase/migrations/ (supabase migration new <nome>), nunca mais SQL
+-- solto direto em produção — senão este arquivo volta a ficar desatualizado.
 
 create extension if not exists pgcrypto;
 
@@ -103,14 +87,6 @@ create policy "profiles_delete_own" on public.profiles
   for delete using (auth.uid() = id);
 
 -- ========== papéis de acesso e créditos de IA — colunas + is_admin() ==========
--- Precisa vir aqui, logo após as policies "own" de profiles: as policies
--- de admin abaixo (e o trigger de proteção de colunas, mais abaixo) usam
--- is_admin(), e CREATE POLICY valida a expressão using/check na hora —
--- diferente de uma função plpgsql, ela não aceita referência a uma
--- função que ainda não existe no momento em que a policy é criada. Como
--- este arquivo é pensado para ser rodado inteiro do zero (comentário no
--- topo do arquivo), a ordem aqui dentro importa de verdade.
-
 do $$ begin
   create type public.user_role_enum as enum ('admin', 'pro', 'free');
 exception when duplicate_object then null; end $$;
@@ -122,10 +98,6 @@ alter table public.profiles
   add column if not exists data_inicio_pro timestamptz,
   add column if not exists data_proxima_renovacao timestamptz;
 
--- security definer + search_path fixo: roda com os privilégios de quem
--- criou a função (o dono do projeto), que por padrão ignora RLS — por
--- isso não entra em recursão ao consultar profiles (que também tem RLS)
--- de dentro de uma policy da própria tabela profiles.
 create or replace function public.is_admin(uid uuid)
 returns boolean
 language sql
@@ -138,7 +110,6 @@ as $$
   );
 $$;
 
--- Admin enxerga e edita qualquer perfil (Etapa 3).
 drop policy if exists "profiles_select_admin" on public.profiles;
 create policy "profiles_select_admin" on public.profiles
   for select using (public.is_admin(auth.uid()));
@@ -160,14 +131,6 @@ create trigger profiles_set_updated_at
   before update on public.profiles
   for each row execute function public.set_updated_at();
 
--- RLS é por LINHA, não por coluna — a policy "profiles_update_own" acima
--- deixa o próprio usuário atualizar a linha dele inteira, o que incluiria
--- role/créditos se nada mais impedisse. Este trigger fecha essa brecha:
--- só passa a alteração dessas 5 colunas se quem está atualizando for
--- admin (is_admin), for o service role (Edge Function de consumo de
--- créditos, Etapa 6) ou tiver marcado a flag de sessão
--- app.bypass_profile_protection (usada por renovar_creditos_pro(), que
--- roda via pg_cron sem nenhum auth.uid() — não tem como ser "admin").
 create or replace function public.protect_profile_privileged_columns()
 returns trigger
 language plpgsql
@@ -205,21 +168,10 @@ create trigger profiles_protect_privileged_columns
   before update on public.profiles
   for each row execute function public.protect_profile_privileged_columns();
 
--- Override manual de proteína/gordura (em gramas) na aba Metas — quando
--- preenchido, o carboidrato da meta passa a ser o restante das calorias
--- (kcal - proteína*4 - gordura*9)/4, calculado no frontend. NULL em
--- qualquer um dos dois significa "usar o cálculo automático" para
--- aquele macro especificamente. Coluna comum, editável pelo próprio
--- usuário (não faz parte da proteção de colunas privilegiadas da
--- Etapa 3 — aquilo é só sobre role/créditos).
 alter table public.profiles
   add column if not exists override_proteina_g int,
   add column if not exists override_gordura_g int;
 
--- Descrição livre do objetivo da pessoa (ex: "emagrecer e perder gordura
--- corporal mantendo a massa muscular"), editável na aba Metas — mostrada
--- em destaque no topo daquela aba. Diferente de `objetivo` (enum de 3
--- valores usado no cálculo de kcal/macros), esta é só texto livre.
 alter table public.profiles
   add column if not exists meta_descricao text;
 
@@ -243,10 +195,6 @@ create table if not exists public.refeicoes (
 create index if not exists refeicoes_user_data_idx on public.refeicoes(user_id, data);
 
 alter table public.refeicoes enable row level security;
-
-drop policy if exists "refeicoes_select_own" on public.refeicoes;
-create policy "refeicoes_select_own" on public.refeicoes
-  for select using (auth.uid() = user_id);
 
 drop policy if exists "refeicoes_insert_own" on public.refeicoes;
 create policy "refeicoes_insert_own" on public.refeicoes
@@ -287,10 +235,6 @@ create index if not exists treinos_user_data_idx on public.treinos(user_id, data
 
 alter table public.treinos enable row level security;
 
-drop policy if exists "treinos_select_own" on public.treinos;
-create policy "treinos_select_own" on public.treinos
-  for select using (auth.uid() = user_id);
-
 drop policy if exists "treinos_insert_own" on public.treinos;
 create policy "treinos_insert_own" on public.treinos
   for insert with check (auth.uid() = user_id);
@@ -325,10 +269,6 @@ create table if not exists public.registros_peso (
 create index if not exists registros_peso_user_data_idx on public.registros_peso(user_id, data);
 
 alter table public.registros_peso enable row level security;
-
-drop policy if exists "registros_peso_select_own" on public.registros_peso;
-create policy "registros_peso_select_own" on public.registros_peso
-  for select using (auth.uid() = user_id);
 
 drop policy if exists "registros_peso_insert_own" on public.registros_peso;
 create policy "registros_peso_insert_own" on public.registros_peso
@@ -391,13 +331,6 @@ create policy "metas_mensais_update_admin" on public.metas_mensais
   for update using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
 
 -- ========== auto-criação de profile em todo novo usuário (e-mail ou OAuth) ==========
--- Sem isso, um usuário que entra pelo Google nunca passa pelo ProfileForm
--- salvando a linha em profiles — o trigger garante que a linha sempre existe,
--- com nome pré-preenchido a partir do Google quando disponível, e o resto
--- com os defaults da tabela (nivel_atividade/objetivo/ritmo/role/créditos —
--- role/créditos, definidos mais acima, também têm default na tabela,
--- então todo INSERT feito por este trigger já sai com os valores certos
--- sem precisar tocar aqui).
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -420,11 +353,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- ========== papéis de acesso e créditos de IA — transações de crédito ==========
--- As colunas role/creditos_* em profiles e a função is_admin() já foram
--- criadas mais acima (logo após as policies "own" de profiles). Aqui
--- entra só a tabela de auditoria de créditos.
-
+-- ========== transações de crédito ==========
 do $$ begin
   create type public.tipo_transacao_credito_enum as enum ('consumo', 'renovacao_mensal', 'ajuste_admin');
 exception when duplicate_object then null; end $$;
@@ -442,14 +371,6 @@ create index if not exists transacoes_creditos_user_idx on public.transacoes_cre
 
 alter table public.transacoes_creditos enable row level security;
 
--- Só leitura por policy — o próprio usuário vê seu histórico, admin vê o
--- de todo mundo. Não existe insert/update/delete por policy de propósito:
--- toda escrita nessa tabela passa pelas funções security definer
--- (promote_user_to_pro, demote_user_to_free, renovar_creditos_pro, e a
--- Edge Function de consumo de créditos na Etapa 6), que ignoram RLS por
--- rodarem como o dono do projeto — assim a tabela de auditoria nunca
--- pode ser adulterada diretamente por um usuário comum nem por um admin
--- direto no cliente, só pelo caminho controlado do backend.
 drop policy if exists "transacoes_creditos_select_own" on public.transacoes_creditos;
 create policy "transacoes_creditos_select_own" on public.transacoes_creditos
   for select using (auth.uid() = user_id);
@@ -458,13 +379,7 @@ drop policy if exists "transacoes_creditos_select_admin" on public.transacoes_cr
 create policy "transacoes_creditos_select_admin" on public.transacoes_creditos
   for select using (public.is_admin(auth.uid()));
 
--- ========== papéis de acesso e créditos de IA — Etapa 2 (promoção/renovação) ==========
--- promote_user_to_pro / demote_user_to_free são as únicas formas suportadas
--- de mudar o role de alguém (chamadas via RPC pela tela de Administração,
--- Etapa 5). Cada uma checa is_admin(auth.uid()) por conta própria — não
--- dependem só da policy de RLS (que ainda nem existe até a Etapa 3) —
--- então já podem ser chamadas com segurança assim que a Etapa 5 existir.
-
+-- ========== promoção/rebaixamento manual (admin) ==========
 create or replace function public.promote_user_to_pro(target_user uuid)
 returns void
 language plpgsql
@@ -520,8 +435,6 @@ begin
       data_proxima_renovacao = null
   where id = target_user;
 
-  -- creditos_mensais é mantido de propósito: se o usuário virar Pro de
-  -- novo depois, volta com o mesmo limite configurado antes.
   if v_creditos_antigos <> 0 then
     insert into public.transacoes_creditos (user_id, tipo, quantidade, descricao)
     values (target_user, 'ajuste_admin', -v_creditos_antigos, 'Rebaixamento para Free — créditos zerados');
@@ -530,21 +443,12 @@ end;
 $$;
 
 -- ========== cobrança via Stripe (Checkout + Portal + webhook) ==========
--- stripe_customer_id liga o profile ao Cliente no Stripe. Fica protegido
--- igual role/créditos (trigger acima) — se um usuário pudesse setar esse
--- campo livremente, poderia apontar pra um Cliente de outra pessoa e abrir
--- o Portal de faturamento dela.
 alter table public.profiles
   add column if not exists stripe_customer_id text;
 
 create unique index if not exists profiles_stripe_customer_id_idx
   on public.profiles (stripe_customer_id) where stripe_customer_id is not null;
 
--- stripe_activate_pro / stripe_deactivate_pro são o equivalente de
--- promote_user_to_pro / demote_user_to_free, mas chamadas pela Edge
--- Function stripe-webhook (Stripe → nosso servidor), que não tem usuário
--- logado — só a Service Role Key. Por isso checam auth.role() =
--- 'service_role' em vez de is_admin(auth.uid()).
 create or replace function public.stripe_activate_pro(target_user uuid, p_stripe_customer_id text)
 returns void
 language plpgsql
@@ -608,12 +512,6 @@ begin
 end;
 $$;
 
--- Licença avulsa (pagamento único, ex: Pix — que não tem cobrança
--- recorrente de verdade). Diferente de stripe_activate_pro (assinatura
--- recorrente, cancelamento vem via webhook do Stripe), aqui NÓS que
--- controlamos o vencimento: licenca_avulsa_expira_em guarda até quando o
--- acesso vale, e o cron expirar_licencas_avulsas() (abaixo) rebaixa quem
--- passou da data. Fica null pra quem é Pro via assinatura recorrente.
 alter table public.profiles
   add column if not exists licenca_avulsa_expira_em timestamptz;
 
@@ -648,10 +546,6 @@ begin
 end;
 $$;
 
--- Roda diariamente (agendado mais abaixo, junto com renovar_creditos_pro)
--- e rebaixa quem comprou licença avulsa e passou do vencimento. Não mexe
--- em quem é Pro via assinatura recorrente (licenca_avulsa_expira_em fica
--- null pra esses — a queda deles vem do webhook, não daqui).
 create or replace function public.expirar_licencas_avulsas()
 returns void
 language plpgsql
@@ -672,17 +566,6 @@ begin
 end;
 $$;
 
--- Roda diariamente (via pg_cron, agendado mais abaixo) e renova todo Pro
--- cujo ciclo de 30 dias já venceu. Se o cron ficar fora do ar por um
--- tempo, um usuário muito atrasado só avança um ciclo de 30 dias por
--- execução — mas como isso roda todo dia, ele se recupera sozinho em
--- poucos dias sem precisar de intervenção manual.
---
--- (Atualizada na Etapa 3): pg_cron não carrega nenhum JWT — auth.uid()
--- fica null aqui dentro, então is_admin(auth.uid()) do trigger de
--- proteção de colunas nunca passaria. set_config com o 3º argumento
--- `true` deixa a flag valendo só dentro desta transação, sem vazar pra
--- fora nem exigir um "unset" depois.
 create or replace function public.renovar_creditos_pro()
 returns void
 language plpgsql
@@ -704,13 +587,8 @@ begin
 end;
 $$;
 
--- Ativa a extensão pg_cron (em alguns projetos Supabase precisa ser
--- ligada manualmente antes em Database > Extensions, se este create
--- extension falhar por falta de permissão).
 create extension if not exists pg_cron;
 
--- Idempotente: remove o agendamento antigo (se existir) antes de recriar,
--- pra este arquivo poder ser rodado de novo sem duplicar o job.
 do $$
 begin
   perform cron.unschedule(jobid) from cron.job where jobname = 'renovar-creditos-pro-diario';
@@ -735,17 +613,7 @@ select cron.schedule(
   $$select public.expirar_licencas_avulsas();$$
 );
 
--- ========== papéis de acesso e créditos de IA — Etapa 5 (tela de Administração) ==========
--- Três funções security definer, todas checando is_admin(auth.uid()) por
--- conta própria (defesa em profundidade, igual às da Etapa 2) — a tela de
--- Administração no frontend só chama RPC, nunca faz update direto na
--- tabela profiles, mesmo sendo tecnicamente permitido pra admin pela RLS
--- + trigger da Etapa 3. Isso mantém toda escrita privilegiada centralizada
--- e auditável num único lugar.
-
--- profiles não guarda e-mail (fica em auth.users, schema que o cliente
--- não acessa via PostgREST) — esta função faz o join e devolve pro
--- frontend só quando quem chama é admin.
+-- ========== tela de Administração ==========
 create or replace function public.admin_list_users()
 returns table (
   id uuid,
@@ -773,10 +641,6 @@ begin
 end;
 $$;
 
--- Ajuste pontual (positivo ou negativo) no saldo atual de créditos —
--- usado pelo admin pra dar créditos extras ou corrigir algo manualmente.
--- Sempre loga em transacoes_creditos (tipo=ajuste_admin) pra manter
--- rastro de auditoria de toda mudança de saldo.
 create or replace function public.admin_adjust_creditos(target_user uuid, delta int, motivo text default null)
 returns void
 language plpgsql
@@ -804,9 +668,6 @@ begin
 end;
 $$;
 
--- Muda o limite mensal (o valor que creditos_ia recebe a cada renovação
--- via renovar_creditos_pro()) — não mexe no saldo atual, só no teto
--- futuro, por isso não gera lançamento em transacoes_creditos.
 create or replace function public.admin_set_creditos_mensais(target_user uuid, novo_valor int)
 returns void
 language plpgsql
@@ -829,17 +690,7 @@ begin
 end;
 $$;
 
--- ========== papéis de acesso e créditos de IA — Etapa 6 (consumo nas Edge Functions) ==========
--- Chamada pelas Edge Functions (describe-meal, chat-assistant) logo após
--- uma resposta bem-sucedida da IA, sempre em nome de quem está logado
--- (auth.uid() — nunca recebe um user_id por parâmetro, pra não dar
--- brecha de um usuário decrementar crédito de outro). Admin e Pro não
--- consomem (retornam true sem mexer em nada) — Pro é IA ilimitada de
--- verdade, sem teto mensal; as colunas creditos_ia/creditos_mensais
--- ficam no schema só como histórico/uso administrativo, não limitam
--- mais nada na prática. Free não deveria nem chegar aqui (a Edge
--- Function já bloqueia antes de chamar a IA), mas por segurança também
--- retorna false aqui.
+-- ========== consumo de créditos nas Edge Functions ==========
 create or replace function public.consumir_credito_ia(descricao text default 'Uso de IA')
 returns boolean
 language plpgsql
@@ -864,26 +715,11 @@ begin
 end;
 $$;
 
--- ========== Etapa 8 — regras de negócio Free vs Pro (limites diários) ==========
--- Antes disso, "Free" só tinha 3 diferenças reais na prática: sem Chat de
--- IA, sem refeição por voz, e sem nenhuma estimativa de IA (bloqueio
--- total). O resto (registros de refeição, edições, histórico, metas
--- personalizadas) não tinha limite nenhum, mesmo a landing page
--- anunciando limites específicos. Este bloco fecha essas lacunas.
-
--- 3 estimativas de IA em texto por dia pro Free ("Descrever com IA") —
--- contador diário separado do sistema de créditos mensais do Pro (que
--- continua intocado). Reseta sozinho no primeiro uso de cada dia, sem
--- precisar de cron: a própria função confere se `estimativas_ia_free_data`
--- é de hoje: se não for, zera o contador antes de checar o limite.
+-- ========== regras de negócio Free vs Pro (limites diários) ==========
 alter table public.profiles
   add column if not exists estimativas_ia_free_hoje int not null default 0,
   add column if not exists estimativas_ia_free_data date;
 
--- Chamada pela Edge Function describe-meal (Etapa 6) logo após uma resposta
--- boa da IA, só para usuários Free — mesmo padrão do consumir_credito_ia
--- (bypass da proteção de colunas, `for update` pra travar a linha contra
--- duas chamadas simultâneas do mesmo usuário).
 create or replace function public.consumir_estimativa_ia_free()
 returns boolean
 language plpgsql
@@ -924,10 +760,6 @@ begin
 end;
 $$;
 
--- Máximo de 5 alimentos registrados por dia pro Free (Pro/admin sem
--- limite). Trigger em vez de checagem só no frontend porque cobre
--- qualquer forma de inserção (inclusive o insert em lote do "Salvar
--- refeição", que manda vários alimentos de uma vez).
 alter table public.refeicoes
   add column if not exists edicoes int not null default 0;
 
@@ -959,10 +791,6 @@ create trigger refeicoes_free_insert_limit
   before insert on public.refeicoes
   for each row execute function public.protect_refeicoes_free_limits();
 
--- 1 edição por alimento salvo pro Free — a coluna `edicoes` conta quantas
--- vezes esse item específico já foi editado; o trigger nega a 2ª edição e
--- incrementa o contador na 1ª (sobrescrevendo qualquer valor que o
--- frontend tenha mandado, de propósito — quem manda é sempre o banco).
 create or replace function public.protect_refeicoes_free_edit_limit()
 returns trigger
 language plpgsql
@@ -986,11 +814,6 @@ create trigger refeicoes_free_edit_limit
   before update on public.refeicoes
   for each row execute function public.protect_refeicoes_free_edit_limit();
 
--- Histórico de 7 dias pro Free (refeições, treinos e peso) — Pro/admin
--- continuam vendo tudo. Precisa ser uma condição extra DENTRO da mesma
--- policy "own" (com AND), não uma policy nova: RLS combina múltiplas
--- policies permissivas com OR, então uma policy nova só restringiria se
--- não houvesse nenhuma outra liberando — o que não é o caso aqui.
 create or replace function public.is_free(uid uuid)
 returns boolean
 language sql
@@ -1024,17 +847,10 @@ create policy "registros_peso_select_own" on public.registros_peso
     and (not public.is_free(auth.uid()) or data >= (current_date - interval '7 days'))
   );
 
--- ========== Etapa 9 — Foto de refeição com IA (Pro) ==========
--- Referência (caminho no Storage, não URL pública — o bucket é privado) da
--- foto que originou os alimentos, quando registrados via "Foto com IA" em
--- vez de texto/manual. Null pros outros fluxos.
+-- ========== foto de refeição com IA (Pro) ==========
 alter table public.refeicoes
   add column if not exists foto_url text;
 
--- Bucket privado — cada usuário só acessa os próprios arquivos, guardados
--- sob o prefixo "{auth.uid()}/...". 5MB e só os 3 formatos que o frontend
--- realmente envia (a foto já é comprimida/redimensionada no client antes
--- do upload).
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('meal-photos', 'meal-photos', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
 on conflict (id) do update set
@@ -1060,10 +876,7 @@ create policy "meal_photos_delete_own" on storage.objects
     bucket_id = 'meal-photos' and (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- ========== Etapa 10 — mais tipos de treino ==========
--- ALTER TYPE ... ADD VALUE precisa rodar fora de bloco transacional com
--- outras operações que dependam do novo valor no mesmo statement — por
--- isso cada ADD VALUE fica isolado, sem do $$ ... $$ envolvendo.
+-- ========== mais tipos de treino ==========
 alter type tipo_atividade_enum add value if not exists 'caminhada';
 alter type tipo_atividade_enum add value if not exists 'yoga';
 alter type tipo_atividade_enum add value if not exists 'pilates';
@@ -1071,12 +884,7 @@ alter type tipo_atividade_enum add value if not exists 'crossfit';
 alter type tipo_atividade_enum add value if not exists 'danca';
 alter type tipo_atividade_enum add value if not exists 'hiit';
 
--- ========== Etapa 11 — foto de perfil ==========
--- Diferente das fotos de refeição (bucket privado, URL assinada), o
--- avatar é exibido o tempo todo no topo do app — bucket público evita
--- ficar gerando/renovando signed URL a cada render. avatar_url guarda a
--- URL pública já pronta (com um "?t=" de cache-busting, adicionado pelo
--- frontend a cada novo upload).
+-- ========== foto de perfil ==========
 alter table public.profiles
   add column if not exists avatar_url text;
 
@@ -1109,36 +917,91 @@ create policy "avatars_delete_own" on storage.objects
     bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- ========== Etapa 12 — pagamentos via Pix (Mercado Pago) ==========
--- Registra cada order Pix criada em web/api/create-pix-order.js e
--- atualizada em web/api/mercadopago-webhook.js. Só essas duas Serverless
--- Functions escrevem aqui (Service Role Key, ignora RLS) — a policy de
--- select abaixo é só pra o usuário logado acompanhar o status do próprio
--- pedido no frontend (ex: tela de checkout esperando o Pix cair).
+-- ========== pagamentos via Pix (Mercado Pago) ==========
+-- ATENÇÃO: esta tabela foi criada em produção com uma estrutura diferente
+-- da que estava documentada em schema.sql (que nunca chegou a ser rodado
+-- de fato). A definição abaixo é a que reflete o banco real, extraída por
+-- introspecção direta (pg_catalog) em 2026-09-25:
+--   - user_id NÃO tem "on delete cascade" (diferente das outras tabelas)
+--   - external_reference é NOT NULL + UNIQUE (não apenas um índice solto)
+--   - mp_order_id é UNIQUE via constraint (não um índice nomeado à parte)
+--   - não existe um índice extra em (user_id)
+--   - só existe UMA policy de leitura (o usuário vê o próprio pedido);
+--     nunca existiu uma policy de admin para esta tabela em produção.
+-- Ficou assim porque as duas últimas colunas foram adicionadas via SQL
+-- direto no projeto, sem passar por uma migration. Se algum dia quiser
+-- alinhar (ex: adicionar on delete cascade, ou dar visibilidade de admin),
+-- isso deve ser uma migration nova e deliberada — não algo para "corrigir"
+-- silenciosamente aqui.
 create table if not exists public.pix_orders (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  external_reference text not null unique,
+  mp_order_id text not null unique,
+  user_id uuid not null references auth.users(id),
   plan_code text not null,
-  amount numeric not null,
-  payer_email text not null,
-  mp_order_id text not null,
-  external_reference text,
+  amount numeric(10,2) not null,
   status text not null default 'pending',
-  qr_code text,
-  qr_code_base64 text,
   created_at timestamptz not null default now(),
-  paid_at timestamptz
+  paid_at timestamptz,
+  payer_email text not null,
+  qr_code text,
+  qr_code_base64 text
 );
-
-create unique index if not exists pix_orders_mp_order_id_idx on public.pix_orders(mp_order_id);
-create index if not exists pix_orders_user_id_idx on public.pix_orders(user_id);
 
 alter table public.pix_orders enable row level security;
 
-drop policy if exists "pix_orders_select_own" on public.pix_orders;
-create policy "pix_orders_select_own" on public.pix_orders
+drop policy if exists "Usuários veem seus próprios pedidos Pix" on public.pix_orders;
+create policy "Usuários veem seus próprios pedidos Pix" on public.pix_orders
   for select using (auth.uid() = user_id);
 
-drop policy if exists "pix_orders_select_admin" on public.pix_orders;
-create policy "pix_orders_select_admin" on public.pix_orders
-  for select using (public.is_admin(auth.uid()));
+-- ========== rede de segurança: RLS automático em toda tabela nova ==========
+-- Existe em produção desde antes deste arquivo (não fazia parte do
+-- schema.sql original). Garante que qualquer "create table" futuro em
+-- public, mesmo que alguém esqueça o "enable row level security", já
+-- nasça protegido por RLS (sem policy nenhuma = sem acesso via API, o que
+-- é o padrão seguro — as policies têm que ser adicionadas depois,
+-- explicitamente).
+create or replace function public.rls_auto_enable()
+returns event_trigger
+language plpgsql
+security definer
+set search_path = pg_catalog
+as $$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$$;
+
+do $$ begin
+  create event trigger ensure_rls on ddl_command_end execute function public.rls_auto_enable();
+exception when duplicate_object then null; end $$;
+
+-- ========== fora do escopo desta migration (documentado, não reproduzido) ==========
+-- Produção também tem uma tabela estrangeira `public.ciclodepagamento`
+-- (relkind 'f', via a extensão `wrappers` + foreign server "Nutriibase_server"),
+-- usada para consultar dados do Stripe direto por SQL. Não é reproduzida
+-- aqui de propósito: exigiria configurar de novo um foreign server com
+-- credencial do Stripe (via Vault) em cada ambiente novo, e não guarda
+-- nenhum dado nosso (é só um proxy de leitura pra API do Stripe) — não é
+-- código de aplicação nem precisa de backup. Se algum branch/ambiente novo
+-- precisar dela, configure manualmente seguindo a doc do Supabase Wrappers
+-- para Stripe.
