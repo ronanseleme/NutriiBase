@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchSystemStatus, type StatusCheck } from '../../lib/systemStatus'
+import { fetchSystemStatus, type StatusCheck, type StorageUsage } from '../../lib/systemStatus'
 
 function Dot({ status }: { status: 'ok' | 'error' | 'checking' }) {
   const color = status === 'ok' ? 'var(--teal)' : status === 'error' ? 'var(--coral)' : 'var(--text-soft)'
@@ -24,8 +24,64 @@ function StatusRow({ check }: { check: StatusCheck }) {
   )
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  const units = ['KB', 'MB', 'GB', 'TB']
+  let value = bytes / 1024
+  let i = 0
+  while (value >= 1024 && i < units.length - 1) {
+    value /= 1024
+    i++
+  }
+  return `${value.toLocaleString('pt-BR', { maximumFractionDigits: value < 10 ? 2 : 1 })} ${units[i]}`
+}
+
+function UsageBar({ label, usedBytes, quotaBytes }: { label: string; usedBytes: number; quotaBytes: number }) {
+  const pct = quotaBytes > 0 ? Math.min(100, (usedBytes / quotaBytes) * 100) : 0
+  const barColor = pct >= 95 ? 'var(--coral)' : pct >= 80 ? 'var(--gold)' : 'var(--teal)'
+  return (
+    <div>
+      <div className="mb-1 flex items-baseline justify-between text-[0.82rem]">
+        <span className="font-semibold">{label}</span>
+        <span className="text-[var(--text-soft)]">
+          {formatBytes(usedBytes)} de {formatBytes(quotaBytes)} <span className="opacity-70">({pct.toFixed(1)}%)</span>
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--bg)]">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: barColor }} />
+      </div>
+    </div>
+  )
+}
+
+function StoragePanel({ storage }: { storage: StorageUsage }) {
+  return (
+    <div className="mt-3 flex flex-col gap-3 border-t border-[var(--line)] pt-3">
+      <UsageBar label="Banco de dados (Postgres)" usedBytes={storage.dbBytes} quotaBytes={storage.dbQuotaBytes} />
+      <UsageBar label="Storage" usedBytes={storage.storageBytes} quotaBytes={storage.storageQuotaBytes} />
+      {storage.buckets.length > 0 && (
+        <div className="flex flex-col gap-1">
+          {storage.buckets.map((b) => (
+            <div key={b.bucket} className="flex items-center justify-between text-[0.74rem] text-[var(--text-soft)]">
+              <span>
+                {b.bucket} · {b.objects} arquivo{b.objects === 1 ? '' : 's'}
+              </span>
+              <span>{formatBytes(b.bytes)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-[0.72rem] text-[var(--text-soft)]">
+        Cotas incluídas no plano Pro do Supabase (8 GB de banco, 100 GB de Storage) — acima disso não trava nada,
+        vira cobrança extra por uso.
+      </p>
+    </div>
+  )
+}
+
 export function StatusPanel() {
   const [checks, setChecks] = useState<StatusCheck[] | null>(null)
+  const [storage, setStorage] = useState<StorageUsage | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [checkedAt, setCheckedAt] = useState<Date | null>(null)
@@ -35,7 +91,8 @@ export function StatusPanel() {
     setError(null)
     try {
       const result = await fetchSystemStatus()
-      setChecks(result)
+      setChecks(result.checks)
+      setStorage(result.storage)
       setCheckedAt(new Date())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível verificar o status agora.')
@@ -86,6 +143,8 @@ export function StatusPanel() {
           ))}
         </div>
       )}
+
+      {storage && <StoragePanel storage={storage} />}
 
       <p className="mt-3 text-[0.72rem] text-[var(--text-soft)]">
         O plano de cobrança do Supabase (Pro/Free) não aparece aqui — isso é configuração de conta, só visível no

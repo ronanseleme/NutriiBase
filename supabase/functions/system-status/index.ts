@@ -10,12 +10,23 @@
 // (ainda que baratos/gratuitos), então não expomos isso pra qualquer usuário
 // logado gerar tráfego à toa.
 //
+// Também devolve o uso de armazenamento (tamanho do banco Postgres +
+// buckets do Storage) contra as cotas incluídas no plano Pro do Supabase —
+// via a função admin_storage_stats() (RPC, admin-only).
+//
 // Deploy: supabase functions deploy system-status
 // Secrets usadas (já configuradas por outras functions): STRIPE_SECRET_KEY,
 // GEMINI_API_KEY, SUPABASE_SERVICE_ROLE_KEY.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { stripeGet } from "../_shared/stripe.ts";
+
+// Cotas incluídas no plano Pro do Supabase (confirmadas na doc oficial em
+// 2026-09 — https://supabase.com/docs/guides/platform/billing-on-supabase).
+// Acima disso é cobrança por uso, não um limite rígido, mas serve como
+// referência de "quanto ainda cabe no incluso do plano".
+const DB_QUOTA_BYTES = 8 * 1024 * 1024 * 1024; // 8 GB de disco por projeto
+const STORAGE_QUOTA_BYTES = 100 * 1024 * 1024 * 1024; // 100 GB de Storage
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -130,5 +141,20 @@ Deno.serve(async (req) => {
     }),
   ]);
 
-  return jsonResponse({ checks, checkedAt: new Date().toISOString() });
+  let storage: unknown = null;
+  const { data: storageStats, error: storageError } = await supabaseAdmin.rpc("admin_storage_stats");
+  if (!storageError && storageStats) {
+    const dbBytes = Number((storageStats as { dbBytes: number }).dbBytes) || 0;
+    const buckets = (storageStats as { buckets: { bucket: string; bytes: number; objects: number }[] }).buckets || [];
+    const storageBytes = buckets.reduce((sum, b) => sum + (Number(b.bytes) || 0), 0);
+    storage = {
+      dbBytes,
+      dbQuotaBytes: DB_QUOTA_BYTES,
+      storageBytes,
+      storageQuotaBytes: STORAGE_QUOTA_BYTES,
+      buckets: buckets.map((b) => ({ bucket: b.bucket, bytes: Number(b.bytes) || 0, objects: Number(b.objects) || 0 })),
+    };
+  }
+
+  return jsonResponse({ checks, storage, checkedAt: new Date().toISOString() });
 });
