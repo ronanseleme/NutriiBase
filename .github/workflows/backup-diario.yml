@@ -66,7 +66,19 @@ jobs:
           mkdir -p "backups-repo/$DATA"
           mv "db_${DATA}.sql.tar.gz" "backups-repo/$DATA/"
           mv "storage_${DATA}.tar.gz" "backups-repo/$DATA/"
-          find backups-repo -maxdepth 1 -type d -name '20*' -mtime +30 -exec rm -rf {} +
+
+          # Comparação por NOME da pasta (AAAA-MM-DD), não por mtime do
+          # arquivo: logo após um "git clone" todo arquivo tem mtime igual
+          # a "agora", então "find -mtime" nunca acharia nada antigo e o
+          # repo de backups cresceria pra sempre.
+          cutoff=$(date -d '30 days ago' +%F)
+          for dir in backups-repo/20*/; do
+            dir="${dir%/}"
+            nome="$(basename "$dir")"
+            if [[ "$nome" < "$cutoff" ]]; then
+              rm -rf "$dir"
+            fi
+          done
 
       - name: Commit e push
         run: |
