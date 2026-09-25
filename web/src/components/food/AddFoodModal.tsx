@@ -303,8 +303,8 @@ export function AddFoodModal({ mealLabel, editItem, draftCount, access, userId, 
       const c = await compressImage(file)
       setPhotoCompressed(c)
       setPhotoPreview(URL.createObjectURL(c.blob))
-    } catch {
-      setPhotoError('Não foi possível processar essa foto. Tente outra.')
+    } catch (err) {
+      setPhotoError(err instanceof Error && err.message ? err.message : 'Não foi possível processar essa foto. Tente outra.')
     }
   }
 

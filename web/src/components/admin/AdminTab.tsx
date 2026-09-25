@@ -2,8 +2,12 @@ import { useState } from 'react'
 import { useAdminUsers } from '../../hooks/useAdminUsers'
 import { AdminUserCard } from './AdminUserCard'
 import { UserHistoryModal } from './UserHistoryModal'
+import { StatusPanel } from './StatusPanel'
+
+type SubView = 'users' | 'status'
 
 export function AdminTab() {
+  const [subView, setSubView] = useState<SubView>('users')
   const { users, loading, error, promote, demote, adjustCreditos, setCreditosMensais } = useAdminUsers()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -17,35 +21,58 @@ export function AdminTab() {
     setBusyId(null)
   }
 
-  if (loading) {
-    return <div className="nb-card text-[0.86rem] text-[var(--text-soft)]">Carregando usuários…</div>
-  }
-
-  if (error) {
-    return <div className="nb-card text-[0.86rem] text-[var(--coral)]">Erro ao carregar usuários: {error}</div>
-  }
-
   return (
     <div className="flex flex-col gap-3">
-      <div className="nb-card-title px-1">Administração · {users.length} usuário{users.length === 1 ? '' : 's'}</div>
-      {actionError && (
-        <div className="nb-card border-l-4 border-[var(--coral)] text-[0.84rem] text-[var(--coral)]">{actionError}</div>
-      )}
-      {users.map((u) => (
-        <AdminUserCard
-          key={u.id}
-          user={u}
-          busy={busyId === u.id}
-          onPromote={() => runAction(u.id, () => promote(u.id))}
-          onDemote={() => runAction(u.id, () => demote(u.id))}
-          onAdjustCreditos={(delta, motivo) => runAction(u.id, () => adjustCreditos(u.id, delta, motivo))}
-          onSetCreditosMensais={(novoValor) => runAction(u.id, () => setCreditosMensais(u.id, novoValor))}
-          onViewHistory={() => setHistoryUser({ id: u.id, nome: u.nome })}
-        />
-      ))}
+      <div className="flex gap-1 rounded-full bg-[var(--surface)] p-1">
+        <button
+          type="button"
+          onClick={() => setSubView('users')}
+          className={`flex-1 rounded-full py-2 text-[0.84rem] font-bold transition-all ${
+            subView === 'users' ? 'bg-[image:var(--brand-gradient)] text-white shadow-[0_6px_14px_-6px_rgba(47,111,237,.55)]' : 'text-[var(--text-soft)]'
+          }`}
+        >
+          Usuários
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubView('status')}
+          className={`flex-1 rounded-full py-2 text-[0.84rem] font-bold transition-all ${
+            subView === 'status' ? 'bg-[image:var(--brand-gradient)] text-white shadow-[0_6px_14px_-6px_rgba(47,111,237,.55)]' : 'text-[var(--text-soft)]'
+          }`}
+        >
+          Status
+        </button>
+      </div>
 
-      {historyUser && (
-        <UserHistoryModal userId={historyUser.id} userName={historyUser.nome} onClose={() => setHistoryUser(null)} />
+      {subView === 'status' ? (
+        <StatusPanel />
+      ) : loading ? (
+        <div className="nb-card text-[0.86rem] text-[var(--text-soft)]">Carregando usuários…</div>
+      ) : error ? (
+        <div className="nb-card text-[0.86rem] text-[var(--coral)]">Erro ao carregar usuários: {error}</div>
+      ) : (
+        <>
+          <div className="nb-card-title px-1">Administração · {users.length} usuário{users.length === 1 ? '' : 's'}</div>
+          {actionError && (
+            <div className="nb-card border-l-4 border-[var(--coral)] text-[0.84rem] text-[var(--coral)]">{actionError}</div>
+          )}
+          {users.map((u) => (
+            <AdminUserCard
+              key={u.id}
+              user={u}
+              busy={busyId === u.id}
+              onPromote={() => runAction(u.id, () => promote(u.id))}
+              onDemote={() => runAction(u.id, () => demote(u.id))}
+              onAdjustCreditos={(delta, motivo) => runAction(u.id, () => adjustCreditos(u.id, delta, motivo))}
+              onSetCreditosMensais={(novoValor) => runAction(u.id, () => setCreditosMensais(u.id, novoValor))}
+              onViewHistory={() => setHistoryUser({ id: u.id, nome: u.nome })}
+            />
+          ))}
+
+          {historyUser && (
+            <UserHistoryModal userId={historyUser.id} userName={historyUser.nome} onClose={() => setHistoryUser(null)} />
+          )}
+        </>
       )}
     </div>
   )
