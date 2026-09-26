@@ -46,8 +46,15 @@ jobs:
           # --data-only à parte pra trazer os dados (documentado na
           # referência da CLI). Sem isso, o dump "completo" ficava só
           # com tabelas vazias.
+          #
+          # --schema public é essencial no dump de dados: ao contrário do
+          # dump de schema (que já exclui os schemas gerenciados do
+          # Supabase por padrão), o --data-only NÃO exclui — sem essa
+          # flag ele também traz auth.users (e-mail + hash de senha),
+          # auth.sessions e auth.refresh_tokens de usuários reais. Isso
+          # já aconteceu uma vez (ver histórico) antes desta flag existir.
           supabase db dump --db-url "${{ secrets.SUPABASE_DB_URL }}" -f schema.sql
-          supabase db dump --db-url "${{ secrets.SUPABASE_DB_URL }}" --data-only -f data.sql
+          supabase db dump --db-url "${{ secrets.SUPABASE_DB_URL }}" --data-only --schema public -f data.sql
           cat schema.sql data.sql > db.sql
 
       - name: Baixar arquivos do Storage (meal-photos, avatars)
