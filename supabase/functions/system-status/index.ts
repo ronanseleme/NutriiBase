@@ -141,8 +141,12 @@ Deno.serve(async (req) => {
     }),
   ]);
 
+  // admin_storage_stats() confere is_admin(auth.uid()) internamente — só
+  // funciona chamada com o client autenticado como o próprio usuário
+  // (supabaseAsUser), nunca com o client de service role: esse não carrega
+  // o JWT de ninguém, então auth.uid() vem null e a checagem sempre falha.
   let storage: unknown = null;
-  const { data: storageStats, error: storageError } = await supabaseAdmin.rpc("admin_storage_stats");
+  const { data: storageStats, error: storageError } = await supabaseAsUser.rpc("admin_storage_stats");
   if (!storageError && storageStats) {
     const dbBytes = Number((storageStats as { dbBytes: number }).dbBytes) || 0;
     const buckets = (storageStats as { buckets: { bucket: string; bytes: number; objects: number }[] }).buckets || [];
