@@ -53,12 +53,14 @@ jobs:
           SB_URL: ${{ secrets.SUPABASE_URL }}
           REPO_TOKEN: ${{ secrets.BACKUPS_REPO_TOKEN }}
           GH_TOKEN_LEN_CHECK: ${{ secrets.GITHUB_TOKEN }}
+          TESTE: ${{ secrets.TESTE_DIAGNOSTICO }}
         run: |
           echo "SUPABASE_DB_URL length: ${#DB_URL}"
           echo "SUPABASE_SERVICE_ROLE_KEY length: ${#SVC_KEY}"
           echo "SUPABASE_URL length: ${#SB_URL}"
           echo "BACKUPS_REPO_TOKEN length: ${#REPO_TOKEN}"
           echo "GITHUB_TOKEN (automatico, nao e secret nosso) length: ${#GH_TOKEN_LEN_CHECK}"
+          echo "TESTE_DIAGNOSTICO length: ${#TESTE}"
 
       - name: Dump do banco (schema + dados)
         run: |
