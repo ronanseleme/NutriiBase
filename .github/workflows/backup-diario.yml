@@ -26,6 +26,12 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
+      - name: DEBUG temporário — contexto não-secret (isolar o problema)
+        run: |
+          echo "repo: ${{ github.repository }}"
+          echo "actor: ${{ github.actor }}"
+          echo "event: ${{ github.event_name }}"
+
       - uses: actions/checkout@v4
         with:
           sparse-checkout: |
@@ -46,11 +52,13 @@ jobs:
           SVC_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SB_URL: ${{ secrets.SUPABASE_URL }}
           REPO_TOKEN: ${{ secrets.BACKUPS_REPO_TOKEN }}
+          GH_TOKEN_LEN_CHECK: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "SUPABASE_DB_URL length: ${#DB_URL}"
           echo "SUPABASE_SERVICE_ROLE_KEY length: ${#SVC_KEY}"
           echo "SUPABASE_URL length: ${#SB_URL}"
           echo "BACKUPS_REPO_TOKEN length: ${#REPO_TOKEN}"
+          echo "GITHUB_TOKEN (automatico, nao e secret nosso) length: ${#GH_TOKEN_LEN_CHECK}"
 
       - name: Dump do banco (schema + dados)
         run: |
