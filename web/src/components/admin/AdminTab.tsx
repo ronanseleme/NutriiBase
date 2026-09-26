@@ -3,6 +3,7 @@ import { useAdminUsers } from '../../hooks/useAdminUsers'
 import { AdminUserCard } from './AdminUserCard'
 import { UserHistoryModal } from './UserHistoryModal'
 import { StatusPanel } from './StatusPanel'
+import { EnvironmentsPanel } from './EnvironmentsPanel'
 
 type SubView = 'users' | 'status'
 
@@ -45,7 +46,10 @@ export function AdminTab() {
       </div>
 
       {subView === 'status' ? (
-        <StatusPanel />
+        <>
+          <EnvironmentsPanel />
+          <StatusPanel />
+        </>
       ) : loading ? (
         <div className="nb-card text-[0.86rem] text-[var(--text-soft)]">Carregando usuários…</div>
       ) : error ? (
