@@ -40,6 +40,18 @@ jobs:
         with:
           version: latest
 
+      - name: DEBUG temporário — tamanho dos secrets (nunca o valor)
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SVC_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SB_URL: ${{ secrets.SUPABASE_URL }}
+          REPO_TOKEN: ${{ secrets.BACKUPS_REPO_TOKEN }}
+        run: |
+          echo "SUPABASE_DB_URL length: ${#DB_URL}"
+          echo "SUPABASE_SERVICE_ROLE_KEY length: ${#SVC_KEY}"
+          echo "SUPABASE_URL length: ${#SB_URL}"
+          echo "BACKUPS_REPO_TOKEN length: ${#REPO_TOKEN}"
+
       - name: Dump do banco (schema + dados)
         run: |
           supabase db dump --db-url "${{ secrets.SUPABASE_DB_URL }}" -f db.sql
