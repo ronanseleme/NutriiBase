@@ -1,0 +1,43 @@
+# Config do Supabase CLI para o projeto NutriiBase.
+# Necessário para o Branching (ambientes de preview/staging por PR) saber
+# quais Edge Functions existem e como cada uma deve ser implantada.
+# Docs: https://supabase.com/docs/guides/local-development/cli/config
+
+project_id = "yvsqvvjrprovcpfqmevh"
+
+[functions.analyze-meal-photo]
+verify_jwt = true
+
+[functions.chat-assistant]
+verify_jwt = true
+
+[functions.create-checkout-session]
+verify_jwt = true
+
+[functions.create-portal-session]
+verify_jwt = true
+
+[functions.describe-meal]
+verify_jwt = true
+
+[functions.list-plans]
+verify_jwt = true
+
+[functions.manage-subscription]
+verify_jwt = true
+
+[functions.subscription-details]
+verify_jwt = true
+
+[functions.system-status]
+verify_jwt = true
+
+[functions.transcribe-audio]
+verify_jwt = true
+
+# O Stripe chama esta função sem token do Supabase — a autenticidade da
+# chamada é verificada dentro do código via assinatura HMAC
+# (STRIPE_WEBHOOK_SECRET), igual já documentado em
+# .github/workflows/deploy-functions.yml.
+[functions.stripe-webhook]
+verify_jwt = false
