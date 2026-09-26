@@ -42,7 +42,13 @@ jobs:
 
       - name: Dump do banco (schema + dados)
         run: |
-          supabase db dump --db-url "${{ secrets.SUPABASE_DB_URL }}" -f db.sql
+          # `supabase db dump` sem flag só traz o schema — precisa de
+          # --data-only à parte pra trazer os dados (documentado na
+          # referência da CLI). Sem isso, o dump "completo" ficava só
+          # com tabelas vazias.
+          supabase db dump --db-url "${{ secrets.SUPABASE_DB_URL }}" -f schema.sql
+          supabase db dump --db-url "${{ secrets.SUPABASE_DB_URL }}" --data-only -f data.sql
+          cat schema.sql data.sql > db.sql
 
       - name: Baixar arquivos do Storage (meal-photos, avatars)
         env:
